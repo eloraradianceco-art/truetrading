@@ -1150,6 +1150,8 @@ function renderChart(){
      </div>
      <div id="lwchart" style="height:340px;width:100%"></div>
      <div class="chipwrap" style="margin-top:10px">
+       <span class="chip ${chartState.showSignal!==false?'on':''}" onclick="toggleOverlay('showSignal')">Signal levels</span>
+       <span class="chip ${chartState.showCone?'on':''}" onclick="toggleOverlay('showCone')">Volatility range</span>
        <span class="chip ${chartState.showSess?'on':''}" onclick="toggleOverlay('showSess')">Killzones</span>
        <span class="chip ${chartState.showPD?'on':''}" onclick="toggleOverlay('showPD')">PDH / PDL</span>
      </div>
@@ -1185,6 +1187,7 @@ async function initChart(attempt){
   const series=chart.addSeries(LightweightCharts.CandlestickSeries,{
     upColor:'#3ec77b',downColor:'#e0533b',borderVisible:false,wickUpColor:'#3ec77b',wickDownColor:'#e0533b'});
   chartState.chart=chart; chartState.series=series;
+  chartState.priceLines=[]; chartState.markerPrim=null;  // reset overlay refs for new series
   await refreshChart(false);
   chart.timeScale().fitContent(); // fit once on initial load only
   startAutoRefresh();
@@ -1203,6 +1206,7 @@ async function refreshChart(manual){
   if(manual){const u=$('#chartUpd'); if(u)u.textContent='updating…';}
   chartState.feedError=null;
   const data=await fetchCandles(chartState.instrument,chartState.tf,200);
+  chartState.lastData=data;
   series.setData(data); // updates in place, no rebuild/flicker
   const last=data[data.length-1];
   if(last){const px=$('#chartPx'); if(px)px.textContent='O '+last.open.toFixed(5)+'  H '+last.high.toFixed(5)+'  L '+last.low.toFixed(5)+'  C '+last.close.toFixed(5);}
@@ -1219,25 +1223,90 @@ async function refreshChart(manual){
 }
 function setTF(tf){stopAutoRefresh();chartState.tf=tf;renderChart()}
 function toggleOverlay(k){chartState[k]=!chartState[k];renderChart()}
+function clearPriceLines(){
+  const s=chartState.series; if(!s)return;
+  (chartState.priceLines||[]).forEach(l=>{try{s.removePriceLine(l)}catch(e){}});
+  chartState.priceLines=[];
+}
+function addLine(opts){
+  const s=chartState.series; if(!s)return;
+  try{const l=s.createPriceLine(opts);chartState.priceLines=chartState.priceLines||[];chartState.priceLines.push(l);}catch(e){}
+}
+function atr(data,period){
+  if(data.length<period+1)return 0;
+  let sum=0;const n=data.length;
+  for(let i=n-period;i<n;i++){
+    const tr=Math.max(
+      data[i].high-data[i].low,
+      Math.abs(data[i].high-data[i-1].close),
+      Math.abs(data[i].low-data[i-1].close)
+    );
+    sum+=tr;
+  }
+  return sum/period;
+}
 function applyOverlays(data){
   const s=chartState.series; if(!s)return;
-  // PDH/PDL: approximate "previous day" as the prior ~96 M15 bars window
+  clearPriceLines();              // FIX: remove old lines so they don't stack each refresh
+  const marks=[];
+
+  // --- Signal levels: entry / stop / target + swept liquidity (on by default) ---
+  if(chartState.showSignal!==false && chartState.activeSignal){
+    const sig=chartState.activeSignal, dir=chartState.activeDir;
+    const ec=dir==='long'?'#3ec77b':'#e0533b';
+    addLine({price:sig.entry, color:'#e8aa42', lineWidth:2, lineStyle:0, title:'Entry'});
+    addLine({price:sig.sl, color:'#e0533b', lineWidth:1, lineStyle:2, title:'Stop (1R)'});
+    addLine({price:sig.tp, color:'#3ec77b', lineWidth:1, lineStyle:2, title:'Target (2R)'});
+    addLine({price:sig.sweptLevel, color:'#9a7bd0', lineWidth:1, lineStyle:3, title:'Swept liq'});
+    // FVG zone edges (the imbalance the entry sits in)
+    if(sig.fvgTop!=null && sig.fvgBottom!=null){
+      addLine({price:sig.fvgTop, color:'#8a98a5', lineWidth:1, lineStyle:3, title:'FVG'});
+      addLine({price:sig.fvgBottom, color:'#8a98a5', lineWidth:1, lineStyle:3, title:''});
+    }
+    // marker on the most recent bar showing direction
+    if(data.length){
+      const lastT=data[data.length-1].time;
+      marks.push({time:lastT, position:dir==='long'?'belowBar':'aboveBar', color:ec, shape:dir==='long'?'arrowUp':'arrowDown', text:dir.toUpperCase()});
+    }
+  }
+
+  // --- Volatility range (ATR cone): measured, NOT a forecast of direction ---
+  if(chartState.showCone && data.length>20){
+    const a=atr(data,14);
+    const lastClose=data[data.length-1].close;
+    if(a>0){
+      // expected range over the next ~5 bars ≈ ATR * sqrt(bars). Honest volatility band.
+      const band=a*Math.sqrt(5);
+      addLine({price:lastClose+band, color:'#4a90d9', lineWidth:1, lineStyle:2, title:'+1 ATR range'});
+      addLine({price:lastClose-band, color:'#4a90d9', lineWidth:1, lineStyle:2, title:'-1 ATR range'});
+    }
+  }
+
+  // --- PDH / PDL ---
   if(chartState.showPD){
     const day=data.slice(-Math.min(data.length,Math.floor(86400/(TF.find(t=>t.k===chartState.tf)||TF[1]).sec)));
     const prev=data.slice(0,data.length-day.length);
     if(prev.length){
       const pdh=Math.max(...prev.map(d=>d.high)), pdl=Math.min(...prev.map(d=>d.low));
-      s.createPriceLine({price:pdh,color:'#e0533b',lineWidth:1,lineStyle:2,title:'PDH'});
-      s.createPriceLine({price:pdl,color:'#3ec77b',lineWidth:1,lineStyle:2,title:'PDL'});
+      addLine({price:pdh,color:'#e0533b',lineWidth:1,lineStyle:2,title:'PDH'});
+      addLine({price:pdl,color:'#3ec77b',lineWidth:1,lineStyle:2,title:'PDL'});
     }
   }
-  // Killzone markers on bars that open inside a killzone (UTC)
-  if(chartState.showSess && LightweightCharts.createSeriesMarkers){
+
+  // --- Killzone markers ---
+  if(chartState.showSess){
     const kz=h=>(h>=7&&h<10)?{t:'LDN',c:'#e8aa42'}:(h>=12&&h<15)?{t:'NY',c:'#3ec77b'}:(h>=0&&h<4)?{t:'ASIA',c:'#4a90d9'}:null;
-    const marks=[];
     data.forEach(d=>{const z=kz(new Date(d.time*1000).getUTCHours());
       if(z&&Math.random()<0.04)marks.push({time:d.time,position:'aboveBar',color:z.c,shape:'circle',text:z.t})});
-    try{LightweightCharts.createSeriesMarkers(s,marks)}catch(e){}
+  }
+
+  // apply all markers at once (v5 marker primitive)
+  if(LightweightCharts.createSeriesMarkers){
+    try{
+      marks.sort((a,b)=>a.time-b.time);
+      if(chartState.markerPrim){chartState.markerPrim.setMarkers(marks);}
+      else{chartState.markerPrim=LightweightCharts.createSeriesMarkers(s,marks);}
+    }catch(e){}
   }
 }
 
@@ -1372,7 +1441,9 @@ function signalKey(sig){
 async function runSignalEngine(){
   const sig=await scanSignals();
   const box=$('#signalBox');
-  if(!sig){ if(box)box.innerHTML='<div class="faint" style="font-size:13px">No aligned M15 + H1 setup right now. The engine is watching.</div>'; return; }
+  chartState.activeSignal = sig ? sig.primary : null;  // expose to chart overlay
+  chartState.activeDir = sig ? sig.dir : null;
+  if(!sig){ if(box)box.innerHTML='<div class="faint" style="font-size:13px">No aligned M15 + H1 setup right now. The engine is watching.</div>'; applyOverlays(chartState.lastData||[]); return; }
   // log if new — guard against exact key match AND near-identical recent setups
   DB.signals=DB.signals||[];
   const key=signalKey(sig);
@@ -1392,6 +1463,7 @@ async function runSignalEngine(){
     save();
   }
   if(box)box.innerHTML=signalCard(sig);
+  applyOverlays(chartState.lastData||[]);  // draw signal levels on chart
 }
 function signalCard(sig){
   const s=sig.primary; const dirU=sig.dir==='long'?'LONG':'SHORT';
