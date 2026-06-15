@@ -6,96 +6,112 @@
 <title>True Balance Trader</title>
 <style>
 :root{
-  --bg:#0c0f12; --panel:#13181d; --panel2:#1a2127; --line:#262f38;
-  --ink:#e6ebf0; --dim:#8a98a5; --faint:#5a6772;
-  --amber:#e0a23b; --amber-d:#a8782a;
+  --bg:#0a0c0f; --panel:#14191f; --panel2:#1a2127; --line:#28323d; --line-soft:#1e262e;
+  --ink:#eaeff4; --dim:#8a98a5; --faint:#5a6772;
+  --amber:#e8aa42; --amber-d:#a8782a; --amber-glow:rgba(232,170,66,.14);
   --green:#3ec77b; --green-d:#1f7a4a;
   --red:#e0533b; --red-d:#9a3525;
   --blue:#4a90d9; --violet:#9a7bd0;
   --mono:'SF Mono',ui-monospace,'Cascadia Mono','Roboto Mono',Menlo,Consolas,monospace;
   --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,system-ui,sans-serif;
+  --shadow:0 1px 3px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.25);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.3);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-text-size-adjust:100%}
-body{padding-bottom:80px}
+html,body{color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-text-size-adjust:100%}
+body{
+  padding-bottom:80px;
+  background:
+    radial-gradient(1200px 600px at 50% -5%, rgba(232,170,66,.05), transparent 60%),
+    radial-gradient(900px 500px at 100% 100%, rgba(74,144,217,.04), transparent 55%),
+    var(--bg);
+  background-attachment:fixed;
+}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-h1,h2,h3,h4{font-weight:600;letter-spacing:-0.01em;line-height:1.2}
-.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+h1,h2,h3,h4{font-weight:650;letter-spacing:-0.015em;line-height:1.2}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-0.02em}
 .dim{color:var(--dim)}.faint{color:var(--faint)}
 .pos{color:var(--green)}.neg{color:var(--red)}.amber{color:var(--amber)}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
-input,select,textarea{font-family:inherit;font-size:15px;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:10px 12px;width:100%}
-input:focus,select:focus,textarea:focus{outline:2px solid var(--amber);outline-offset:-1px;border-color:var(--amber)}
-label{display:block;font-size:12px;color:var(--dim);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.06em;font-weight:600}
+input,select,textarea{font-family:inherit;font-size:15px;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:10px 12px;width:100%;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 3px var(--amber-glow)}
+label{display:block;font-size:11px;color:var(--dim);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.08em;font-weight:700}
+
 
 /* Top bar + session ribbon */
-.topbar{position:sticky;top:0;z-index:50;background:linear-gradient(180deg,#0c0f12 0%,rgba(12,15,18,.96) 100%);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
-.brand{display:flex;align-items:center;gap:10px;padding:12px 16px 8px}
-.brand .logo{width:30px;height:30px;flex:none}
-.brand .t{font-size:16px;font-weight:700;letter-spacing:-0.02em}
+.topbar{position:sticky;top:0;z-index:50;background:linear-gradient(180deg,rgba(10,12,15,.98) 0%,rgba(10,12,15,.92) 100%);backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3);border-bottom:1px solid var(--line-soft);box-shadow:0 1px 0 rgba(255,255,255,.02)}
+.brand{display:flex;align-items:center;gap:11px;padding:13px 16px 9px}
+.brand .logo{width:32px;height:32px;flex:none;filter:drop-shadow(0 0 8px rgba(232,170,66,.25))}
+.brand .t{font-size:16px;font-weight:750;letter-spacing:-0.025em}
 .brand .t span{color:var(--amber)}
 .brand .clock{margin-left:auto;text-align:right}
-.brand .clock .utc{font-family:var(--mono);font-size:15px;font-weight:600}
-.brand .clock .lbl{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:0.1em}
+.brand .clock .utc{font-family:var(--mono);font-size:15px;font-weight:650;letter-spacing:0.02em}
+.brand .clock .lbl{font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:0.14em}
 
 /* Session ribbon */
-.ribbon{display:flex;height:34px;border-top:1px solid var(--line);position:relative;overflow:hidden}
-.ribbon .seg{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--faint);border-right:1px solid var(--line);position:relative;transition:all .4s}
+.ribbon{display:flex;height:32px;border-top:1px solid var(--line-soft);position:relative;overflow:hidden}
+.ribbon .seg{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;font-weight:600;color:var(--faint);border-right:1px solid var(--line-soft);position:relative;transition:all .5s cubic-bezier(.4,0,.2,1)}
 .ribbon .seg:last-child{border-right:none}
-.ribbon .seg.active{color:var(--bg);font-weight:700}
-.ribbon .seg.active.asia{background:var(--blue)}
-.ribbon .seg.active.london{background:var(--amber)}
-.ribbon .seg.active.ny{background:var(--green)}
+.ribbon .seg.active{color:#0a0c0f;font-weight:750;text-shadow:0 1px 0 rgba(255,255,255,.15)}
+.ribbon .seg.active.asia{background:linear-gradient(180deg,#5ba0e0,var(--blue))}
+.ribbon .seg.active.london{background:linear-gradient(180deg,#f0b556,var(--amber))}
+.ribbon .seg.active.ny{background:linear-gradient(180deg,#4dd68a,var(--green))}
 .ribbon .seg.kz::after{content:'KZ';position:absolute;top:3px;right:5px;font-size:8px;color:var(--amber);font-weight:700}
-.ribbon .seg.active.kz::after{color:var(--bg)}
+.ribbon .seg.active.kz::after{color:#0a0c0f}
 
 /* Tabs */
-.tabbar{position:fixed;bottom:0;left:0;right:0;z-index:60;background:var(--panel);border-top:1px solid var(--line);display:flex;overflow-x:auto;scrollbar-width:none}
+.tabbar{position:fixed;bottom:0;left:0;right:0;z-index:60;background:linear-gradient(180deg,rgba(20,25,31,.85),rgba(14,17,21,.97));backdrop-filter:blur(16px) saturate(1.3);-webkit-backdrop-filter:blur(16px) saturate(1.3);border-top:1px solid var(--line-soft);display:flex;overflow-x:auto;scrollbar-width:none;padding-bottom:env(safe-area-inset-bottom,0)}
 .tabbar::-webkit-scrollbar{display:none}
-.tabbar button{flex:1 0 auto;min-width:64px;padding:9px 8px 10px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--faint);font-size:10px;font-weight:600;border-top:2px solid transparent}
+.tabbar button{flex:1 0 auto;min-width:62px;padding:9px 8px 10px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--faint);font-size:10px;font-weight:600;border-top:2px solid transparent;transition:color .2s,transform .1s}
 .tabbar button.on{color:var(--amber);border-top-color:var(--amber)}
-.tabbar button svg{width:21px;height:21px}
+.tabbar button.on svg{filter:drop-shadow(0 0 6px var(--amber-glow))}
+.tabbar button:active{transform:scale(.92)}
+.tabbar button svg{width:21px;height:21px;transition:transform .2s}
 
 /* Layout */
 .wrap{max-width:760px;margin:0 auto;padding:16px}
-.view{display:none}.view.on{display:block;animation:fade .25s}
-@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1}}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
-.card h3{font-size:13px;text-transform:uppercase;letter-spacing:0.06em;color:var(--dim);margin-bottom:12px;display:flex;align-items:center;gap:8px}
-.card h3 .tag{margin-left:auto;font-size:10px;color:var(--faint)}
+.view{display:none}.view.on{display:block;animation:fade .32s cubic-bezier(.2,0,.2,1)}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.card{background:linear-gradient(180deg,var(--panel),#11161b);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow-sm)}
+.card h3{font-size:12px;text-transform:uppercase;letter-spacing:0.08em;color:var(--dim);margin-bottom:12px;display:flex;align-items:center;gap:8px;font-weight:700}
+.card h3 .tag{margin-left:auto;font-size:10px;color:var(--faint);font-weight:600;letter-spacing:0.04em;text-transform:none}
 .row{display:flex;gap:10px}.row>*{flex:1}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-.section-h{font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:var(--faint);margin:22px 4px 10px;font-weight:700}
+.section-h{font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--faint);margin:22px 4px 10px;font-weight:700}
 
 /* Buttons */
-.btn{background:var(--amber);color:#1a1206;font-weight:700;border-radius:9px;padding:12px 16px;font-size:14px;text-align:center;transition:filter .15s}
-.btn:active{filter:brightness(.88)}
-.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink);font-weight:600}
-.btn.green{background:var(--green);color:#062013}
-.btn.red{background:var(--red);color:#2a0a04}
-.btn.sm{padding:7px 12px;font-size:13px}
+.btn{background:linear-gradient(180deg,#f0b556,var(--amber));color:#1a1206;font-weight:700;border-radius:10px;padding:12px 16px;font-size:14px;text-align:center;transition:transform .1s,box-shadow .2s,filter .15s;box-shadow:0 2px 8px rgba(232,170,66,.2)}
+.btn:active{transform:scale(.97);filter:brightness(.95)}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink);font-weight:600;box-shadow:none}
+.btn.ghost:active{background:var(--panel2)}
+.btn.green{background:linear-gradient(180deg,#4dd68a,var(--green));color:#062013;box-shadow:0 2px 8px rgba(62,199,123,.2)}
+.btn.red{background:linear-gradient(180deg,#ec6850,var(--red));color:#2a0a04;box-shadow:0 2px 8px rgba(224,83,59,.2)}
+.btn.sm{padding:7px 12px;font-size:13px;box-shadow:none}
 .chip{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:20px;border:1px solid var(--line);background:var(--panel2);font-size:13px;color:var(--dim);cursor:pointer;user-select:none;transition:all .15s}
-.chip.on{background:var(--amber);color:#1a1206;border-color:var(--amber);font-weight:700}
+.chip:active{transform:scale(.95)}
+.chip.on{background:linear-gradient(180deg,#f0b556,var(--amber));color:#1a1206;border-color:var(--amber);font-weight:700}
 .chip.on.g{background:var(--green);color:#062013;border-color:var(--green)}
 .chip.on.r{background:var(--red);color:#2a0a04;border-color:var(--red)}
 .chipwrap{display:flex;flex-wrap:wrap;gap:7px}
 
 /* Stats */
 .statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.stat{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px}
-.stat .v{font-family:var(--mono);font-size:22px;font-weight:700;line-height:1}
-.stat .l{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:0.06em;margin-top:5px}
+.stat{background:linear-gradient(180deg,#1c242c,#161c22);border:1px solid var(--line);border-radius:12px;padding:13px;position:relative;overflow:hidden}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent)}
+.stat .v{font-family:var(--mono);font-size:23px;font-weight:750;line-height:1;letter-spacing:-0.03em}
+.stat .l{font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:0.08em;margin-top:6px;font-weight:600}
 
 /* Table */
 .tlist{display:flex;flex-direction:column;gap:8px}
-.trade{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:11px 13px;border-left:3px solid var(--faint)}
+.trade{background:linear-gradient(180deg,#1b232a,#161c22);border:1px solid var(--line);border-radius:11px;padding:11px 13px;border-left:3px solid var(--faint);transition:transform .1s,border-color .2s}
+.trade[onclick]:active{transform:scale(.99)}
 .trade.win{border-left-color:var(--green)}.trade.loss{border-left-color:var(--red)}.trade.be{border-left-color:var(--amber)}
 .trade .top{display:flex;align-items:center;gap:8px;margin-bottom:4px}
-.trade .pair{font-weight:700;font-family:var(--mono)}
-.trade .dir{font-size:10px;padding:2px 7px;border-radius:5px;font-weight:700;text-transform:uppercase}
+.trade .pair{font-weight:700;font-family:var(--mono);letter-spacing:-0.02em}
+.trade .dir{font-size:10px;padding:2px 7px;border-radius:5px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em}
 .trade .dir.long{background:var(--green-d);color:#bff5d6}.trade .dir.short{background:var(--red-d);color:#ffcabf}
-.trade .r{margin-left:auto;font-family:var(--mono);font-weight:700;font-size:16px}
+.trade .r{margin-left:auto;font-family:var(--mono);font-weight:750;font-size:16px;letter-spacing:-0.03em}
 .trade .meta{font-size:11px;color:var(--faint);display:flex;gap:10px;flex-wrap:wrap}
 
 /* Reference cards */
@@ -137,25 +153,51 @@ label{display:block;font-size:12px;color:var(--dim);margin-bottom:5px;text-trans
 .check.done .box svg{display:block}.check .box svg{display:none;width:14px;height:14px}
 .check .txt{font-size:14px}.check.done .txt{color:var(--faint)}
 
-.empty{text-align:center;padding:40px 20px;color:var(--faint)}
-.empty svg{width:44px;height:44px;opacity:.4;margin-bottom:12px}
-.bar{height:8px;background:var(--panel2);border-radius:4px;overflow:hidden;display:flex}
-.modal{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.6);display:none;align-items:flex-end}
-.modal.on{display:flex}
-.sheet{background:var(--panel);border-radius:18px 18px 0 0;width:100%;max-height:92vh;overflow-y:auto;padding:18px 16px 30px;animation:up .3s}
+.empty{text-align:center;padding:44px 20px;color:var(--faint);line-height:1.6}
+.empty svg{width:44px;height:44px;opacity:.35;margin-bottom:14px;stroke:var(--amber)}
+.bar{height:8px;background:var(--panel2);border-radius:5px;overflow:hidden;display:flex;box-shadow:inset 0 1px 2px rgba(0,0,0,.3)}
+.bar>div{transition:width .5s cubic-bezier(.4,0,.2,1)}
+.modal{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);display:none;align-items:flex-end}
+.modal.on{display:flex;animation:fadein .2s}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.sheet{background:linear-gradient(180deg,#181e25,var(--panel));border-radius:20px 20px 0 0;width:100%;max-height:92vh;overflow-y:auto;padding:18px 16px calc(30px + env(safe-area-inset-bottom,0));animation:up .34s cubic-bezier(.2,0,.2,1);box-shadow:0 -8px 40px rgba(0,0,0,.5);border-top:1px solid var(--line)}
 @keyframes up{from{transform:translateY(100%)}}
-.sheet .grab{width:40px;height:4px;background:var(--line);border-radius:2px;margin:0 auto 16px}
-.note{font-size:12px;color:var(--faint);background:var(--panel2);border-left:3px solid var(--amber-d);padding:10px 12px;border-radius:0 8px 8px 0;margin:10px 0}
+.sheet .grab{width:38px;height:4px;background:var(--line);border-radius:2px;margin:0 auto 16px}
+.note{font-size:12px;color:var(--dim);background:var(--panel2);border-left:3px solid var(--amber);padding:11px 13px;border-radius:0 9px 9px 0;margin:10px 0;line-height:1.55}
 canvas{max-width:100%}
+
+/* Boot splash */
+#splash{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:radial-gradient(800px 500px at 50% 40%,rgba(232,170,66,.08),transparent 60%),var(--bg);transition:opacity .5s ease,visibility .5s}
+#splash.gone{opacity:0;visibility:hidden;pointer-events:none}
+#splash .slogo{width:72px;height:72px;animation:splashpulse 2s ease-in-out infinite}
+#splash .stitle{font-size:22px;font-weight:750;letter-spacing:-0.03em;opacity:0;animation:splashup .6s .2s forwards}
+#splash .stitle span{color:var(--amber)}
+#splash .ssub{font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:0.22em;opacity:0;animation:splashup .6s .4s forwards}
+#splash .sbar{width:120px;height:2px;background:var(--line);border-radius:2px;overflow:hidden;opacity:0;animation:splashup .6s .5s forwards}
+#splash .sbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--amber-d),var(--amber));animation:sload 1.1s .5s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes splashpulse{0%,100%{filter:drop-shadow(0 0 6px rgba(232,170,66,.2))}50%{filter:drop-shadow(0 0 16px rgba(232,170,66,.45))}}
+@keyframes splashup{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes sload{from{width:0}to{width:100%}}
+@media(prefers-reduced-motion:reduce){#splash .slogo,#splash .stitle,#splash .ssub,#splash .sbar,#splash .sbar i{animation:none;opacity:1}#splash .sbar i{width:100%}}
 </style>
 </head>
 <body>
+<div id="splash">
+  <svg class="slogo" viewBox="0 0 40 40" fill="none">
+    <circle cx="20" cy="20" r="18" stroke="#e8aa42" stroke-width="2"/>
+    <path d="M20 6 L20 34 M6 20 L34 20" stroke="#28323d" stroke-width="1"/>
+    <path d="M11 25 L17 18 L23 22 L29 11" stroke="#3ec77b" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <div class="stitle">True Balance <span>Trader</span></div>
+  <div class="ssub">Time is the first edge</div>
+  <div class="sbar"><i></i></div>
+</div>
 <!-- content injected by app.js below -->
 <div class="topbar">
   <div class="brand">
     <svg class="logo" viewBox="0 0 40 40" fill="none">
-      <circle cx="20" cy="20" r="18" stroke="#e0a23b" stroke-width="2"/>
-      <path d="M20 6 L20 34 M6 20 L34 20" stroke="#262f38" stroke-width="1"/>
+      <circle cx="20" cy="20" r="18" stroke="#e8aa42" stroke-width="2"/>
+      <path d="M20 6 L20 34 M6 20 L34 20" stroke="#28323d" stroke-width="1"/>
       <path d="M11 25 L17 18 L23 22 L29 11" stroke="#3ec77b" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
     <div class="t">True Balance <span>Trader</span></div>
@@ -284,9 +326,9 @@ const ICT=[
  svg:svgWrap('',`
   <rect x="0" y="0" width="320" height="170" fill="none"/>
   <rect x="10" y="20" width="70" height="130" fill="#4a90d911"/><text x="14" y="33" fill="#4a90d9" font-size="9" font-family="monospace">ASIA</text>
-  <rect x="90" y="20" width="80" height="130" fill="#e0a23b18"/><text x="94" y="33" fill="#e0a23b" font-size="9" font-family="monospace">LONDON KZ</text>
+  <rect x="90" y="20" width="80" height="130" fill="#e8aa4218"/><text x="94" y="33" fill="#e8aa42" font-size="9" font-family="monospace">LONDON KZ</text>
   <rect x="180" y="20" width="90" height="130" fill="#3ec77b18"/><text x="184" y="33" fill="#3ec77b" font-size="9" font-family="monospace">NY KZ</text>
-  <rect x="205" y="20" width="40" height="130" fill="#e0a23b22" stroke="#e0a23b" stroke-dasharray="3 2"/><text x="208" y="145" fill="#e0a23b" font-size="7" font-family="monospace">SB</text>
+  <rect x="205" y="20" width="40" height="130" fill="#e8aa4222" stroke="#e8aa42" stroke-dasharray="3 2"/><text x="208" y="145" fill="#e8aa42" font-size="7" font-family="monospace">SB</text>
   <text x="278" y="90" fill="#5a6772" font-size="8" font-family="monospace">DEAD</text>
   ${candle(30,60,50,75,68)}${candle(50,68,58,80,62)}${candle(70,62,55,72,58)}
   ${candle(105,58,48,90,85)}${candle(125,85,40,92,52)}${candle(145,52,45,60,48)}
@@ -314,7 +356,7 @@ const ICT=[
  svg:svgWrap('',`
   ${candle(60,120,110,130,122)}
   ${candle(100,122,55,128,62)}
-  <rect x="115" y="80" width="120" height="32" fill="#e0a23b22" stroke="#e0a23b" stroke-dasharray="3 2"/><text x="170" y="100" fill="#e0a23b" font-size="8" font-family="monospace" text-anchor="middle">FVG</text>
+  <rect x="115" y="80" width="120" height="32" fill="#e8aa4222" stroke="#e8aa42" stroke-dasharray="3 2"/><text x="170" y="100" fill="#e8aa42" font-size="8" font-family="monospace" text-anchor="middle">FVG</text>
   ${candle(140,62,52,70,58)}
   ${candle(175,58,55,95,90)}
   ${candle(210,90,80,100,85)}
@@ -342,7 +384,7 @@ const ICT=[
  <div class="kv"><b>Stop</b><span>Beyond the swept high/low</span></div>
  <div class="note">AUD note: NY AM SB lands right after the 12:30 USD data. If NFP/CPI just dropped, the sweep is the news spike itself — let the FVG form on the reversal.</div>`,
  svg:svgWrap('',`
-  <rect x="80" y="15" width="160" height="140" fill="#e0a23b12" stroke="#e0a23b" stroke-dasharray="4 3"/><text x="160" y="28" fill="#e0a23b" font-size="9" font-family="monospace" text-anchor="middle">14:00–15:00 SB</text>
+  <rect x="80" y="15" width="160" height="140" fill="#e8aa4212" stroke="#e8aa42" stroke-dasharray="4 3"/><text x="160" y="28" fill="#e8aa42" font-size="9" font-family="monospace" text-anchor="middle">14:00–15:00 SB</text>
   ${lvl(50,20,300,'#e0533b',1,'BSL')}
   ${candle(95,80,72,90,85)}${candle(118,85,52,90,58)}
   ${candle(140,58,48,55,52)}
@@ -360,7 +402,7 @@ const ICT=[
   ${lvl(40,20,280,'#e0533b',1,'liq')}
   ${candle(55,90,82,100,95)}${candle(78,95,42,100,52)}
   <rect x="70" y="68" width="40" height="16" fill="#9a7bd033" stroke="#9a7bd0"/><text x="90" y="62" fill="#9a7bd0" font-size="7" font-family="monospace" text-anchor="middle">breaker</text>
-  <rect x="70" y="68" width="40" height="16" fill="#e0a23b22" stroke="#e0a23b" stroke-dasharray="2 2"/>
+  <rect x="70" y="68" width="40" height="16" fill="#e8aa4222" stroke="#e8aa42" stroke-dasharray="2 2"/>
   ${candle(105,52,46,60,55)}${candle(128,55,48,70,52)}
   ${candle(150,52,68,58,72)}${candle(172,72,66,95,90)}
   <text x="150" y="120" fill="#9a7bd0" font-size="8" font-family="monospace" text-anchor="middle">breaker ∩ FVG = unicorn</text>
@@ -398,7 +440,7 @@ const ICT=[
  svg:svgWrap('',`
   <rect x="20" y="70" width="70" height="40" fill="#4a90d911"/><text x="55" y="125" fill="#4a90d9" font-size="8" font-family="monospace" text-anchor="middle">Accum</text>
   ${candle(35,90,85,95,88)}${candle(55,88,84,94,90)}${candle(75,90,85,96,87)}
-  <text x="120" y="55" fill="#e0a23b" font-size="8" font-family="monospace" text-anchor="middle">Manip</text>
+  <text x="120" y="55" fill="#e8aa42" font-size="8" font-family="monospace" text-anchor="middle">Manip</text>
   ${candle(110,87,60,92,65)}${candle(130,65,58,80,72)}
   <text x="210" y="140" fill="#3ec77b" font-size="8" font-family="monospace" text-anchor="middle">Distribution</text>
   ${candle(155,72,78,90,95)}${candle(178,95,90,115,110)}${candle(200,110,105,135,130)}${candle(222,130,125,150,145)}
@@ -410,10 +452,10 @@ const ICT=[
  <div class="kv"><b>Target</b><span>-0.5 / -1 fib extension (prior liquidity)</span></div>`,
  svg:svgWrap('',`
   ${candle(40,120,112,128,116)}${candle(60,116,70,122,75)}${candle(80,75,55,80,60)}
-  <rect x="95" y="72" width="150" height="26" fill="#e0a23b18" stroke="#e0a23b" stroke-dasharray="3 2"/>
-  <text x="248" y="80" fill="#e0a23b" font-size="7" font-family="monospace">.62</text>
-  <text x="248" y="98" fill="#e0a23b" font-size="7" font-family="monospace">.79</text>
-  <text x="170" y="90" fill="#e0a23b" font-size="8" font-family="monospace" text-anchor="middle">OTE</text>
+  <rect x="95" y="72" width="150" height="26" fill="#e8aa4218" stroke="#e8aa42" stroke-dasharray="3 2"/>
+  <text x="248" y="80" fill="#e8aa42" font-size="7" font-family="monospace">.62</text>
+  <text x="248" y="98" fill="#e8aa42" font-size="7" font-family="monospace">.79</text>
+  <text x="170" y="90" fill="#e8aa42" font-size="8" font-family="monospace" text-anchor="middle">OTE</text>
   ${candle(105,60,68,65,82)}${candle(125,82,78,95,90)}
   ${candle(150,90,84,92,86)}
   ${candle(175,86,55,90,60)}${candle(200,60,40,65,45)}
@@ -1191,7 +1233,7 @@ function applyOverlays(data){
   }
   // Killzone markers on bars that open inside a killzone (UTC)
   if(chartState.showSess && LightweightCharts.createSeriesMarkers){
-    const kz=h=>(h>=7&&h<10)?{t:'LDN',c:'#e0a23b'}:(h>=12&&h<15)?{t:'NY',c:'#3ec77b'}:(h>=0&&h<4)?{t:'ASIA',c:'#4a90d9'}:null;
+    const kz=h=>(h>=7&&h<10)?{t:'LDN',c:'#e8aa42'}:(h>=12&&h<15)?{t:'NY',c:'#3ec77b'}:(h>=0&&h<4)?{t:'ASIA',c:'#4a90d9'}:null;
     const marks=[];
     data.forEach(d=>{const z=kz(new Date(d.time*1000).getUTCHours());
       if(z&&Math.random()<0.04)marks.push({time:d.time,position:'aboveBar',color:z.c,shape:'circle',text:z.t})});
@@ -1379,6 +1421,8 @@ function exportData(){
   a.download='true-balance-trader-'+new Date().toISOString().slice(0,10)+'.json';a.click();
 }
 tickClock();nav('dash');
+// dismiss boot splash once the app is up
+setTimeout(()=>{const sp=document.getElementById('splash');if(sp)sp.classList.add('gone');setTimeout(()=>{if(sp)sp.remove();},600);},1400);
 console.log('TBT ready');
 
 /* ============ ICT LIBRARY — EXPANSION (from reference set) ============ */
@@ -1396,7 +1440,7 @@ const ICT2=[
   <rect x="35" y="55" width="26" height="60" fill="#3ec77b"/><line x1="48" y1="35" x2="48" y2="120" stroke="#3ec77b" stroke-width="1.5"/>
   <text x="40" y="135" fill="#8a98a5" font-size="7" font-family="monospace">accum</text>
   ${candle(85,60,25,68,48)}<text x="72" y="20" fill="#e0533b" font-size="8" font-family="monospace">sweep↑</text>
-  <rect x="100" y="48" width="60" height="16" fill="#e0a23b22" stroke="#e0a23b" stroke-dasharray="2 2"/><text x="130" y="44" fill="#e0a23b" font-size="7" font-family="monospace" text-anchor="middle">FVG</text>
+  <rect x="100" y="48" width="60" height="16" fill="#e8aa4222" stroke="#e8aa42" stroke-dasharray="2 2"/><text x="130" y="44" fill="#e8aa42" font-size="7" font-family="monospace" text-anchor="middle">FVG</text>
   ${candle(110,48,42,72,68)}${candle(135,68,62,95,90)}
   ${candle(160,90,85,130,125)}${candle(185,125,118,145,140)}
   <text x="150" y="160" fill="#8a98a5" font-size="8" font-family="monospace">manipulate → distribute to CRT low</text>
@@ -1427,9 +1471,9 @@ const ICT2=[
   ${lvl(28,20,300,'#e0533b',1,'BSL swept')}
   ${candle(45,70,60,80,66)}${candle(68,66,55,75,72)}${candle(92,72,30,80,40)}
   <text x="80" y="22" fill="#e0533b" font-size="7" font-family="monospace">sweep</text>
-  ${lvl(70,90,260,'#e0a23b',1,'50% premium')}
+  ${lvl(70,90,260,'#e8aa42',1,'50% premium')}
   <rect x="130" y="48" width="70" height="22" fill="#e0533b22" stroke="#e0533b" stroke-dasharray="3 2"/><text x="165" y="44" fill="#e0533b" font-size="7" font-family="monospace" text-anchor="middle">FVG (short)</text>
-  ${candle(115,40,35,70,65)}<text x="100" y="95" fill="#e0a23b" font-size="7" font-family="monospace">MSS↓</text>
+  ${candle(115,40,35,70,65)}<text x="100" y="95" fill="#e8aa42" font-size="7" font-family="monospace">MSS↓</text>
   ${candle(140,65,58,75,60)}${candle(165,60,55,72,58)}
   ${candle(190,58,48,62,52)}${candle(215,52,95,58,92)}
   <text x="180" y="120" fill="#8a98a5" font-size="8" font-family="monospace">retrace to FVG → deliver down</text>
@@ -1446,9 +1490,9 @@ const ICT2=[
   ${lvl(140,20,300,'#3ec77b',1,'SSL swept')}
   ${candle(45,95,88,105,100)}${candle(68,100,92,108,96)}${candle(92,96,90,140,130)}
   <text x="80" y="155" fill="#3ec77b" font-size="7" font-family="monospace">sweep</text>
-  ${lvl(95,90,260,'#e0a23b',1,'50% discount')}
+  ${lvl(95,90,260,'#e8aa42',1,'50% discount')}
   <rect x="130" y="95" width="70" height="22" fill="#3ec77b22" stroke="#3ec77b" stroke-dasharray="3 2"/><text x="165" y="91" fill="#3ec77b" font-size="7" font-family="monospace" text-anchor="middle">FVG (long)</text>
-  ${candle(115,130,95,135,100)}<text x="100" y="80" fill="#e0a23b" font-size="7" font-family="monospace">MSS↑</text>
+  ${candle(115,130,95,135,100)}<text x="100" y="80" fill="#e8aa42" font-size="7" font-family="monospace">MSS↑</text>
   ${candle(140,100,92,110,105)}${candle(165,105,95,112,108)}
   ${candle(190,108,45,115,50)}
   <text x="170" y="40" fill="#8a98a5" font-size="8" font-family="monospace">retrace to FVG → deliver up</text>
@@ -1460,8 +1504,8 @@ const ICT2=[
  <div class="kv"><b>Use</b><span>Set alerts. Look for the sweep + IFVG/Breaker inside the window.</span></div>
  <div class="note">All times NY (ET). For AUD/USD the AM macros overlap NY data releases (08:30 ET = 12:30/13:30 UTC). The 09:50–10:10 macro is a frequent reversal window.</div>`,
  svg:svgWrap('',`
-  <rect x="40" y="20" width="34" height="120" fill="#e0a23b18" stroke="#e0a23b" stroke-dasharray="3 2"/><text x="57" y="15" fill="#e0a23b" font-size="7" font-family="monospace" text-anchor="middle">macro</text>
-  <rect x="150" y="20" width="34" height="120" fill="#e0a23b18" stroke="#e0a23b" stroke-dasharray="3 2"/><text x="167" y="15" fill="#e0a23b" font-size="7" font-family="monospace" text-anchor="middle">macro</text>
+  <rect x="40" y="20" width="34" height="120" fill="#e8aa4218" stroke="#e8aa42" stroke-dasharray="3 2"/><text x="57" y="15" fill="#e8aa42" font-size="7" font-family="monospace" text-anchor="middle">macro</text>
+  <rect x="150" y="20" width="34" height="120" fill="#e8aa4218" stroke="#e8aa42" stroke-dasharray="3 2"/><text x="167" y="15" fill="#e8aa42" font-size="7" font-family="monospace" text-anchor="middle">macro</text>
   ${candle(50,90,60,95,65)}${candle(64,65,55,72,60)}
   ${candle(90,60,55,90,85)}${candle(110,85,80,98,92)}${candle(130,92,85,100,95)}
   ${candle(158,95,62,100,68)}${candle(172,68,40,74,46)}
@@ -1474,13 +1518,13 @@ const ICT2=[
  <div class="kv"><b>3. Range</b><span>Fib the last leg down; entry valid in FVG within the premium (0.5–1) half</span></div>
  <div class="kv"><b>4. Entry/SL/TP</b><span>Enter premium FVG EQ (0.5) · SL above sweep high (1R) · TP fixed 2R</span></div>`,
  svg:svgWrap('',`
-  ${lvl(28,20,200,'#e0a23b',1,'HTF BSL')}
+  ${lvl(28,20,200,'#e8aa42',1,'HTF BSL')}
   ${candle(45,80,70,90,76)}${candle(68,76,30,82,40)}<text x="55" y="22" fill="#e0533b" font-size="7" font-family="monospace">sweep</text>
   <line x1="30" y1="40" x2="280" y2="40" stroke="#e0533b" stroke-dasharray="2 2"/><text x="248" y="38" fill="#e0533b" font-size="7" font-family="monospace">1 / SL</text>
-  <line x1="30" y1="80" x2="280" y2="80" stroke="#e0a23b" stroke-dasharray="2 2"/><text x="248" y="78" fill="#e0a23b" font-size="7" font-family="monospace">.5 entry</text>
+  <line x1="30" y1="80" x2="280" y2="80" stroke="#e8aa42" stroke-dasharray="2 2"/><text x="248" y="78" fill="#e8aa42" font-size="7" font-family="monospace">.5 entry</text>
   <line x1="30" y1="130" x2="280" y2="130" stroke="#3ec77b" stroke-dasharray="2 2"/><text x="248" y="128" fill="#3ec77b" font-size="7" font-family="monospace">2R TP</text>
-  <rect x="95" y="58" width="50" height="20" fill="#e0a23b22" stroke="#e0a23b" stroke-dasharray="2 2"/>
-  ${candle(90,40,35,60,55)}${candle(112,55,50,80,75)}<text x="100" y="100" fill="#e0a23b" font-size="7" font-family="monospace">MSB↓</text>
+  <rect x="95" y="58" width="50" height="20" fill="#e8aa4222" stroke="#e8aa42" stroke-dasharray="2 2"/>
+  ${candle(90,40,35,60,55)}${candle(112,55,50,80,75)}<text x="100" y="100" fill="#e8aa42" font-size="7" font-family="monospace">MSB↓</text>
   ${candle(140,75,68,82,70)}${candle(165,70,60,128,122)}
  `,160)},
 {n:'Supply/Demand + Imbalance',badge:'Concept',lead:'A zone is only valid with imbalance (FVG) inside it. Price returns to rebalance the gap, then respects the zone.',
@@ -1522,7 +1566,7 @@ const ICT2=[
   ${candle(45,70,60,80,66)}${candle(68,66,55,72,70)}${candle(92,70,28,76,38)}<text x="80" y="22" fill="#e0533b" font-size="7" font-family="monospace">run</text>
   <rect x="105" y="45" width="22" height="20" fill="#e0533b33" stroke="#e0533b"/><text x="116" y="40" fill="#e0533b" font-size="6" font-family="monospace" text-anchor="middle">OB</text>
   <rect x="105" y="65" width="50" height="14" fill="#9a7bd033" stroke="#9a7bd0"/><text x="160" y="76" fill="#9a7bd0" font-size="7" font-family="monospace">SIBI</text>
-  ${candle(116,38,33,68,62)}<text x="100" y="100" fill="#e0a23b" font-size="7" font-family="monospace">shift↓</text>
+  ${candle(116,38,33,68,62)}<text x="100" y="100" fill="#e8aa42" font-size="7" font-family="monospace">shift↓</text>
   ${candle(140,62,55,70,58)}${candle(165,58,48,64,50)}${candle(190,50,38,56,42)}
  `)},
 {n:'One Setup for Life',badge:'Setup',lead:'Stack two confirmations inside a Macro window: IFVG (1st entry) then Breaker (2nd entry). Patience over frequency — 1–2 A+ trades a day.',
@@ -1556,7 +1600,7 @@ const EDU_DIAGRAMS=[
   svg:svgWrap('',`
    <rect x="20" y="20" width="280" height="20" fill="#4a90d922" stroke="#4a90d9"/><text x="160" y="34" fill="#4a90d9" font-size="9" font-family="monospace" text-anchor="middle">WEEKLY · macro bias</text>
    <rect x="50" y="48" width="220" height="20" fill="#9a7bd022" stroke="#9a7bd0"/><text x="160" y="62" fill="#9a7bd0" font-size="9" font-family="monospace" text-anchor="middle">DAILY · trend + PDH/PDL</text>
-   <rect x="80" y="76" width="160" height="20" fill="#e0a23b22" stroke="#e0a23b"/><text x="160" y="90" fill="#e0a23b" font-size="9" font-family="monospace" text-anchor="middle">4H/1H · zone of interest</text>
+   <rect x="80" y="76" width="160" height="20" fill="#e8aa4222" stroke="#e8aa42"/><text x="160" y="90" fill="#e8aa42" font-size="9" font-family="monospace" text-anchor="middle">4H/1H · zone of interest</text>
    <rect x="105" y="104" width="110" height="20" fill="#3ec77b22" stroke="#3ec77b"/><text x="160" y="118" fill="#3ec77b" font-size="9" font-family="monospace" text-anchor="middle">5m · sweep + MSS</text>
    <rect x="130" y="132" width="60" height="18" fill="#3ec77b44" stroke="#3ec77b"/><text x="160" y="145" fill="#3ec77b" font-size="8" font-family="monospace" text-anchor="middle">1m entry</text>
    <path d="M160 40 L160 48 M160 68 L160 76 M160 96 L160 104 M160 124 L160 132" stroke="#5a6772" stroke-width="1"/>
@@ -1569,8 +1613,8 @@ const EDU_DIAGRAMS=[
    ${candle(50,90,80,100,85)}${candle(72,85,75,95,88)}
    ${candle(95,88,40,95,50)}${candle(118,50,42,128,122)}
    <text x="100" y="155" fill="#e0533b" font-size="8" font-family="monospace">swept SSL →</text>
-   <path d="M150 125 Q200 80 240 40" stroke="#e0a23b" stroke-width="1.5" fill="none" stroke-dasharray="4 3"/>
-   <text x="195" y="70" fill="#e0a23b" font-size="8" font-family="monospace">draw to BSL</text>
+   <path d="M150 125 Q200 80 240 40" stroke="#e8aa42" stroke-width="1.5" fill="none" stroke-dasharray="4 3"/>
+   <text x="195" y="70" fill="#e8aa42" font-size="8" font-family="monospace">draw to BSL</text>
   `)},
  // Risk Mgmt: equity outcomes bar
  {cap:'Expectancy beats win-rate: 45% at 1:3 grows the curve; 70% at 1:0.5 bleeds it down.',
@@ -1586,12 +1630,12 @@ const EDU_DIAGRAMS=[
  {cap:'Manage in stages: stop to breakeven at 1R, partial at 2R, trail the runner to the next pool.',
   svg:svgWrap('',`
    ${lvl(120,20,270,'#e0533b',1,'SL')}
-   ${lvl(95,20,270,'#e0a23b',1,'entry')}
+   ${lvl(95,20,270,'#e8aa42',1,'entry')}
    ${lvl(95,20,270,'#4a90d9',0,'')}<text x="252" y="93" fill="#4a90d9" font-size="7" font-family="monospace">→BE</text>
    ${lvl(60,20,270,'#3ec77b',1,'TP1 +2R')}
    ${lvl(30,20,270,'#3ec77b',1,'runner')}
    <polyline points="40,95 70,90 100,98 130,70 160,75 190,55 220,58 250,32" fill="none" stroke="#e6ebf0" stroke-width="1.5"/>
-   <circle cx="40" cy="95" r="3" fill="#e0a23b"/><circle cx="130" cy="70" r="3" fill="#4a90d9"/><circle cx="190" cy="55" r="3" fill="#3ec77b"/>
+   <circle cx="40" cy="95" r="3" fill="#e8aa42"/><circle cx="130" cy="70" r="3" fill="#4a90d9"/><circle cx="190" cy="55" r="3" fill="#3ec77b"/>
    <text x="60" y="135" fill="#8a98a5" font-size="7" font-family="monospace">enter→BE→partial→trail</text>
   `,155)},
 ];
@@ -1608,7 +1652,7 @@ const TA_DIAGRAMS=[
  // S/R flip
  {cap:'A broken support flips to resistance; price retests it from below before continuing down.',
   svg:svgWrap('',`
-   ${lvl(75,20,290,'#e0a23b',0,'S→R')}
+   ${lvl(75,20,290,'#e8aa42',0,'S→R')}
    <polyline points="20,55 45,70 70,60 95,80 120,73 145,95 160,80 175,76 200,90 225,78 250,100 275,115" fill="none" stroke="#e6ebf0" stroke-width="1.5"/>
    <text x="60" y="45" fill="#3ec77b" font-size="7" font-family="monospace">support holds</text>
    <text x="200" y="68" fill="#e0533b" font-size="7" font-family="monospace">retest as resistance</text>
@@ -1617,10 +1661,10 @@ const TA_DIAGRAMS=[
  {cap:'Fib the impulse leg; the 0.62–0.79 band (OTE) is the discount entry zone for the continuation.',
   svg:svgWrap('',`
    ${lvl(30,40,290,'#5a6772',1,'1.0')}
-   ${lvl(70,40,290,'#e0a23b',1,'.62')}
-   ${lvl(90,40,290,'#e0a23b',1,'.79')}
+   ${lvl(70,40,290,'#e8aa42',1,'.62')}
+   ${lvl(90,40,290,'#e8aa42',1,'.79')}
    ${lvl(120,40,290,'#5a6772',1,'0')}
-   <rect x="40" y="70" width="250" height="20" fill="#e0a23b18"/><text x="165" y="84" fill="#e0a23b" font-size="8" font-family="monospace" text-anchor="middle">OTE zone</text>
+   <rect x="40" y="70" width="250" height="20" fill="#e8aa4218"/><text x="165" y="84" fill="#e8aa42" font-size="8" font-family="monospace" text-anchor="middle">OTE zone</text>
    <polyline points="50,118 90,40 120,75 150,82 180,55 220,30" fill="none" stroke="#3ec77b" stroke-width="1.5"/>
   `,150)},
  // Trend/momentum: divergence
@@ -1637,9 +1681,9 @@ const TA_DIAGRAMS=[
  {cap:'The daily levels to pre-mark: previous day/week high-low, Asia range, and the opening price.',
   svg:svgWrap('',`
    ${lvl(30,20,250,'#e0533b',1,'PWH')}
-   ${lvl(50,20,250,'#e0a23b',1,'PDH')}
+   ${lvl(50,20,250,'#e8aa42',1,'PDH')}
    ${lvl(80,20,250,'#4a90d9',0,'Open')}
-   ${lvl(105,20,250,'#e0a23b',1,'PDL')}
+   ${lvl(105,20,250,'#e8aa42',1,'PDL')}
    ${lvl(125,20,250,'#e0533b',1,'PWL')}
    <rect x="60" y="60" width="50" height="35" fill="#4a90d918" stroke="#4a90d9" stroke-dasharray="2 2"/><text x="85" y="80" fill="#4a90d9" font-size="7" font-family="monospace" text-anchor="middle">Asia</text>
   `,150)},
