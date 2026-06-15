@@ -811,25 +811,30 @@ function renderICT(){
 
 /* ---- EDU (candles + TA + methodology) ---- */
 function renderEdu(){
+  const capStyle='font-size:11px;color:var(--faint);font-style:italic;margin:6px 0 0;padding-left:8px;border-left:2px solid var(--line)';
   $('#v-edu').innerHTML=`
+   <div class="note">Every card includes a diagram and a plain-language description of what the picture shows. Tap to expand.</div>
    <div class="section-h">Methodology</div>
    ${EDU.map((e,i)=>`<div class="refcard" id="edu-${i}">
      <div class="head" onclick="document.getElementById('edu-${i}').classList.toggle('open')">
        <span class="n">${esc(e.n)}</span><span class="arr">›</span></div>
      <div class="body"><p class="lead">${esc(e.lead)}</p>
+       ${e.svg||''}${e.cap?`<p style="${capStyle}"><b style="color:var(--dim);font-style:normal">What you're seeing:</b> ${esc(e.cap)}</p>`:''}
        ${e.steps.map(s=>`<div class="kv"><b>${esc(s[0])}</b><span>${esc(s[1])}</span></div>`).join('')}
        <div class="note">${esc(e.note)}</div></div></div>`).join('')}
    <div class="section-h">Technical Analysis Cheat Sheets</div>
    ${TA.map((t,i)=>`<div class="refcard" id="ta-${i}">
      <div class="head" onclick="document.getElementById('ta-${i}').classList.toggle('open')">
        <span class="n">${esc(t.n)}</span><span class="arr">›</span></div>
-     <div class="body"><ul style="margin:12px 0 0 18px;font-size:14px;color:var(--dim)">${t.pts.map(p=>`<li style="margin-bottom:7px">${esc(p)}</li>`).join('')}</ul></div></div>`).join('')}
+     <div class="body">${t.svg||''}${t.cap?`<p style="${capStyle}"><b style="color:var(--dim);font-style:normal">What you're seeing:</b> ${esc(t.cap)}</p>`:''}
+       <ul style="margin:12px 0 0 18px;font-size:14px;color:var(--dim)">${t.pts.map(p=>`<li style="margin-bottom:7px">${esc(p)}</li>`).join('')}</ul></div></div>`).join('')}
    <div class="section-h">Candlestick Patterns</div>
    <div class="grid2">
    ${CANDLES.map(c=>`<div class="refcard" style="margin-bottom:0"><div class="body" style="display:block;border:none;padding:13px">
      <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px"><span style="font-weight:700;font-size:14px">${esc(c.n)}</span></div>
      <span class="badge" style="font-size:9px">${esc(c.t)}</span>
-     ${c.svg}<p style="font-size:12px;margin:6px 0 0">${esc(c.d)}</p></div></div>`).join('')}
+     ${c.svg}${c.cap?`<p style="font-size:10px;color:var(--faint);font-style:italic;margin:4px 0 0">${esc(c.cap)}</p>`:''}
+     <p style="font-size:12px;margin:6px 0 0">${esc(c.d)}</p></div></div>`).join('')}
    </div>`;
 }
 
@@ -848,11 +853,12 @@ function renderPlan(){
     ${DB.plans.length?`<label>Active plan</label><select onchange="DB.activePlan=this.value;save();renderPlan()">
       ${DB.plans.map(p=>`<option value="${p.id}" ${active&&p.id===active.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select>`:''}
     <div class="row" style="margin-top:12px">
-      <button class="btn" onclick="newPlan()">+ New Plan</button>
-      ${active?`<button class="btn ghost" onclick="editPlan('${active.id}')">Edit</button>`:''}
+      <button class="btn" onclick="openTemplates()">⚡ Load Template</button>
+      <button class="btn ghost" onclick="newPlan()">+ Blank Plan</button>
     </div>
+    ${active?`<button class="btn ghost sm" style="margin-top:8px;width:100%" onclick="editPlan('${active.id}')">Edit active plan</button>`:''}
    </div>
-   ${active?runPlan(active):`<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3 8-8M3 12a9 9 0 1018 0 9 9 0 00-18 0"/></svg><div>No plans yet.<br>Build your first checklist — your rules, your structure.</div></div>`}`;
+   ${active?runPlan(active):`<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3 8-8M3 12a9 9 0 1018 0 9 9 0 00-18 0"/></svg><div>No plans yet.<br>Load a template to start fast, or build one from scratch.</div></div>`}`;
 }
 function runPlan(p){
   const rs=(DB.runState&&DB.runState[p.id])||{};
@@ -873,6 +879,61 @@ function runPlan(p){
 }
 function runToggle(pid,iid){DB.runState=DB.runState||{};DB.runState[pid]=DB.runState[pid]||{};DB.runState[pid][iid]=!DB.runState[pid][iid];save();renderPlan()}
 function resetRun(pid){if(DB.runState)DB.runState[pid]={};save();renderPlan()}
+
+/* ---- PLAN TEMPLATES (click-to-load, fully editable after) ---- */
+const PLAN_TEMPLATES=[
+ {name:'AUD/USD Kill Zone Scalping',desc:'Your smart-money scalping checklist, start to finish',
+  sections:[
+   {title:'Bias Check (4H + 1H)',items:['Is structure bullish or bearish? (BOS/CHoCH)','Are we in discount (long) or premium (short) pricing?','Is price near a valid OB, FVG, or Breaker Block?']},
+   {title:'Liquidity Zone Confirmation',items:['Internal liquidity (equal highs/lows) or external (prev day/session H/L) nearby?','Is price about to sweep or reacting to these zones?']},
+   {title:'OTE Fibonacci',items:['Longs: draw swing low → swing high of last impulse','Shorts: draw swing high → swing low of last impulse','Is price inside the 61.8%–79% retracement zone?','Confluence with OB, FVG, or Breaker Block?']},
+   {title:'Execution TF (15M / 5M)',items:['Is it during a Kill Zone? (London 2–5 AM CT / NY 7–10 AM CT)','Did price tap a marked zone (OB, FVG, Breaker)?','Is there a CHoCH or BOS on the lower TF after the tap?']},
+   {title:'Entry Confirmation Candle',items:['Bullish: engulfing / displacement / long lower-wick pin','Bearish: engulfing / displacement / long upper-wick pin','CHoCH/BOS candle closed beyond minor structure?','Did you wait for the candle to close before entry?']},
+   {title:'Entry & Risk Management',items:['Entry placed at confirmation candle close','Stop just beyond zone/swing (tight: 8–12 pips)','TP1: internal liquidity (structure H/L)','TP2: external liquidity (equal H/L, session H/L)','Minimum R:R = 1.5:1','Stop trading after 3 wins or 2 losses today']},
+  ]},
+ {name:'ICT 2022 Model',desc:'The 5-gate mechanical sweep → MSS → FVG sequence',
+  sections:[
+   {title:'1 · Liquidity Run',items:['Has price taken obvious buyside (sell) or sellside (buy) liquidity on 15m/Daily?']},
+   {title:'2 · Structure Shift',items:['Sell: swing low formed AFTER the highest swing high that took liquidity?','Buy: swing high formed BEFORE the lowest swing low that took liquidity?']},
+   {title:'3 · Fair Value Gap',items:['Does the displacement leg leave a 3-candle FVG?','Is the middle candle energetic (real displacement, not drift)?']},
+   {title:'4 · Premium / Discount',items:['Draw 50% fib of the dealing range','Sell: is the FVG at/above 50% (premium)?','Buy: is the FVG at/below 50% (discount)?']},
+   {title:'5 · Execution',items:['Place limit order inside the FVG','SL beyond the swept high/low','TP at opposing liquidity, min 1:2 R']},
+  ]},
+ {name:'One Setup for Life',desc:'IFVG + Breaker dual confirmation inside a macro',
+  sections:[
+   {title:'Context',items:['Price at HTF PD array (premium/discount)?','Inside an ICT macro time window?','Focus: only 1–2 A+ trades today']},
+   {title:'Trigger',items:['Liquidity sweep / stop hunt off the level','SMT divergence confirmation present?']},
+   {title:'1st Entry — Inversion',items:['Candle closed through the FVG (now IFVG)?','Enter on 2nd candle open after the close']},
+   {title:'2nd Entry — Breaker',items:['Candle closed below/above the breaker?','Enter on 2nd candle open after the close']},
+   {title:'Risk',items:['SL above/below the liquidity sweep','Target minimum 1:2 R']},
+  ]},
+ {name:'Daily Bias Routine',desc:'Pre-session top-down prep before any entry',
+  sections:[
+   {title:'Higher Timeframe',items:['Weekly: macro bias & major liquidity marked','Daily: trend (HH/HL?), PDH/PDL marked','Where is the draw on liquidity today?']},
+   {title:'Key Levels Marked',items:['Previous Day High / Low','Previous Week High / Low','Asia session range H/L','Daily / Weekly opening price','Equal highs & lows (liquidity pools)']},
+   {title:'News Check',items:['Any high-impact USD/AUD/CNY event today? (check News tab)','If yes — plan around the release, avoid the spread']},
+   {title:'Commit the Bias',items:['Write one sentence: "Today I expect price to sweep ___ then deliver to ___"','If you cannot write it — no bias, no trade']},
+  ]},
+ {name:'Pre-Trade Discipline',desc:'Fast final gate before clicking buy/sell',
+  sections:[
+   {title:'Setup Quality',items:['HTF bias aligned?','In a killzone (time)?','At a key level (OB/FVG/PDH-PDL)?','Liquidity swept before entry?','Min 1:2 R:R?']},
+   {title:'Mind & Risk',items:['Emotion calm — not FOMO/revenge?','Risk is fixed % (not "conviction"-sized)?','Daily loss limit not hit?','Not over-correlated with an open position?']},
+  ]},
+];
+function loadTemplate(idx){
+  const t=PLAN_TEMPLATES[idx]; if(!t)return;
+  const p={id:uid(),name:t.name,sections:t.sections.map(s=>({id:uid(),title:s.title,items:s.items.map(text=>({id:uid(),text}))}))};
+  DB.plans.push(p);DB.activePlan=p.id;closeSheet();save();renderPlan();
+}
+function openTemplates(){
+  sheet(`<h2 style="margin-bottom:6px">Load a Template</h2>
+   <p class="dim" style="font-size:13px;margin-bottom:16px">Pick a ready-made checklist. It loads fully populated — then edit, rename, or trim it to your exact rules.</p>
+   ${PLAN_TEMPLATES.map((t,i)=>`<div class="refcard" style="margin-bottom:10px"><div class="head" style="cursor:default">
+     <div><div class="n">${esc(t.name)}</div><div class="faint" style="font-size:12px;margin-top:2px">${esc(t.desc)}</div>
+       <div class="faint mono" style="font-size:10px;margin-top:4px">${t.sections.length} sections · ${t.sections.reduce((a,s)=>a+s.items.length,0)} items</div></div>
+     <button class="btn sm" style="flex:none;margin-left:auto" onclick="loadTemplate(${i})">Load</button></div></div>`).join('')}`);
+}
+
 
 function newPlan(){
   const p={id:uid(),name:'New Plan',sections:[{id:uid(),title:'Section 1',items:[{id:uid(),text:''}]}]};
@@ -1214,6 +1275,129 @@ const ICT2=[
 ];
 ICT.push(...ICT2);
 console.log('ICT expanded to',ICT.length,'models');
+
+/* ============ LEARN DIAGRAMS + CAPTIONS (attached by index) ============ */
+// Methodology diagrams
+const EDU_DIAGRAMS=[
+ // Top-Down: stacked timeframe funnel
+ {cap:'Bias flows down from Monthly/Weekly to the 1m execution candle — each timeframe narrows the zone.',
+  svg:svgWrap('',`
+   <rect x="20" y="20" width="280" height="20" fill="#4a90d922" stroke="#4a90d9"/><text x="160" y="34" fill="#4a90d9" font-size="9" font-family="monospace" text-anchor="middle">WEEKLY · macro bias</text>
+   <rect x="50" y="48" width="220" height="20" fill="#9a7bd022" stroke="#9a7bd0"/><text x="160" y="62" fill="#9a7bd0" font-size="9" font-family="monospace" text-anchor="middle">DAILY · trend + PDH/PDL</text>
+   <rect x="80" y="76" width="160" height="20" fill="#e0a23b22" stroke="#e0a23b"/><text x="160" y="90" fill="#e0a23b" font-size="9" font-family="monospace" text-anchor="middle">4H/1H · zone of interest</text>
+   <rect x="105" y="104" width="110" height="20" fill="#3ec77b22" stroke="#3ec77b"/><text x="160" y="118" fill="#3ec77b" font-size="9" font-family="monospace" text-anchor="middle">5m · sweep + MSS</text>
+   <rect x="130" y="132" width="60" height="18" fill="#3ec77b44" stroke="#3ec77b"/><text x="160" y="145" fill="#3ec77b" font-size="8" font-family="monospace" text-anchor="middle">1m entry</text>
+   <path d="M160 40 L160 48 M160 68 L160 76 M160 96 L160 104 M160 124 L160 132" stroke="#5a6772" stroke-width="1"/>
+  `,165)},
+ // Daily Bias: BSL/SSL with draw arrow
+ {cap:'Mark liquidity above (BSL) and below (SSL); the side just taken points to where price is drawn next.',
+  svg:svgWrap('',`
+   ${lvl(35,20,250,'#e0533b',1,'BSL')}
+   ${lvl(130,20,250,'#3ec77b',1,'SSL')}
+   ${candle(50,90,80,100,85)}${candle(72,85,75,95,88)}
+   ${candle(95,88,40,95,50)}${candle(118,50,42,128,122)}
+   <text x="100" y="155" fill="#e0533b" font-size="8" font-family="monospace">swept SSL →</text>
+   <path d="M150 125 Q200 80 240 40" stroke="#e0a23b" stroke-width="1.5" fill="none" stroke-dasharray="4 3"/>
+   <text x="195" y="70" fill="#e0a23b" font-size="8" font-family="monospace">draw to BSL</text>
+  `)},
+ // Risk Mgmt: equity outcomes bar
+ {cap:'Expectancy beats win-rate: 45% at 1:3 grows the curve; 70% at 1:0.5 bleeds it down.',
+  svg:svgWrap('',`
+   <line x1="30" y1="80" x2="290" y2="80" stroke="#262f38"/>
+   <rect x="50" y="40" width="40" height="40" fill="#3ec77b"/><text x="70" y="100" fill="#3ec77b" font-size="8" font-family="monospace" text-anchor="middle">45% @1:3</text><text x="70" y="113" fill="#8a98a5" font-size="7" font-family="monospace" text-anchor="middle">+EV</text>
+   <rect x="130" y="80" width="40" height="35" fill="#e0533b"/><text x="150" y="100" fill="#e0533b" font-size="8" font-family="monospace" text-anchor="middle">70% @1:0.5</text><text x="150" y="128" fill="#8a98a5" font-size="7" font-family="monospace" text-anchor="middle">-EV</text>
+   <rect x="210" y="55" width="40" height="25" fill="#3ec77b"/><text x="230" y="100" fill="#3ec77b" font-size="8" font-family="monospace" text-anchor="middle">55% @1:2</text><text x="230" y="113" fill="#8a98a5" font-size="7" font-family="monospace" text-anchor="middle">+EV</text>
+   <text x="20" y="44" fill="#5a6772" font-size="7" font-family="monospace">profit</text>
+   <text x="20" y="116" fill="#5a6772" font-size="7" font-family="monospace">loss</text>
+  `,140)},
+ // Trade Mgmt: entry, BE, partial, runner
+ {cap:'Manage in stages: stop to breakeven at 1R, partial at 2R, trail the runner to the next pool.',
+  svg:svgWrap('',`
+   ${lvl(120,20,270,'#e0533b',1,'SL')}
+   ${lvl(95,20,270,'#e0a23b',1,'entry')}
+   ${lvl(95,20,270,'#4a90d9',0,'')}<text x="252" y="93" fill="#4a90d9" font-size="7" font-family="monospace">→BE</text>
+   ${lvl(60,20,270,'#3ec77b',1,'TP1 +2R')}
+   ${lvl(30,20,270,'#3ec77b',1,'runner')}
+   <polyline points="40,95 70,90 100,98 130,70 160,75 190,55 220,58 250,32" fill="none" stroke="#e6ebf0" stroke-width="1.5"/>
+   <circle cx="40" cy="95" r="3" fill="#e0a23b"/><circle cx="130" cy="70" r="3" fill="#4a90d9"/><circle cx="190" cy="55" r="3" fill="#3ec77b"/>
+   <text x="60" y="135" fill="#8a98a5" font-size="7" font-family="monospace">enter→BE→partial→trail</text>
+  `,155)},
+];
+// TA cheat-sheet diagrams
+const TA_DIAGRAMS=[
+ // Market Structure: HH/HL then break
+ {cap:'Uptrend prints higher highs and higher lows; a lower low (CHoCH) is the first reversal warning.',
+  svg:svgWrap('',`
+   <polyline points="20,120 50,90 75,105 105,65 130,80 160,45 190,60 215,75 245,95 275,110" fill="none" stroke="#3ec77b" stroke-width="1.5"/>
+   <circle cx="50" cy="90" r="2.5" fill="#3ec77b"/><circle cx="105" cy="65" r="2.5" fill="#3ec77b"/><circle cx="160" cy="45" r="2.5" fill="#3ec77b"/>
+   <text x="105" y="58" fill="#3ec77b" font-size="7" font-family="monospace" text-anchor="middle">HH</text><text x="160" y="38" fill="#3ec77b" font-size="7" font-family="monospace" text-anchor="middle">HH</text>
+   <circle cx="245" cy="95" r="2.5" fill="#e0533b"/><text x="245" y="110" fill="#e0533b" font-size="7" font-family="monospace" text-anchor="middle">LL=CHoCH</text>
+  `,140)},
+ // S/R flip
+ {cap:'A broken support flips to resistance; price retests it from below before continuing down.',
+  svg:svgWrap('',`
+   ${lvl(75,20,290,'#e0a23b',0,'S→R')}
+   <polyline points="20,55 45,70 70,60 95,80 120,73 145,95 160,80 175,76 200,90 225,78 250,100 275,115" fill="none" stroke="#e6ebf0" stroke-width="1.5"/>
+   <text x="60" y="45" fill="#3ec77b" font-size="7" font-family="monospace">support holds</text>
+   <text x="200" y="68" fill="#e0533b" font-size="7" font-family="monospace">retest as resistance</text>
+  `,140)},
+ // Fibonacci OTE
+ {cap:'Fib the impulse leg; the 0.62–0.79 band (OTE) is the discount entry zone for the continuation.',
+  svg:svgWrap('',`
+   ${lvl(30,40,290,'#5a6772',1,'1.0')}
+   ${lvl(70,40,290,'#e0a23b',1,'.62')}
+   ${lvl(90,40,290,'#e0a23b',1,'.79')}
+   ${lvl(120,40,290,'#5a6772',1,'0')}
+   <rect x="40" y="70" width="250" height="20" fill="#e0a23b18"/><text x="165" y="84" fill="#e0a23b" font-size="8" font-family="monospace" text-anchor="middle">OTE zone</text>
+   <polyline points="50,118 90,40 120,75 150,82 180,55 220,30" fill="none" stroke="#3ec77b" stroke-width="1.5"/>
+  `,150)},
+ // Trend/momentum: divergence
+ {cap:'Price makes a higher high while RSI makes a lower high — bearish divergence, momentum fading.',
+  svg:svgWrap('',`
+   <polyline points="20,70 50,50 80,65 110,35 140,55 170,25" fill="none" stroke="#e6ebf0" stroke-width="1.5"/>
+   <text x="110" y="28" fill="#e0533b" font-size="7" font-family="monospace">price HH</text>
+   <line x1="110" y1="35" x2="170" y2="25" stroke="#e0533b" stroke-dasharray="3 2"/>
+   <polyline points="20,120 50,105 80,112 110,98 140,108 170,112" fill="none" stroke="#9a7bd0" stroke-width="1.5"/>
+   <text x="140" y="132" fill="#9a7bd0" font-size="7" font-family="monospace">RSI LH</text>
+   <line x1="110" y1="98" x2="170" y2="112" stroke="#e0533b" stroke-dasharray="3 2"/>
+  `,150)},
+ // Key levels map
+ {cap:'The daily levels to pre-mark: previous day/week high-low, Asia range, and the opening price.',
+  svg:svgWrap('',`
+   ${lvl(30,20,250,'#e0533b',1,'PWH')}
+   ${lvl(50,20,250,'#e0a23b',1,'PDH')}
+   ${lvl(80,20,250,'#4a90d9',0,'Open')}
+   ${lvl(105,20,250,'#e0a23b',1,'PDL')}
+   ${lvl(125,20,250,'#e0533b',1,'PWL')}
+   <rect x="60" y="60" width="50" height="35" fill="#4a90d918" stroke="#4a90d9" stroke-dasharray="2 2"/><text x="85" y="80" fill="#4a90d9" font-size="7" font-family="monospace" text-anchor="middle">Asia</text>
+  `,150)},
+ // Confluence stack
+ {cap:'An A+ setup stacks six factors; the more that align in one spot, the higher the probability.',
+  svg:svgWrap('',`
+   ${['HTF bias','Killzone','Key level','Liquidity swept','FVG/OB trigger','1:2 R:R'].map((t,i)=>`
+     <rect x="${40+i*5}" y="${20+i*18}" width="${230-i*10}" height="15" fill="#3ec77b${(i+2)}8" stroke="#3ec77b"/>
+     <text x="${155}" y="${31+i*18}" fill="#e6ebf0" font-size="8" font-family="monospace" text-anchor="middle">${t}</text>`).join('')}
+   <text x="155" y="135" fill="#3ec77b" font-size="8" font-family="monospace" text-anchor="middle">▼ stacked = A+ entry</text>
+  `,150)},
+];
+// Candlestick captions (attached by index to CANDLES)
+const CANDLE_CAPS=[
+ 'Two candles: a small red, then a bigger green that swallows it whole.',
+ 'Two candles: a small green, then a bigger red that swallows it whole.',
+ 'One candle: tiny body up top, long wick hanging below it.',
+ 'One candle: tiny body down low, long wick spiking above it.',
+ 'One candle: open and close almost touching — a cross or plus shape.',
+ 'Three candles: big red, a small pause, then a big green.',
+ 'Three candles: big green, a small pause, then a big red.',
+ 'One candle: a long wick on one side rejecting a price level.',
+ 'Two candles: the second sits entirely within the first\'s range.',
+ 'One candle: a solid block with little or no wick on either end.',
+];
+// Attach
+EDU.forEach((e,i)=>{if(EDU_DIAGRAMS[i]){e.svg=EDU_DIAGRAMS[i].svg;e.cap=EDU_DIAGRAMS[i].cap}});
+TA.forEach((t,i)=>{if(TA_DIAGRAMS[i]){t.svg=TA_DIAGRAMS[i].svg;t.cap=TA_DIAGRAMS[i].cap}});
+CANDLES.forEach((c,i)=>{c.cap=CANDLE_CAPS[i]||''});
+console.log('Learn diagrams attached');
 
 </script>
 </body>
