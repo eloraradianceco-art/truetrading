@@ -506,6 +506,7 @@ const TABS=[
  {id:'plan',n:'Plan',icon:'M9 11l3 3 8-8M3 12a9 9 0 1018 0 9 9 0 00-18 0'},
 ];
 function nav(id){
+  if(id!=='chart' && typeof stopAutoRefresh==='function')stopAutoRefresh();
   $$('.view').forEach(v=>v.classList.remove('on'));
   $('#v-'+id).classList.add('on');
   $$('.tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.t===id));
@@ -1058,8 +1059,9 @@ function renderChart(){
      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
        <span class="mono" style="font-weight:700">AUD/USD</span>
        <span class="badge" style="font-size:10px;padding:3px 8px;border-radius:5px;background:${live?'var(--green-d)':'var(--panel2)'};border:1px solid var(--line);color:${live?'#bff5d6':'var(--faint)'}">${live?'● LIVE':'○ SAMPLE'}</span>
-       <span class="faint" style="margin-left:auto;font-size:11px" id="chartPx"></span>
+       <button class="chip" style="margin-left:auto;padding:4px 10px" onclick="refreshChart(true)" title="Refresh now">↻</button>
      </div>
+     <div style="font-size:11px;margin-bottom:8px" class="faint mono"><span id="chartPx"></span><span id="chartUpd" style="float:right"></span></div>
      <div class="chipwrap" style="margin-bottom:10px">
        ${TF.map(t=>`<span class="chip ${chartState.tf===t.k?'on':''}" onclick="setTF('${t.k}')">${t.n}</span>`).join('')}
      </div>
@@ -1099,13 +1101,30 @@ async function initChart(attempt){
   const series=chart.addSeries(LightweightCharts.CandlestickSeries,{
     upColor:'#3ec77b',downColor:'#e0533b',borderVisible:false,wickUpColor:'#3ec77b',wickDownColor:'#e0533b'});
   chartState.chart=chart; chartState.series=series;
+  await refreshChart(false);
+  chart.timeScale().fitContent(); // fit once on initial load only
+  startAutoRefresh();
+}
+function startAutoRefresh(){
+  stopAutoRefresh();
+  if(DATA_SOURCE!=='supabase'||!SUPA_FN)return; // only stream when live
+  chartState.timer=setInterval(()=>{
+    // only refresh while the Chart tab is actually visible
+    const v=$('#v-chart'); if(v&&v.classList.contains('on'))refreshChart(false);
+  },15000);
+}
+function stopAutoRefresh(){if(chartState.timer){clearInterval(chartState.timer);chartState.timer=null;}}
+async function refreshChart(manual){
+  const series=chartState.series; if(!series)return;
+  if(manual){const u=$('#chartUpd'); if(u)u.textContent='updating…';}
   chartState.feedError=null;
   const data=await fetchCandles(chartState.instrument,chartState.tf,200);
-  series.setData(data);
-  chart.timeScale().fitContent();
+  series.setData(data); // updates in place, no rebuild/flicker
   const last=data[data.length-1];
-  if(last)$('#chartPx').textContent='O '+last.open.toFixed(5)+'  H '+last.high.toFixed(5)+'  L '+last.low.toFixed(5)+'  C '+last.close.toFixed(5);
+  if(last){const px=$('#chartPx'); if(px)px.textContent='O '+last.open.toFixed(5)+'  H '+last.high.toFixed(5)+'  L '+last.low.toFixed(5)+'  C '+last.close.toFixed(5);}
   applyOverlays(data);
+  const u=$('#chartUpd');
+  if(u)u.textContent='updated '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
   const fn=$('#feedNote');
   if(fn){
     if(chartState.feedError){fn.innerHTML=`<div class="note" style="border-left-color:var(--red-d)">Live feed unavailable (${esc(chartState.feedError)}) — showing sample data. Check the Supabase function or your connection.</div>`;
@@ -1113,7 +1132,7 @@ async function initChart(attempt){
     else{fn.innerHTML='';}
   }
 }
-function setTF(tf){chartState.tf=tf;renderChart()}
+function setTF(tf){stopAutoRefresh();chartState.tf=tf;renderChart()}
 function toggleOverlay(k){chartState[k]=!chartState[k];renderChart()}
 function applyOverlays(data){
   const s=chartState.series; if(!s)return;
