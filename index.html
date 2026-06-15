@@ -205,7 +205,7 @@ window.__lwcReady=function(){return typeof LightweightCharts!=='undefined'&&Ligh
 const LS='tbt_v1';
 const DB=load();
 function load(){try{return JSON.parse(localStorage.getItem(LS))||seed()}catch(e){return seed()}}
-function seed(){return{trades:[],open:[],plan:{},checklist:{},settings:{tz:-(new Date().getTimezoneOffset()/60),acct:10000,risk:1}}}
+function seed(){return{trades:[],open:[],signals:[],plan:{},checklist:{},settings:{tz:-(new Date().getTimezoneOffset()/60),acct:10000,risk:1}}}
 function save(){localStorage.setItem(LS,JSON.stringify(DB))}
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const fmt=(n,d=2)=>Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
@@ -561,11 +561,52 @@ function renderDash(){
   </div>
   ${s.n?`<div class="card"><h3>Edge by Session</h3>${breakdown(s.bySession)}</div>
   <div class="card"><h3>Edge by Model</h3>${breakdown(s.byModel)}</div>`:''}
+  ${signalSection()}
   <button class="btn" onclick="openTrade()">+ Log a Trade</button>
   <div style="height:10px"></div>
   <button class="btn ghost" onclick="exportData()">Export / Backup Data</button>`;
   if(s.n>1)drawCurve(s.curve);
 }
+function signalSection(){
+  const sigs=DB.signals||[];
+  if(!sigs.length)return `<div class="card"><h3>Signal Engine <span class="tag">educational, separate from your trades</span></h3>
+    <div class="faint" style="font-size:13px">No signals logged yet. Open the Chart tab and let the engine scan — flagged setups appear here so you can mark how each one resolved.</div></div>`;
+  const resolved=sigs.filter(s=>s.outcome==='win'||s.outcome==='loss');
+  const wins=resolved.filter(s=>s.outcome==='win').length;
+  const wr=resolved.length?wins/resolved.length*100:0;
+  const totR=resolved.reduce((a,s)=>a+(s.outcome==='win'?(s.rr||2):-1),0);
+  const open=sigs.filter(s=>!s.outcome).length;
+  return `<div class="card"><h3>Signal Engine <span class="tag">${sigs.length} flagged · ${open} unresolved</span></h3>
+    <p class="faint" style="font-size:12px;margin:-4px 0 12px">Kept separate from your hand-logged trades so neither number is polluted. Mark each signal's outcome to measure the engine's real edge.</p>
+    <div class="statgrid" style="margin-bottom:14px">
+      <div class="stat"><div class="v ${wr>=50?'pos':wr>0?'amber':''}">${resolved.length?fmt(wr,0)+'%':'—'}</div><div class="l">Engine Win Rate</div></div>
+      <div class="stat"><div class="v ${totR>=0?'pos':'neg'}">${resolved.length?(totR>=0?'+':'')+fmt(totR,1):'—'}</div><div class="l">Engine Total R</div></div>
+      <div class="stat"><div class="v">${resolved.length}/${sigs.length}</div><div class="l">Resolved</div></div>
+    </div>
+    <div class="tlist">${sigs.slice(0,12).map(sg=>signalRow(sg)).join('')}</div>
+    ${sigs.length>12?`<div class="faint mono" style="font-size:10px;margin-top:8px">Showing latest 12 of ${sigs.length}</div>`:''}
+  </div>`;
+}
+function signalRow(sg){
+  const col=sg.dir==='long'?'long':'short';
+  const oc=sg.outcome;
+  const ocCls=oc==='win'?'win':oc==='loss'?'loss':'be';
+  return `<div class="trade ${ocCls}">
+    <div class="top"><span class="pair">AUD/USD</span><span class="dir ${col}">${sg.dir}</span>
+      <span class="badge" style="font-size:9px;padding:2px 6px;border-radius:4px;border:1px solid var(--line)">${sg.grade}</span>
+      <span class="r ${oc==='win'?'pos':oc==='loss'?'neg':'amber'}" style="font-size:13px">${oc?(oc==='win'?'+'+fmt(sg.rr||2,1)+'R':oc==='loss'?'-1R':'BE'):'open'}</span></div>
+    <div class="meta"><span class="mono">@${sg.entry.toFixed(5)}</span><span class="mono">SL ${sg.sl.toFixed(5)}</span><span class="mono">TP ${sg.tp.toFixed(5)}</span>
+      <span>${new Date(sg.ts).toLocaleDateString('en',{month:'short',day:'numeric'})} ${new Date(sg.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></div>
+    ${!oc?`<div class="chipwrap" style="margin-top:8px">
+      <span class="chip" style="padding:5px 11px" onclick="resolveSignal('${sg.id}','win')">Hit TP ✓</span>
+      <span class="chip" style="padding:5px 11px" onclick="resolveSignal('${sg.id}','loss')">Hit SL ✕</span>
+      <span class="chip" style="padding:5px 11px" onclick="resolveSignal('${sg.id}','be')">Breakeven</span>
+      <span class="chip" style="padding:5px 11px" onclick="deleteSignal('${sg.id}')">Dismiss</span>
+    </div>`:`<div class="chipwrap" style="margin-top:6px"><span class="chip" style="padding:4px 10px" onclick="resolveSignal('${sg.id}',null)">↺ reopen</span></div>`}
+  </div>`;
+}
+function resolveSignal(id,outcome){const s=(DB.signals||[]).find(x=>x.id===id);if(s){s.outcome=outcome;save();renderDash();}}
+function deleteSignal(id){DB.signals=(DB.signals||[]).filter(x=>x.id!==id);save();renderDash();}
 function breakdown(o){
   const ks=Object.keys(o).sort((a,b)=>o[b].r-o[a].r);
   if(!ks.length)return'<div class="faint">No data yet.</div>';
@@ -1073,8 +1114,9 @@ function renderChart(){
    </div>
    ${live?'':`<div class="note">Showing <b>sample data</b>. Set <span class="mono">DATA_SOURCE='supabase'</span> and your function URL at the top of the chart module to go live.</div>`}
    <div id="feedNote"></div>
-   <div class="card"><h3>Educational Signal Engine <span class="tag">coming next</span></h3>
-     <p class="dim" style="font-size:14px;margin:0">Now that live data flows, this is where the rules engine flags ICT setups (sweep → MSS → FVG in a killzone) as educational signal cards, and auto-logs each one so your Desk analytics can measure the real hit rate. For your eyes only — nothing shared.</p>
+   <div class="card"><h3>Signal Engine <span class="tag">M15 + H1 aligned · educational</span></h3>
+     <div id="signalBox"><div class="faint" style="font-size:13px">Scanning…</div></div>
+     <div class="note" style="margin-top:10px">Detects sweep → structure shift → FVG on M15 and H1, flags only when both agree. Every flag is auto-logged to Desk so you can measure the real hit rate. Not a predictor — your bias, news read, and checklist decide the trade.</div>
    </div>`;
   setTimeout(initChart,30);
 }
@@ -1125,6 +1167,7 @@ async function refreshChart(manual){
   applyOverlays(data);
   const u=$('#chartUpd');
   if(u)u.textContent='updated '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  runSignalEngine();
   const fn=$('#feedNote');
   if(fn){
     if(chartState.feedError){fn.innerHTML=`<div class="note" style="border-left-color:var(--red-d)">Live feed unavailable (${esc(chartState.feedError)}) — showing sample data. Check the Supabase function or your connection.</div>`;
@@ -1156,6 +1199,175 @@ function applyOverlays(data){
   }
 }
 
+
+
+/* ============ SIGNAL ENGINE (ICT pattern detection) ============ */
+/* Educational pattern detection on completed candles. NOT a predictor.
+   Detects: liquidity sweep -> market structure shift (MSS) -> fair value gap (FVG).
+   Scans M15 + H1; a signal fires only when both timeframes AGREE on direction.   */
+
+// --- swing point detection: a swing high/low needs `k` lower/higher bars on each side
+function swings(c,k){
+  const hi=[],lo=[];
+  for(let i=k;i<c.length-k;i++){
+    let isH=true,isL=true;
+    for(let j=1;j<=k;j++){
+      if(c[i].high<=c[i-j].high||c[i].high<=c[i+j].high)isH=false;
+      if(c[i].low >=c[i-j].low ||c[i].low >=c[i+j].low )isL=false;
+    }
+    if(isH)hi.push({i,price:c[i].high});
+    if(isL)lo.push({i,price:c[i].low});
+  }
+  return {hi,lo};
+}
+
+// --- find a bullish FVG (gap up): candle i-1 high < candle i+1 low. Bearish: i-1 low > i+1 high.
+function findFVG(c,fromIdx,dir){
+  for(let i=Math.max(fromIdx,1);i<c.length-1;i++){
+    if(dir==='long' && c[i-1].high < c[i+1].low)
+      return {top:c[i+1].low, bottom:c[i-1].high, idx:i};
+    if(dir==='short' && c[i-1].low > c[i+1].high)
+      return {top:c[i-1].low, bottom:c[i+1].high, idx:i};
+  }
+  return null;
+}
+
+// --- core detection on one candle series. Returns a setup object or null.
+function detectSetup(c){
+  if(!c||c.length<40)return null;
+  const k=2;
+  const sw=swings(c,k);
+  const recent=c.length-1;
+  const lookback=Math.min(c.length,80);
+  const startI=c.length-lookback;
+  const lastClose=c[recent].close;
+
+  // SHORT: find a prior swing HIGH that a LATER bar wicked above (sweep) then price closed back below,
+  // with a bearish FVG in the displacement, and the latest close still below that level.
+  // Iterate most-recent prior swings first.
+  const hiCands=sw.hi.filter(s=>s.i>=startI && s.i<=recent-3).reverse();
+  for(const ph of hiCands){
+    // a sweep bar after ph whose HIGH exceeds ph.price
+    let sweepIdx=-1;
+    for(let i=ph.i+1;i<=recent;i++){ if(c[i].high>ph.price){sweepIdx=i;break;} }
+    if(sweepIdx<0)continue;
+    // after the sweep, a bar that CLOSES back below ph.price (rejection / start of MSS)
+    let rejIdx=-1;
+    for(let i=sweepIdx;i<=recent;i++){ if(c[i].close<ph.price){rejIdx=i;break;} }
+    if(rejIdx<0)continue;
+    const fvg=findFVG(c,sweepIdx,'short');
+    if(fvg && fvg.idx>sweepIdx-1 && lastClose<ph.price){
+      return mkSetup('short',ph.price,fvg,c);
+    }
+  }
+  // LONG: mirror — prior swing LOW wicked below then close back above + bullish FVG.
+  const loCands=sw.lo.filter(s=>s.i>=startI && s.i<=recent-3).reverse();
+  for(const pl of loCands){
+    let sweepIdx=-1;
+    for(let i=pl.i+1;i<=recent;i++){ if(c[i].low<pl.price){sweepIdx=i;break;} }
+    if(sweepIdx<0)continue;
+    let rejIdx=-1;
+    for(let i=sweepIdx;i<=recent;i++){ if(c[i].close>pl.price){rejIdx=i;break;} }
+    if(rejIdx<0)continue;
+    const fvg=findFVG(c,sweepIdx,'long');
+    if(fvg && fvg.idx>sweepIdx-1 && lastClose>pl.price){
+      return mkSetup('long',pl.price,fvg,c);
+    }
+  }
+  return null;
+}
+
+function mkSetup(dir,sweptLevel,fvg,c){
+  const last=c[c.length-1];
+  const entry=(fvg.top+fvg.bottom)/2;            // mid of FVG (consequent encroachment)
+  let sl,tp;
+  if(dir==='short'){
+    sl=sweptLevel + (sweptLevel-entry)*0.1 + (fvg.top-fvg.bottom); // just above swept high / fvg
+    sl=Math.max(sweptLevel, fvg.top);
+    const risk=sl-entry;
+    tp=entry - risk*2;                            // 1:2
+  }else{
+    sl=Math.min(sweptLevel, fvg.bottom);
+    const risk=entry-sl;
+    tp=entry + risk*2;
+  }
+  const risk=Math.abs(entry-sl);
+  const rr=risk>0?Math.abs(tp-entry)/risk:0;
+  return {dir,sweptLevel,entry,sl,tp,rr,fvgTop:fvg.top,fvgBottom:fvg.bottom,lastClose:last.close,lastTime:last.time};
+}
+
+// --- run on both TFs and require agreement
+async function scanSignals(){
+  if(DATA_SOURCE!=='supabase'||!SUPA_FN)return null;
+  let m15,h1;
+  try{
+    m15=await fetchCandles('AUD_USD','M15',120);
+    h1 =await fetchCandles('AUD_USD','H1',120);
+  }catch(e){return null;}
+  if(!Array.isArray(m15)||!Array.isArray(h1))return null;
+  const sM=detectSetup(m15), sH=detectSetup(h1);
+  if(!sM||!sH)return null;
+  if(sM.dir!==sH.dir)return null;                 // require alignment
+  // grade by how well levels align + R
+  let grade='B';
+  if(sM.rr>=2 && sH.rr>=2)grade='A';
+  if(sM.rr<1.5)grade='C';
+  return {
+    dir:sM.dir, grade,
+    m15:sM, h1:sH,
+    primary:sM,                                   // execute on M15
+    detectedAt:Date.now(),
+    bar:sM.lastTime,
+  };
+}
+
+// --- dedupe + log. Key on STRUCTURAL identity (dir + swept level + entry zone),
+// NOT the moving last-bar time, so the same setup isn't re-logged every refresh.
+function signalKey(sig){
+  const s=sig.primary;
+  return sig.dir+'_swept'+s.sweptLevel.toFixed(4)+'_e'+s.entry.toFixed(4);
+}
+async function runSignalEngine(){
+  const sig=await scanSignals();
+  const box=$('#signalBox');
+  if(!sig){ if(box)box.innerHTML='<div class="faint" style="font-size:13px">No aligned M15 + H1 setup right now. The engine is watching.</div>'; return; }
+  // log if new — guard against exact key match AND near-identical recent setups
+  DB.signals=DB.signals||[];
+  const key=signalKey(sig);
+  const now=sig.detectedAt;
+  const pip=0.0010; // within ~10 pips of entry + same direction within 6h = treat as the same setup
+  const dup=DB.signals.some(s=>
+    s.key===key ||
+    (s.dir===sig.dir && Math.abs(s.entry-sig.primary.entry)<pip && (now-s.ts)<6*3600*1000)
+  );
+  if(!dup){
+    DB.signals.unshift({
+      id:uid(), key, dir:sig.dir, grade:sig.grade,
+      entry:sig.primary.entry, sl:sig.primary.sl, tp:sig.primary.tp, rr:sig.primary.rr,
+      sweptLevel:sig.primary.sweptLevel, ts:sig.detectedAt, outcome:null,
+    });
+    if(DB.signals.length>200)DB.signals.length=200;
+    save();
+  }
+  if(box)box.innerHTML=signalCard(sig);
+}
+function signalCard(sig){
+  const s=sig.primary; const dirU=sig.dir==='long'?'LONG':'SHORT';
+  const col=sig.dir==='long'?'var(--green)':'var(--red)';
+  return `<div style="border:1px solid ${col};border-radius:10px;padding:13px;background:linear-gradient(135deg,#1a2127,#13181d)">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <span style="font-weight:700;color:${col}">${dirU} setup forming</span>
+      <span class="badge" style="font-size:10px;padding:2px 7px;border-radius:5px;background:var(--panel);border:1px solid var(--line)">Grade ${sig.grade}</span>
+      <span class="faint mono" style="margin-left:auto;font-size:11px">M15 + H1 aligned</span>
+    </div>
+    <div class="kv"><b>Entry (FVG mid)</b><span class="mono">${s.entry.toFixed(5)}</span></div>
+    <div class="kv"><b>Stop</b><span class="mono">${s.sl.toFixed(5)}</span></div>
+    <div class="kv"><b>Target (1:2)</b><span class="mono">${s.tp.toFixed(5)}</span></div>
+    <div class="kv"><b>Reward:Risk</b><span class="mono">1 : ${s.rr.toFixed(1)}</span></div>
+    <div class="kv"><b>Swept level</b><span class="mono">${s.sweptLevel.toFixed(5)}</span></div>
+    <p style="font-size:12px;color:var(--dim);margin:10px 0 0">Price swept ${sig.dir==='long'?'sell-side liquidity (a prior low)':'buy-side liquidity (a prior high)'}, shifted structure, and left an FVG. <b style="color:var(--ink)">Educational only</b> — confirm against your bias, news, and checklist before any entry.</p>
+  </div>`;
+}
 
 /* ---- MODAL + EXPORT + INIT ---- */
 function sheet(html){$('#sheetBody').innerHTML=html;$('#modal').classList.add('on')}
