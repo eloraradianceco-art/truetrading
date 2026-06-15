@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>True Balance Trader</title>
+<style>
+:root{
+  --bg:#0c0f12; --panel:#13181d; --panel2:#1a2127; --line:#262f38;
+  --ink:#e6ebf0; --dim:#8a98a5; --faint:#5a6772;
+  --amber:#e0a23b; --amber-d:#a8782a;
+  --green:#3ec77b; --green-d:#1f7a4a;
+  --red:#e0533b; --red-d:#9a3525;
+  --blue:#4a90d9; --violet:#9a7bd0;
+  --mono:'SF Mono',ui-monospace,'Cascadia Mono','Roboto Mono',Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-text-size-adjust:100%}
+body{padding-bottom:80px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+h1,h2,h3,h4{font-weight:600;letter-spacing:-0.01em;line-height:1.2}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.dim{color:var(--dim)}.faint{color:var(--faint)}
+.pos{color:var(--green)}.neg{color:var(--red)}.amber{color:var(--amber)}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select,textarea{font-family:inherit;font-size:15px;background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:10px 12px;width:100%}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--amber);outline-offset:-1px;border-color:var(--amber)}
+label{display:block;font-size:12px;color:var(--dim);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.06em;font-weight:600}
+
+/* Top bar + session ribbon */
+.topbar{position:sticky;top:0;z-index:50;background:linear-gradient(180deg,#0c0f12 0%,rgba(12,15,18,.96) 100%);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;padding:12px 16px 8px}
+.brand .logo{width:30px;height:30px;flex:none}
+.brand .t{font-size:16px;font-weight:700;letter-spacing:-0.02em}
+.brand .t span{color:var(--amber)}
+.brand .clock{margin-left:auto;text-align:right}
+.brand .clock .utc{font-family:var(--mono);font-size:15px;font-weight:600}
+.brand .clock .lbl{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:0.1em}
+
+/* Session ribbon */
+.ribbon{display:flex;height:34px;border-top:1px solid var(--line);position:relative;overflow:hidden}
+.ribbon .seg{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--faint);border-right:1px solid var(--line);position:relative;transition:all .4s}
+.ribbon .seg:last-child{border-right:none}
+.ribbon .seg.active{color:var(--bg);font-weight:700}
+.ribbon .seg.active.asia{background:var(--blue)}
+.ribbon .seg.active.london{background:var(--amber)}
+.ribbon .seg.active.ny{background:var(--green)}
+.ribbon .seg.kz::after{content:'KZ';position:absolute;top:3px;right:5px;font-size:8px;color:var(--amber);font-weight:700}
+.ribbon .seg.active.kz::after{color:var(--bg)}
+
+/* Tabs */
+.tabbar{position:fixed;bottom:0;left:0;right:0;z-index:60;background:var(--panel);border-top:1px solid var(--line);display:flex;overflow-x:auto;scrollbar-width:none}
+.tabbar::-webkit-scrollbar{display:none}
+.tabbar button{flex:1 0 auto;min-width:64px;padding:9px 8px 10px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--faint);font-size:10px;font-weight:600;border-top:2px solid transparent}
+.tabbar button.on{color:var(--amber);border-top-color:var(--amber)}
+.tabbar button svg{width:21px;height:21px}
+
+/* Layout */
+.wrap{max-width:760px;margin:0 auto;padding:16px}
+.view{display:none}.view.on{display:block;animation:fade .25s}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+.card h3{font-size:13px;text-transform:uppercase;letter-spacing:0.06em;color:var(--dim);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card h3 .tag{margin-left:auto;font-size:10px;color:var(--faint)}
+.row{display:flex;gap:10px}.row>*{flex:1}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.section-h{font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:var(--faint);margin:22px 4px 10px;font-weight:700}
+
+/* Buttons */
+.btn{background:var(--amber);color:#1a1206;font-weight:700;border-radius:9px;padding:12px 16px;font-size:14px;text-align:center;transition:filter .15s}
+.btn:active{filter:brightness(.88)}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink);font-weight:600}
+.btn.green{background:var(--green);color:#062013}
+.btn.red{background:var(--red);color:#2a0a04}
+.btn.sm{padding:7px 12px;font-size:13px}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:20px;border:1px solid var(--line);background:var(--panel2);font-size:13px;color:var(--dim);cursor:pointer;user-select:none;transition:all .15s}
+.chip.on{background:var(--amber);color:#1a1206;border-color:var(--amber);font-weight:700}
+.chip.on.g{background:var(--green);color:#062013;border-color:var(--green)}
+.chip.on.r{background:var(--red);color:#2a0a04;border-color:var(--red)}
+.chipwrap{display:flex;flex-wrap:wrap;gap:7px}
+
+/* Stats */
+.statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px}
+.stat .v{font-family:var(--mono);font-size:22px;font-weight:700;line-height:1}
+.stat .l{font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:0.06em;margin-top:5px}
+
+/* Table */
+.tlist{display:flex;flex-direction:column;gap:8px}
+.trade{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:11px 13px;border-left:3px solid var(--faint)}
+.trade.win{border-left-color:var(--green)}.trade.loss{border-left-color:var(--red)}.trade.be{border-left-color:var(--amber)}
+.trade .top{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.trade .pair{font-weight:700;font-family:var(--mono)}
+.trade .dir{font-size:10px;padding:2px 7px;border-radius:5px;font-weight:700;text-transform:uppercase}
+.trade .dir.long{background:var(--green-d);color:#bff5d6}.trade .dir.short{background:var(--red-d);color:#ffcabf}
+.trade .r{margin-left:auto;font-family:var(--mono);font-weight:700;font-size:16px}
+.trade .meta{font-size:11px;color:var(--faint);display:flex;gap:10px;flex-wrap:wrap}
+
+/* Reference cards */
+.refcard{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:0;margin-bottom:12px;overflow:hidden}
+.refcard .head{padding:13px 15px;cursor:pointer;display:flex;align-items:center;gap:10px}
+.refcard .head .n{font-weight:700;font-size:15px}
+.refcard .head .badge{font-size:10px;padding:3px 8px;border-radius:5px;background:var(--panel);border:1px solid var(--line);color:var(--dim);text-transform:uppercase;letter-spacing:0.05em}
+.refcard .head .arr{margin-left:auto;color:var(--faint);transition:transform .2s}
+.refcard.open .head .arr{transform:rotate(90deg)}
+.refcard .body{display:none;padding:0 15px 16px;border-top:1px solid var(--line)}
+.refcard.open .body{display:block}
+.refcard .body p{font-size:14px;color:var(--dim);margin:12px 0}
+.refcard .body .lead{color:var(--ink);font-weight:500}
+.refcard svg{width:100%;height:auto;background:#0a0d10;border:1px solid var(--line);border-radius:8px;margin:8px 0}
+.kv{display:flex;gap:8px;font-size:13px;padding:5px 0;border-bottom:1px solid var(--line)}
+.kv:last-child{border:none}.kv b{color:var(--amber);min-width:90px;flex:none}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.tags .x{font-size:11px;padding:3px 8px;background:var(--panel);border:1px solid var(--line);border-radius:5px;color:var(--dim)}
+
+/* News */
+.news-item{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--line)}
+.news-item:last-child{border:none}
+.news-item .imp{width:8px;height:8px;border-radius:50%;flex:none}
+.imp.high{background:var(--red)}.imp.med{background:var(--amber)}
+.news-item .cc{font-family:var(--mono);font-weight:700;font-size:13px;width:34px;flex:none}
+.news-item .ev{flex:1;font-size:14px}
+.news-item .ev small{display:block;color:var(--faint);font-size:11px}
+.news-item .tm{font-family:var(--mono);font-size:12px;color:var(--dim);text-align:right}
+
+/* Calc result */
+.result{background:linear-gradient(135deg,#1a2127,#13181d);border:1px solid var(--amber-d);border-radius:10px;padding:14px;margin-top:12px}
+.result .big{font-family:var(--mono);font-size:28px;font-weight:700;color:var(--amber)}
+.result .sub{font-size:12px;color:var(--dim);margin-top:4px}
+
+/* Checklist */
+.check{display:flex;align-items:flex-start;gap:11px;padding:11px;background:var(--panel2);border:1px solid var(--line);border-radius:9px;margin-bottom:7px;cursor:pointer}
+.check .box{width:22px;height:22px;border:2px solid var(--faint);border-radius:6px;flex:none;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.check.done .box{background:var(--green);border-color:var(--green)}
+.check.done .box svg{display:block}.check .box svg{display:none;width:14px;height:14px}
+.check .txt{font-size:14px}.check.done .txt{color:var(--faint)}
+
+.empty{text-align:center;padding:40px 20px;color:var(--faint)}
+.empty svg{width:44px;height:44px;opacity:.4;margin-bottom:12px}
+.bar{height:8px;background:var(--panel2);border-radius:4px;overflow:hidden;display:flex}
+.modal{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.6);display:none;align-items:flex-end}
+.modal.on{display:flex}
+.sheet{background:var(--panel);border-radius:18px 18px 0 0;width:100%;max-height:92vh;overflow-y:auto;padding:18px 16px 30px;animation:up .3s}
+@keyframes up{from{transform:translateY(100%)}}
+.sheet .grab{width:40px;height:4px;background:var(--line);border-radius:2px;margin:0 auto 16px}
+.note{font-size:12px;color:var(--faint);background:var(--panel2);border-left:3px solid var(--amber-d);padding:10px 12px;border-radius:0 8px 8px 0;margin:10px 0}
+canvas{max-width:100%}
+</style>
+</head>
+<body>
+<!-- content injected by app.js below -->
+<div class="topbar">
+  <div class="brand">
+    <svg class="logo" viewBox="0 0 40 40" fill="none">
+      <circle cx="20" cy="20" r="18" stroke="#e0a23b" stroke-width="2"/>
+      <path d="M20 6 L20 34 M6 20 L34 20" stroke="#262f38" stroke-width="1"/>
+      <path d="M11 25 L17 18 L23 22 L29 11" stroke="#3ec77b" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div class="t">True Balance <span>Trader</span></div>
+    <div class="clock"><div class="utc mono" id="clkUtc">--:--</div><div class="lbl" id="clkLbl">UTC</div></div>
+  </div>
+  <div class="ribbon" id="ribbon"></div>
+</div>
+
+<div class="wrap">
+  <div class="view on" id="v-dash"></div>
+  <div class="view" id="v-chart"></div>
+  <div class="view" id="v-journal"></div>
+  <div class="view" id="v-calc"></div>
+  <div class="view" id="v-news"></div>
+  <div class="view" id="v-ict"></div>
+  <div class="view" id="v-edu"></div>
+  <div class="view" id="v-plan"></div>
+</div>
+
+<div class="tabbar" id="tabbar"></div>
+<div class="modal" id="modal"><div class="sheet" id="sheet"><div class="grab"></div><div id="sheetBody"></div></div></div>
+
+<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+<script>
+/* ============ TRUE BALANCE TRADER ============ */
+const LS='tbt_v1';
+const DB=load();
+function load(){try{return JSON.parse(localStorage.getItem(LS))||seed()}catch(e){return seed()}}
+function seed(){return{trades:[],open:[],plan:{},checklist:{},settings:{tz:-(new Date().getTimezoneOffset()/60),acct:10000,risk:1}}}
+function save(){localStorage.setItem(LS,JSON.stringify(DB))}
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const fmt=(n,d=2)=>Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const uid=()=>Math.random().toString(36).slice(2,9);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---- Pairs & correlation ---- */
+const PAIRS=['AUD/USD','NZD/USD','AUD/JPY','AUD/NZD','EUR/USD','GBP/USD','USD/JPY','USD/CAD','USD/CHF','XAU/USD'];
+const PIP={'AUD/USD':0.0001,'NZD/USD':0.0001,'EUR/USD':0.0001,'GBP/USD':0.0001,'USD/CAD':0.0001,'USD/CHF':0.0001,'AUD/NZD':0.0001,'AUD/JPY':0.01,'USD/JPY':0.01,'XAU/USD':0.1};
+const MODELS=['Silver Bullet','Unicorn','Turtle Soup','Order Block','FVG Entry','Judas Swing','Power of 3','OTE','Liquidity Sweep','Breaker','Other'];
+const SESSIONS=['Asia','London','NY AM','NY PM'];
+const MISTAKES=['None','FOMO entry','No setup / forced','Moved stop','Revenge trade','Oversized','Early exit','Late entry','Against HTF bias','Traded news spread'];
+
+/* ---- Session clock (UTC based) ---- */
+// Killzones (UTC): Asia 23-04, London 07-10 (SB 03-04 NY... using ICT classic), NY AM 12-15 (SB 14-15), NY PM 18-20
+const SESS=[
+ {k:'asia',n:'Asia',s:23,e:8,kz:[0,4]},
+ {k:'london',n:'London',s:7,e:16,kz:[7,10]},
+ {k:'ny',n:'New York',s:12,e:21,kz:[14,15]},
+];
+function tickClock(){
+  const now=new Date(); const u=now.getUTCHours()+now.getUTCMinutes()/60;
+  $('#clkUtc').textContent=String(now.getUTCHours()).padStart(2,'0')+':'+String(now.getUTCMinutes()).padStart(2,'0');
+  const inR=(h,s,e)=>s<e?(h>=s&&h<e):(h>=s||h<e);
+  const rib=$('#ribbon'); rib.innerHTML=SESS.map(S=>{
+    const act=inR(u,S.s,S.e); const kz=u>=S.kz[0]&&u<S.kz[1];
+    return `<div class="seg ${S.k} ${act?'active':''} ${kz&&act?'kz':''}">${S.n}</div>`;
+  }).join('');
+}
+setInterval(tickClock,15000);
+
+/* ============ NEWS CALENDAR (recurring high-impact) ============ */
+/* Times in UTC. AUD-relevant: USD, AUD, CNY */
+const NEWS_RECUR=[
+ {cc:'USD',ev:'Non-Farm Payrolls',note:'1st Friday — biggest USD mover',imp:'high',when:'1st Fri',t:'12:30'},
+ {cc:'USD',ev:'CPI (Inflation)',note:'Mid-month — Fed rate driver',imp:'high',when:'~mid-month',t:'12:30'},
+ {cc:'USD',ev:'FOMC Rate Decision',note:'8x/yr — highest impact session',imp:'high',when:'8x/year',t:'18:00'},
+ {cc:'USD',ev:'Core PCE',note:'Fed preferred inflation gauge',imp:'high',when:'Late month',t:'12:30'},
+ {cc:'USD',ev:'Retail Sales',note:'Consumer strength',imp:'med',when:'~mid-month',t:'12:30'},
+ {cc:'USD',ev:'ISM Manufacturing PMI',note:'1st business day',imp:'med',when:'1st b-day',t:'14:00'},
+ {cc:'USD',ev:'Unemployment Claims',note:'Weekly — Thursday',imp:'med',when:'Every Thu',t:'12:30'},
+ {cc:'AUD',ev:'RBA Rate Decision',note:'~1st Tue most months — direct AUD',imp:'high',when:'Monthly Tue',t:'03:30'},
+ {cc:'AUD',ev:'CPI (Quarterly)',note:'Jan/Apr/Jul/Oct — RBA driver',imp:'high',when:'Quarterly',t:'00:30'},
+ {cc:'AUD',ev:'Employment Change',note:'Mid-month — AUD volatility',imp:'high',when:'~mid-month',t:'00:30'},
+ {cc:'AUD',ev:'Wage Price Index',note:'Quarterly — inflation input',imp:'med',when:'Quarterly',t:'00:30'},
+ {cc:'AUD',ev:'RBA Meeting Minutes',note:'2 weeks after decision',imp:'med',when:'Monthly',t:'00:30'},
+ {cc:'CNY',ev:'GDP',note:'Quarterly — risk sentiment / AUD proxy',imp:'high',when:'Quarterly',t:'02:00'},
+ {cc:'CNY',ev:'Caixin Manufacturing PMI',note:'1st b-day — AUD leading signal',imp:'high',when:'1st b-day',t:'01:45'},
+ {cc:'CNY',ev:'CPI / PPI',note:'~9th — China demand gauge',imp:'med',when:'~9th',t:'01:30'},
+ {cc:'CNY',ev:'Trade Balance',note:'AUD commodity demand read',imp:'med',when:'~7th-14th',t:'03:00'},
+ {cc:'CNY',ev:'Retail Sales & Ind. Production',note:'Mid-month — growth pulse',imp:'med',when:'~15th',t:'02:00'},
+];
+const CORR={inverse:['USD/CAD','USD/CHF','USD/JPY','DXY'],positive:['NZD/USD','XAU/USD','Copper','China data']};
+
+console.log('part1 loaded');
+
+/* ============ ICT MODEL LIBRARY (with SVG diagrams) ============ */
+// SVG helpers for clean candlestick/structure diagrams
+function candle(x,o,h,l,c,w=10){
+  const up=c<o; const col=up?'#3ec77b':'#e0533b';
+  const bt=Math.min(o,c),bb=Math.max(o,c);
+  return `<line x1="${x}" y1="${h}" x2="${x}" y2="${l}" stroke="${col}" stroke-width="1.5"/>
+  <rect x="${x-w/2}" y="${bt}" width="${w}" height="${Math.max(bb-bt,1.5)}" fill="${col}"/>`;
+}
+function svgWrap(vb,inner,h=170){return `<svg viewBox="0 0 320 ${h}" preserveAspectRatio="xMidYMid meet">${inner}</svg>`}
+function lvl(y,x1,x2,col,dash,lbl){return `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${col}" stroke-width="1" ${dash?'stroke-dasharray="4 3"':''}/>${lbl?`<text x="${x2+2}" y="${y+3}" fill="${col}" font-size="8" font-family="monospace">${lbl}</text>`:''}`}
+
+const ICT=[
+{n:'Killzones (Time Theory)',badge:'Time',lead:'Time is the first filter. Price only matters inside the windows where institutions are active.',
+ body:`<p>ICT trades specific UTC windows where liquidity and volatility concentrate. Outside these, you wait.</p>
+ <div class="kv"><b>Asia KZ</b><span>00:00–04:00 UTC — accumulation, sets the day's range</span></div>
+ <div class="kv"><b>London KZ</b><span>07:00–10:00 UTC — first manipulation, often the daily high/low</span></div>
+ <div class="kv"><b>NY AM KZ</b><span>12:00–15:00 UTC — main move, NFP/CPI land here (12:30)</span></div>
+ <div class="kv"><b>Silver Bullet</b><span>14:00–15:00 UTC — the hour-long algorithmic window</span></div>
+ <div class="note">For AUD: the London KZ frequently sweeps the Asia session high/low before the real NY move. RBA news drops 03:30 UTC — inside no killzone, so expect a Judas spike.</div>`,
+ svg:svgWrap('',`
+  <rect x="0" y="0" width="320" height="170" fill="none"/>
+  <rect x="10" y="20" width="70" height="130" fill="#4a90d911"/><text x="14" y="33" fill="#4a90d9" font-size="9" font-family="monospace">ASIA</text>
+  <rect x="90" y="20" width="80" height="130" fill="#e0a23b18"/><text x="94" y="33" fill="#e0a23b" font-size="9" font-family="monospace">LONDON KZ</text>
+  <rect x="180" y="20" width="90" height="130" fill="#3ec77b18"/><text x="184" y="33" fill="#3ec77b" font-size="9" font-family="monospace">NY KZ</text>
+  <rect x="205" y="20" width="40" height="130" fill="#e0a23b22" stroke="#e0a23b" stroke-dasharray="3 2"/><text x="208" y="145" fill="#e0a23b" font-size="7" font-family="monospace">SB</text>
+  <text x="278" y="90" fill="#5a6772" font-size="8" font-family="monospace">DEAD</text>
+  ${candle(30,60,50,75,68)}${candle(50,68,58,80,62)}${candle(70,62,55,72,58)}
+  ${candle(105,58,48,90,85)}${candle(125,85,40,92,52)}${candle(145,52,45,60,48)}
+  ${candle(190,48,42,70,55)}${candle(215,55,30,62,35)}${candle(240,35,28,50,32)}
+ `)},
+{n:'Liquidity (BSL / SSL)',badge:'Concept',lead:'Price is engineered to reach resting orders. Find the liquidity, and you find the target.',
+ body:`<p>Stops cluster above old highs (Buy-Side Liquidity) and below old lows (Sell-Side Liquidity). The algorithm seeks these pools to fill institutional orders.</p>
+ <div class="kv"><b>BSL</b><span>Above swing highs, equal highs, trendline tops — where shorts' stops sit</span></div>
+ <div class="kv"><b>SSL</b><span>Below swing lows, equal lows — where longs' stops sit</span></div>
+ <div class="kv"><b>Read</b><span>Equal highs/lows = a magnet. Price wants to run them before reversing.</span></div>
+ <div class="tags"><span class="x">Equal highs</span><span class="x">Liquidity void</span><span class="x">Stop hunt</span></div>`,
+ svg:svgWrap('',`
+  ${lvl(40,20,250,'#e0533b',1,'BSL')}
+  ${lvl(135,20,250,'#3ec77b',1,'SSL')}
+  ${candle(40,90,80,100,95)}${candle(60,95,42,100,55)}${candle(80,55,48,70,62)}
+  ${candle(100,62,55,90,85)}${candle(120,85,80,128,124)}${candle(140,124,38,128,45)}
+  ${candle(165,45,40,60,52)}${candle(185,52,42,70,48)}${candle(205,48,36,55,40)}
+  <text x="120" y="160" fill="#8a98a5" font-size="8" font-family="monospace">sweep SSL → reverse to BSL</text>
+ `)},
+{n:'Fair Value Gap (FVG)',badge:'Entry',lead:'A 3-candle imbalance the algorithm returns to fill. Your highest-probability entry zone.',
+ body:`<p>An FVG is a gap between candle 1's wick and candle 3's wick, left by an aggressive candle 2. Price tends to retrace into it before continuing.</p>
+ <div class="kv"><b>Bullish FVG</b><span>Gap below price — buy the retrace into it</span></div>
+ <div class="kv"><b>Entry</b><span>Limit at 50% (consequent encroachment) of the gap</span></div>
+ <div class="kv"><b>Invalid</b><span>Full close through the gap kills the setup</span></div>`,
+ svg:svgWrap('',`
+  ${candle(60,120,110,130,122)}
+  ${candle(100,122,55,128,62)}
+  <rect x="115" y="80" width="120" height="32" fill="#e0a23b22" stroke="#e0a23b" stroke-dasharray="3 2"/><text x="170" y="100" fill="#e0a23b" font-size="8" font-family="monospace" text-anchor="middle">FVG</text>
+  ${candle(140,62,52,70,58)}
+  ${candle(175,58,55,95,90)}
+  ${candle(210,90,80,100,85)}
+  ${candle(245,85,40,90,48)}
+  <text x="175" y="130" fill="#8a98a5" font-size="8" font-family="monospace" text-anchor="middle">retrace fills gap → continue</text>
+ `)},
+{n:'Order Block (OB)',badge:'Entry',lead:'The last opposing candle before an impulsive move. Institutional footprint and a precision entry.',
+ body:`<p>A bullish OB is the last down-candle before a strong up-move; price returns to it as support. Bearish OB is the mirror.</p>
+ <div class="kv"><b>Valid OB</b><span>Must create displacement (a strong, gappy move away) + take liquidity first</span></div>
+ <div class="kv"><b>Entry</b><span>Open of the OB candle; SL below its low (bullish)</span></div>
+ <div class="kv"><b>Best</b><span>OB that also holds an FVG = "Unicorn" confluence</span></div>`,
+ svg:svgWrap('',`
+  ${candle(50,70,62,85,80)}${candle(75,80,70,92,88)}
+  <rect x="93" y="78" width="22" height="22" fill="#3ec77b22" stroke="#3ec77b"/><text x="104" y="115" fill="#3ec77b" font-size="7" font-family="monospace" text-anchor="middle">OB</text>
+  ${candle(104,88,82,100,96)}
+  ${candle(130,96,45,100,52)}${candle(155,52,38,58,42)}
+  ${candle(185,42,40,90,85)}${candle(210,85,80,98,90)}
+  <text x="150" y="135" fill="#8a98a5" font-size="8" font-family="monospace">return to OB → launch</text>
+ `)},
+{n:'Silver Bullet',badge:'Setup',lead:'A fixed one-hour window (14:00–15:00 UTC). Take the first FVG after a liquidity sweep. Time-boxed and mechanical.',
+ body:`<p class="lead">The most rule-bound ICT setup — ideal for journaling because the variables are fixed.</p>
+ <div class="kv"><b>Window</b><span>14:00–15:00 UTC (NY AM). Also 03–04 & 19–20 variants.</span></div>
+ <div class="kv"><b>Trigger</b><span>1) Liquidity sweep → 2) displacement → 3) FVG forms → enter the FVG</span></div>
+ <div class="kv"><b>Target</b><span>Opposing liquidity pool; min 1:2 R</span></div>
+ <div class="kv"><b>Stop</b><span>Beyond the swept high/low</span></div>
+ <div class="note">AUD note: NY AM SB lands right after the 12:30 USD data. If NFP/CPI just dropped, the sweep is the news spike itself — let the FVG form on the reversal.</div>`,
+ svg:svgWrap('',`
+  <rect x="80" y="15" width="160" height="140" fill="#e0a23b12" stroke="#e0a23b" stroke-dasharray="4 3"/><text x="160" y="28" fill="#e0a23b" font-size="9" font-family="monospace" text-anchor="middle">14:00–15:00 SB</text>
+  ${lvl(50,20,300,'#e0533b',1,'BSL')}
+  ${candle(95,80,72,90,85)}${candle(118,85,52,90,58)}
+  ${candle(140,58,48,55,52)}
+  <rect x="150" y="58" width="80" height="20" fill="#3ec77b22" stroke="#3ec77b" stroke-dasharray="3 2"/><text x="190" y="72" fill="#3ec77b" font-size="7" font-family="monospace" text-anchor="middle">FVG entry</text>
+  ${candle(165,52,46,62,55)}${candle(190,55,48,68,52)}
+  ${candle(215,52,40,58,45)}<text x="200" y="135" fill="#8a98a5" font-size="8" font-family="monospace">sweep→displace→FVG→short</text>
+ `)},
+{n:'Unicorn Model',badge:'Setup',lead:'Breaker block + FVG overlapping in the same zone. Two confluences stacked = a high-probability "unicorn" entry.',
+ body:`<p>Combines a <b>breaker</b> (failed OB that price breaks and returns to) with an <b>FVG</b> in the same price band. When both align, you trade the overlap.</p>
+ <div class="kv"><b>1. Liquidity</b><span>Price sweeps a high/low</span></div>
+ <div class="kv"><b>2. MSS</b><span>Market structure shift confirms reversal</span></div>
+ <div class="kv"><b>3. Breaker+FVG</b><span>Enter where the breaker and FVG overlap</span></div>
+ <div class="tags"><span class="x">Highest confluence</span><span class="x">A+ only</span></div>`,
+ svg:svgWrap('',`
+  ${lvl(40,20,280,'#e0533b',1,'liq')}
+  ${candle(55,90,82,100,95)}${candle(78,95,42,100,52)}
+  <rect x="70" y="68" width="40" height="16" fill="#9a7bd033" stroke="#9a7bd0"/><text x="90" y="62" fill="#9a7bd0" font-size="7" font-family="monospace" text-anchor="middle">breaker</text>
+  <rect x="70" y="68" width="40" height="16" fill="#e0a23b22" stroke="#e0a23b" stroke-dasharray="2 2"/>
+  ${candle(105,52,46,60,55)}${candle(128,55,48,70,52)}
+  ${candle(150,52,68,58,72)}${candle(172,72,66,95,90)}
+  <text x="150" y="120" fill="#9a7bd0" font-size="8" font-family="monospace" text-anchor="middle">breaker ∩ FVG = unicorn</text>
+ `)},
+{n:'Turtle Soup',badge:'Setup',lead:'A false breakout reversal. Price pokes a prior high/low to grab stops, then snaps back. Fade the failed break.',
+ body:`<p>Named for fading the "Turtle" breakout system. Price runs an old high/low (liquidity grab) and immediately reverses — you trade the reversal.</p>
+ <div class="kv"><b>Setup</b><span>Old high/low gets swept by a small margin</span></div>
+ <div class="kv"><b>Trigger</b><span>Quick rejection candle + MSS back inside range</span></div>
+ <div class="kv"><b>Stop</b><span>Just beyond the false-break extreme</span></div>`,
+ svg:svgWrap('',`
+  ${lvl(45,20,280,'#e0533b',1,'old high')}
+  ${candle(60,90,80,100,88)}${candle(85,88,55,95,62)}${candle(110,62,70,80,75)}
+  ${candle(135,75,38,82,42)}
+  ${candle(160,42,40,75,70)}${candle(185,70,62,90,85)}${candle(210,85,78,100,95)}
+  <text x="140" y="30" fill="#e0533b" font-size="8" font-family="monospace">false break ↑</text>
+  <text x="170" y="120" fill="#3ec77b" font-size="8" font-family="monospace">snap back → long</text>
+ `)},
+{n:'Judas Swing',badge:'Concept',lead:'The early false move that traps breakout traders before the real session move runs the opposite way.',
+ body:`<p>Early in London or NY, price makes a deceptive move (the "betrayal") to grab liquidity, then reverses into the true direction for the session.</p>
+ <div class="kv"><b>Timing</b><span>First 1–2h of London / NY open</span></div>
+ <div class="kv"><b>Use</b><span>Don't chase the open. Wait for the swing to complete, then trade the reversal.</span></div>
+ <div class="note">AUD/RBA at 03:30 UTC is a classic Judas generator — initial spike often reverses once the statement is digested.</div>`,
+ svg:svgWrap('',`
+  <line x1="70" y1="15" x2="70" y2="155" stroke="#262f38" stroke-dasharray="3 3"/><text x="73" y="25" fill="#5a6772" font-size="8" font-family="monospace">open</text>
+  ${candle(85,80,70,90,72)}${candle(105,72,55,78,58)}
+  <text x="95" y="48" fill="#e0533b" font-size="8" font-family="monospace">Judas ↑ trap</text>
+  ${candle(127,58,52,90,85)}${candle(150,85,80,110,105)}${candle(173,105,98,125,120)}
+  <text x="150" y="145" fill="#3ec77b" font-size="8" font-family="monospace">true move ↓</text>
+ `)},
+{n:'Power of 3 (AMD)',badge:'Concept',lead:'Accumulation → Manipulation → Distribution. The daily candle is built in three phases. Trade the distribution.',
+ body:`<p>Every higher-timeframe candle forms in 3 acts. Recognizing the phase tells you whether to wait or strike.</p>
+ <div class="kv"><b>Accumulation</b><span>Tight range (often Asia) — institutions build positions</span></div>
+ <div class="kv"><b>Manipulation</b><span>Judas swing sweeps liquidity the wrong way</span></div>
+ <div class="kv"><b>Distribution</b><span>The real expansion — your trade lives here</span></div>`,
+ svg:svgWrap('',`
+  <rect x="20" y="70" width="70" height="40" fill="#4a90d911"/><text x="55" y="125" fill="#4a90d9" font-size="8" font-family="monospace" text-anchor="middle">Accum</text>
+  ${candle(35,90,85,95,88)}${candle(55,88,84,94,90)}${candle(75,90,85,96,87)}
+  <text x="120" y="55" fill="#e0a23b" font-size="8" font-family="monospace" text-anchor="middle">Manip</text>
+  ${candle(110,87,60,92,65)}${candle(130,65,58,80,72)}
+  <text x="210" y="140" fill="#3ec77b" font-size="8" font-family="monospace" text-anchor="middle">Distribution</text>
+  ${candle(155,72,78,90,95)}${candle(178,95,90,115,110)}${candle(200,110,105,135,130)}${candle(222,130,125,150,145)}
+ `)},
+{n:'OTE (Optimal Trade Entry)',badge:'Entry',lead:'The 0.62–0.79 Fibonacci retracement of an impulse leg. Deep enough for great R, shallow enough to stay valid.',
+ body:`<p>After displacement, price retraces. The OTE zone (62%–79% fib) is where you enter with the trend for maximum reward-to-risk.</p>
+ <div class="kv"><b>Zone</b><span>0.62, 0.705 (sweet spot), 0.79 retracement</span></div>
+ <div class="kv"><b>Confluence</b><span>Stack with FVG / OB inside the zone</span></div>
+ <div class="kv"><b>Target</b><span>-0.5 / -1 fib extension (prior liquidity)</span></div>`,
+ svg:svgWrap('',`
+  ${candle(40,120,112,128,116)}${candle(60,116,70,122,75)}${candle(80,75,55,80,60)}
+  <rect x="95" y="72" width="150" height="26" fill="#e0a23b18" stroke="#e0a23b" stroke-dasharray="3 2"/>
+  <text x="248" y="80" fill="#e0a23b" font-size="7" font-family="monospace">.62</text>
+  <text x="248" y="98" fill="#e0a23b" font-size="7" font-family="monospace">.79</text>
+  <text x="170" y="90" fill="#e0a23b" font-size="8" font-family="monospace" text-anchor="middle">OTE</text>
+  ${candle(105,60,68,65,82)}${candle(125,82,78,95,90)}
+  ${candle(150,90,84,92,86)}
+  ${candle(175,86,55,90,60)}${candle(200,60,40,65,45)}
+  <text x="160" y="135" fill="#8a98a5" font-size="8" font-family="monospace">retrace to OTE → continue</text>
+ `)},
+];
+
+console.log('part2 ICT loaded');
+
+/* ============ CANDLESTICK PATTERNS (SVG) ============ */
+function cstick(x,o,h,l,c,w=14){
+  const up=c<o,col=up?'#3ec77b':'#e0533b',bt=Math.min(o,c),bb=Math.max(o,c);
+  return `<line x1="${x}" y1="${h}" x2="${x}" y2="${l}" stroke="${col}" stroke-width="2"/><rect x="${x-w/2}" y="${bt}" width="${w}" height="${Math.max(bb-bt,2)}" fill="${col}"/>`;
+}
+function csWrap(inner){return `<svg viewBox="0 0 200 130">${inner}</svg>`}
+const CANDLES=[
+ {n:'Bullish Engulfing',t:'Reversal ↑',d:'Large green body fully engulfs the prior red body. Buyers overwhelm sellers — strong reversal at support.',svg:csWrap(`${cstick(70,55,45,85,80)}${cstick(120,82,30,95,38)}`)},
+ {n:'Bearish Engulfing',t:'Reversal ↓',d:'Large red body engulfs the prior green. Sellers take control at resistance.',svg:csWrap(`${cstick(70,80,70,95,50)}${cstick(120,42,30,98,90)}`)},
+ {n:'Hammer',t:'Reversal ↑',d:'Small body, long lower wick (2x body). Sellers pushed down but buyers reclaimed — bottom signal.',svg:csWrap(`${cstick(100,55,48,100,62)}`)},
+ {n:'Shooting Star',t:'Reversal ↓',d:'Small body, long upper wick. Buyers pushed up then failed — top signal.',svg:csWrap(`${cstick(100,75,30,82,68)}`)},
+ {n:'Doji',t:'Indecision',d:'Open ≈ close. Equilibrium. Powerful at extremes or inside an FVG — wait for confirmation.',svg:csWrap(`${cstick(100,65,35,95,64)}`)},
+ {n:'Morning Star',t:'Reversal ↑',d:'3-candle: big red → small indecision → big green. Classic bottom.',svg:csWrap(`${cstick(55,50,42,90,85)}${cstick(100,88,82,96,90)}${cstick(145,86,40,92,48)}`)},
+ {n:'Evening Star',t:'Reversal ↓',d:'3-candle: big green → small → big red. Classic top.',svg:csWrap(`${cstick(55,85,78,95,45)}${cstick(100,42,36,50,44)}${cstick(145,48,42,90,85)}`)},
+ {n:'Pin Bar / Rejection',t:'Reversal',d:'Long wick rejecting a level. The wick shows where price was refused — trade away from the wick.',svg:csWrap(`${cstick(100,60,52,105,68)}`)},
+ {n:'Inside Bar',t:'Continuation',d:'Bar fully inside the prior bar\'s range. Compression before expansion — break in trend direction.',svg:csWrap(`${cstick(80,45,35,100,90)}${cstick(125,75,55,85,65)}`)},
+ {n:'Marubozu',t:'Momentum',d:'Full body, no wicks. One side in total control — strong continuation / displacement candle.',svg:csWrap(`${cstick(100,90,90,40,40)}`)},
+];
+
+/* ============ TECHNICAL ANALYSIS CHEAT SHEET ============ */
+const TA=[
+ {n:'Market Structure',pts:['Uptrend = Higher Highs + Higher Lows (HH/HL)','Downtrend = Lower Highs + Lower Lows (LH/LL)','BOS (Break of Structure) = trend continues','MSS / CHoCH = first sign of reversal','Trade WITH structure on your execution TF']},
+ {n:'Support & Resistance',pts:['S/R flip: broken support becomes resistance','More touches = more significant (but more likely to break)','Zones, not lines — use bodies + wicks','Confluence with round numbers (0.6500) & session H/L']},
+ {n:'Fibonacci',pts:['Retrace: 0.382 / 0.5 / 0.618 / 0.705 (OTE) / 0.786','Extensions for targets: 1.27 / 1.618 / -0.5 / -1','Draw swing low→high (uptrend) on the impulse leg','0.705 = ICT sweet spot for entries']},
+ {n:'Trend & Momentum',pts:['EMA 20/50/200 for bias & dynamic S/R','RSI: >70 overbought, <30 oversold — divergence > level','Divergence = price HH but RSI LH → weakening','Volume confirms breakouts; low-vol breaks fail']},
+ {n:'Key Levels to Mark Daily',pts:['Previous Day High / Low (PDH/PDL)','Previous Week High / Low','Asia session range H/L','Daily / Weekly opening price','Equal highs & lows (liquidity)']},
+ {n:'Confluence Stack (A+ setup)',pts:['HTF bias aligned (Daily/4H)','In a killzone (time)','At a key level (PDH/PDL/OB)','Liquidity swept before entry','FVG or OB entry trigger','Min 1:2 reward-to-risk']},
+];
+
+/* ============ EDUCATION: methodology ============ */
+const EDU=[
+ {n:'Top-Down Analysis (HTF → LTF)',lead:'The core workflow. Bias comes from the top; entries from the bottom. Never invert this.',
+  steps:[
+   ['Monthly / Weekly','Establish macro bias & major liquidity. Where is price in the larger range?'],
+   ['Daily','Define the trend (HH/HL?), mark PDH/PDL, identify the draw on liquidity (where does price WANT to go?)'],
+   ['4H / 1H','Find the OB / FVG / structure that aligns with daily bias. This is your "zone of interest."'],
+   ['15m / 5m','Wait for price to reach the zone inside a killzone. Look for a liquidity sweep + MSS.'],
+   ['1m / 5m execution','Enter on the FVG/OB after the shift. SL beyond the sweep, TP at opposing liquidity.'],
+  ],
+  note:'Rule: the higher timeframe always wins. If Daily is bearish, you only take shorts on the LTF — no exceptions. Counter-trend trades are where accounts die.'},
+ {n:'Building Daily Bias',lead:'Before any entry, you must answer: which direction is the algorithm likely to deliver price today?',
+  steps:[
+   ['1. Where is liquidity?','Mark BSL (highs) and SSL (lows). Equal highs/lows are prime targets.'],
+   ['2. Last move','Did price just take SSL? Bias shifts to seek BSL next, and vice versa.'],
+   ['3. HTF FVG/OB','Is there an unfilled HTF imbalance pulling price?'],
+   ['4. News',"Is there high-impact data? It often provides the catalyst for the day's manipulation + distribution."],
+   ['5. Commit',"Write one sentence: \"Today I expect price to sweep ___ then deliver to ___.\""],
+  ],
+  note:'If you cannot write that one sentence, you do not have a bias — and you should not trade. No bias = no trade.'},
+ {n:'Risk Management (the real edge)',lead:'You cannot control outcomes, only risk. This is the only thing that keeps you in the game.',
+  steps:[
+   ['Fixed % risk','Risk 0.5–1% per trade. Never vary by "conviction."'],
+   ['Defined R','Know your R in dollars before entry. Outcome measured in R, not $.'],
+   ['Daily loss limit','Stop after -2R or -3% in a day. Walk away. The market reopens tomorrow.'],
+   ['Min R:R','Skip anything under 1:2. One winner pays for two losers.'],
+   ['Correlation cap','AUD/USD long + NZD/USD long = one trade at double size. Count it as such.'],
+  ],
+  note:'A 45% win rate at 1:3 R is wildly profitable. A 70% win rate at 1:0.5 R bleeds out. Win rate is vanity; expectancy is sanity.'},
+ {n:'Trade Management',lead:'The entry is 20% of the job. Management is the rest.',
+  steps:[
+   ['Set & forget vs. active','Decide before entry. Switching mid-trade = emotion.'],
+   ['Stop to breakeven','Move to BE after price clears the first liquidity / 1R — protects capital.'],
+   ['Partial profits','Take 50% at 1:2, let the rest run to the next pool with a trailed stop.'],
+   ['Never widen a stop','Moving a stop away from price is the single most account-destroying habit.'],
+   ['Journal immediately','Log the trade while it\'s fresh — especially the mistake tag.'],
+  ],
+  note:'The goal is not to be right. The goal is to make more when right than you lose when wrong, repeatedly, without blowing up.'},
+];
+
+console.log('part3 content loaded');
+
+/* ============ NAVIGATION ============ */
+const TABS=[
+ {id:'dash',n:'Desk',icon:'M3 13h2v6H3zm4-5h2v11H7zm4-4h2v15h-2zm4 7h2v8h-2zm4-3h2v11h-2z'},
+ {id:'chart',n:'Chart',icon:'M3 3v18h18M7 14l3-4 3 3 4-6'},
+ {id:'journal',n:'Journal',icon:'M5 3h11l3 3v15H5zM15 3v4h4M8 11h8M8 15h8'},
+ {id:'calc',n:'Calc',icon:'M6 2h12v20H6zM9 6h6M8 10h2m3 0h2M8 14h2m3 0h2M8 18h2m3 0h2'},
+ {id:'news',n:'News',icon:'M4 4h16v16H4zM8 8h8M8 12h8M8 16h5'},
+ {id:'ict',n:'ICT',icon:'M3 17l5-5 4 3 8-9M21 6h-4m4 0v4'},
+ {id:'edu',n:'Learn',icon:'M12 3L2 8l10 5 10-5zM6 11v5l6 3 6-3v-5'},
+ {id:'plan',n:'Plan',icon:'M9 11l3 3 8-8M3 12a9 9 0 1018 0 9 9 0 00-18 0'},
+];
+function nav(id){
+  $$('.view').forEach(v=>v.classList.remove('on'));
+  $('#v-'+id).classList.add('on');
+  $$('.tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.t===id));
+  window.scrollTo(0,0);
+  render(id);
+}
+$('#tabbar').innerHTML=TABS.map(t=>`<button data-t="${t.id}" onclick="nav('${t.id}')">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="${t.icon}"/></svg>${t.n}</button>`).join('');
+
+/* ============ ANALYTICS ENGINE ============ */
+function stats(trades){
+  const closed=trades.filter(t=>t.outcome!=null);
+  const n=closed.length;
+  if(!n)return{n:0,wins:0,wr:0,avgR:0,totR:0,pf:0,exp:0,bySession:{},byModel:{},byDay:{},maxDD:0,curve:[0]};
+  let wins=0,totR=0,gp=0,gl=0,curve=[0],peak=0,maxDD=0;
+  const bySession={},byModel={},byDay={};
+  closed.slice().reverse().forEach(t=>{
+    const r=Number(t.r)||0; totR+=r; if(r>0){wins++;gp+=r}else{gl+=Math.abs(r)}
+    curve.push(+(curve[curve.length-1]+r).toFixed(2));
+    peak=Math.max(peak,curve[curve.length-1]); maxDD=Math.max(maxDD,peak-curve[curve.length-1]);
+    const acc=(o,k)=>{o[k]=o[k]||{n:0,r:0,w:0};o[k].n++;o[k].r+=r;if(r>0)o[k].w++};
+    acc(bySession,t.session||'—'); acc(byModel,t.model||'—');
+    acc(byDay,new Date(t.date).toLocaleDateString('en',{weekday:'short'}));
+  });
+  return{n,wins,wr:wins/n*100,avgR:totR/n,totR,pf:gl?gp/gl:gp,exp:totR/n,bySession,byModel,byDay,maxDD,curve};
+}
+
+/* ============ RENDER DISPATCHER ============ */
+function render(id){
+  ({dash:renderDash,chart:renderChart,journal:renderJournal,calc:renderCalc,news:renderNews,ict:renderICT,edu:renderEdu,plan:renderPlan}[id])();
+}
+
+/* ---- DASHBOARD ---- */
+function renderDash(){
+  const s=stats(DB.trades);
+  const wrCol=s.wr>=50?'pos':s.wr>0?'amber':'';
+  $('#v-dash').innerHTML=`
+  <div class="card">
+    <h3>Performance <span class="tag">${s.n} closed trades</span></h3>
+    <div class="statgrid">
+      <div class="stat"><div class="v ${wrCol}">${s.n?fmt(s.wr,0):'—'}${s.n?'%':''}</div><div class="l">Win Rate</div></div>
+      <div class="stat"><div class="v ${s.totR>=0?'pos':'neg'}">${s.n?(s.totR>=0?'+':'')+fmt(s.totR,1):'—'}</div><div class="l">Total R</div></div>
+      <div class="stat"><div class="v ${s.exp>=0?'pos':'neg'}">${s.n?(s.exp>=0?'+':'')+fmt(s.exp,2):'—'}</div><div class="l">Expectancy</div></div>
+      <div class="stat"><div class="v">${s.n?fmt(s.pf,2):'—'}</div><div class="l">Profit Factor</div></div>
+      <div class="stat"><div class="v">${s.n?fmt(s.avgR,2):'—'}</div><div class="l">Avg R / Trade</div></div>
+      <div class="stat"><div class="v neg">${s.n?'-'+fmt(s.maxDD,1):'—'}</div><div class="l">Max Drawdown</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Equity Curve <span class="tag">cumulative R</span></h3>
+    ${s.n>1?`<canvas id="curve" height="150"></canvas>`:`<div class="empty">Log trades to see your equity curve build.</div>`}
+  </div>
+  ${s.n?`<div class="card"><h3>Edge by Session</h3>${breakdown(s.bySession)}</div>
+  <div class="card"><h3>Edge by Model</h3>${breakdown(s.byModel)}</div>`:''}
+  <button class="btn" onclick="openTrade()">+ Log a Trade</button>
+  <div style="height:10px"></div>
+  <button class="btn ghost" onclick="exportData()">Export / Backup Data</button>`;
+  if(s.n>1)drawCurve(s.curve);
+}
+function breakdown(o){
+  const ks=Object.keys(o).sort((a,b)=>o[b].r-o[a].r);
+  if(!ks.length)return'<div class="faint">No data yet.</div>';
+  return ks.map(k=>{const d=o[k],wr=d.w/d.n*100;
+   return `<div style="margin-bottom:10px"><div style="display:flex;font-size:13px;margin-bottom:4px"><span>${esc(k)}</span><span class="mono" style="margin-left:auto;color:${d.r>=0?'var(--green)':'var(--red)'}">${d.r>=0?'+':''}${fmt(d.r,1)}R</span></div>
+   <div class="bar"><div style="width:${wr}%;background:var(--green)"></div><div style="width:${100-wr}%;background:var(--red-d)"></div></div>
+   <div class="faint mono" style="font-size:10px;margin-top:3px">${d.n} trades · ${fmt(wr,0)}% win</div></div>`;
+  }).join('');
+}
+function drawCurve(c){
+  const cv=$('#curve');if(!cv)return; const ctx=cv.getContext('2d');
+  const W=cv.width=cv.offsetWidth*2,H=cv.height=300; cv.style.height='150px';
+  const mn=Math.min(0,...c),mx=Math.max(0,...c),rng=mx-mn||1,pad=20;
+  const x=i=>pad+i/(c.length-1)*(W-pad*2), y=v=>H-pad-(v-mn)/rng*(H-pad*2);
+  // zero line
+  ctx.strokeStyle='#262f38';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad,y(0));ctx.lineTo(W-pad,y(0));ctx.stroke();
+  // fill
+  ctx.beginPath();ctx.moveTo(x(0),y(c[0]));c.forEach((v,i)=>ctx.lineTo(x(i),y(v)));
+  ctx.lineTo(x(c.length-1),y(0));ctx.lineTo(x(0),y(0));ctx.closePath();
+  ctx.fillStyle=c[c.length-1]>=0?'rgba(62,199,123,.12)':'rgba(224,83,59,.12)';ctx.fill();
+  // line
+  ctx.beginPath();ctx.moveTo(x(0),y(c[0]));c.forEach((v,i)=>ctx.lineTo(x(i),y(v)));
+  ctx.strokeStyle=c[c.length-1]>=0?'#3ec77b':'#e0533b';ctx.lineWidth=2.5;ctx.stroke();
+}
+
+console.log('part4 nav+dash loaded');
+
+/* ---- JOURNAL ---- */
+let jFilter={};
+function renderJournal(){
+  let ts=DB.trades.slice();
+  if(jFilter.model)ts=ts.filter(t=>t.model===jFilter.model);
+  if(jFilter.session)ts=ts.filter(t=>t.session===jFilter.session);
+  if(jFilter.outcome)ts=ts.filter(t=>t.outcome===jFilter.outcome);
+  const op=DB.open;
+  $('#v-journal').innerHTML=`
+  <div class="row" style="margin-bottom:14px">
+    <button class="btn" onclick="openTrade()">+ Log Trade</button>
+    <button class="btn ghost" onclick="openPosition()">+ Open Position</button>
+  </div>
+  ${op.length?`<div class="section-h">Open Positions (${op.length})</div>
+   <div class="tlist">${op.map(p=>posCard(p)).join('')}</div>`:''}
+  <div class="section-h">Trade Log</div>
+  <div class="card" style="padding:12px">
+   <div class="chipwrap" style="margin-bottom:4px">
+    ${['Silver Bullet','Unicorn','Turtle Soup'].map(m=>`<span class="chip ${jFilter.model===m?'on':''}" onclick="toggleF('model','${m}')">${m}</span>`).join('')}
+    <span class="chip ${jFilter.outcome==='win'?'on g':''}" onclick="toggleF('outcome','win')">Wins</span>
+    <span class="chip ${jFilter.outcome==='loss'?'on r':''}" onclick="toggleF('outcome','loss')">Losses</span>
+    ${Object.keys(jFilter).length?`<span class="chip" onclick="jFilter={};renderJournal()">Clear ✕</span>`:''}
+   </div>
+  </div>
+  ${ts.length?`<div class="tlist">${ts.map(t=>tradeCard(t)).join('')}</div>`:
+   `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 3h11l3 3v15H5z"/><path d="M15 3v4h4M8 11h8M8 15h8"/></svg><div>No trades logged yet.<br>Every entry sharpens the edge.</div></div>`}`;
+}
+function toggleF(k,v){jFilter[k]=jFilter[k]===v?undefined:v;if(!jFilter[k])delete jFilter[k];renderJournal()}
+function tradeCard(t){
+  const cls=t.outcome==='win'?'win':t.outcome==='loss'?'loss':'be';
+  const r=Number(t.r)||0;
+  return `<div class="trade ${cls}" onclick="openTrade('${t.id}')">
+   <div class="top"><span class="pair">${esc(t.pair)}</span>
+    <span class="dir ${t.dir}">${t.dir}</span>
+    <span class="r ${r>0?'pos':r<0?'neg':'amber'}">${r>0?'+':''}${fmt(r,1)}R</span></div>
+   <div class="meta"><span>${new Date(t.date).toLocaleDateString('en',{month:'short',day:'numeric'})}</span>
+    <span>${esc(t.session||'—')}</span><span>${esc(t.model||'—')}</span>
+    ${t.grade?`<span class="amber">Grade ${t.grade}</span>`:''}
+    ${t.mistake&&t.mistake!=='None'?`<span class="neg">⚠ ${esc(t.mistake)}</span>`:''}</div>
+  </div>`;
+}
+function posCard(p){
+  return `<div class="trade be" onclick="openPosition('${p.id}')">
+   <div class="top"><span class="pair">${esc(p.pair)}</span><span class="dir ${p.dir}">${p.dir}</span>
+    <span class="r amber" style="font-size:12px">OPEN · ${esc(p.model||'—')}</span></div>
+   <div class="meta"><span>Entry ${esc(p.entry)}</span><span>SL ${esc(p.sl)}</span><span>TP ${esc(p.tp)}</span>
+    ${p.beMoved?'<span class="pos">SL→BE</span>':''}${p.partial?'<span class="pos">partial taken</span>':''}</div>
+  </div>`;
+}
+
+/* ---- TRADE ENTRY SHEET ---- */
+function openTrade(id){
+  const t=id?DB.trades.find(x=>x.id===id):{id:uid(),date:new Date().toISOString().slice(0,16),pair:'AUD/USD',dir:'long',outcome:'win',r:'',session:'',model:'',grade:'',mistake:'None',htf:'',conf:'',emo:'',newsWin:false,note:''};
+  const chip=(arr,k,cur,cl='')=>arr.map(o=>`<span class="chip ${cur===o?'on '+cl:''}" onclick="setF('${k}','${o.replace(/'/g,"\\'")}',this)">${o}</span>`).join('');
+  TMP=Object.assign({},t);
+  sheet(`
+   <h2 style="margin-bottom:16px">${id?'Edit':'Log'} Trade</h2>
+   <div class="grid2">
+     <div><label>Date / Time</label><input type="datetime-local" id="f-date" value="${t.date}"></div>
+     <div><label>Pair</label><select id="f-pair">${PAIRS.map(p=>`<option ${p===t.pair?'selected':''}>${p}</option>`).join('')}</select></div>
+   </div>
+   <label style="margin-top:12px">Direction</label><div class="chipwrap" id="c-dir">${chip(['long','short'],'dir',t.dir)}</div>
+   <label style="margin-top:12px">Outcome</label><div class="chipwrap" id="c-outcome">
+     <span class="chip ${t.outcome==='win'?'on g':''}" onclick="setF('outcome','win',this)">Win</span>
+     <span class="chip ${t.outcome==='loss'?'on r':''}" onclick="setF('outcome','loss',this)">Loss</span>
+     <span class="chip ${t.outcome==='be'?'on':''}" onclick="setF('outcome','be',this)">Breakeven</span></div>
+   <label style="margin-top:12px">Result (R-multiple) — e.g. 2.5 or -1</label><input type="number" step="0.1" id="f-r" value="${t.r}" placeholder="+2.5">
+   <label style="margin-top:12px">Session</label><div class="chipwrap" id="c-session">${chip(SESSIONS,'session',t.session)}</div>
+   <label style="margin-top:12px">Model</label><div class="chipwrap" id="c-model">${chip(MODELS,'model',t.model)}</div>
+   <label style="margin-top:12px">Setup Grade</label><div class="chipwrap" id="c-grade">${chip(['A','B','C'],'grade',t.grade)}</div>
+   <div class="grid2" style="margin-top:12px">
+     <div><label>HTF Bias</label><input id="f-htf" value="${esc(t.htf)}" placeholder="Daily bullish"></div>
+     <div><label>Confluences</label><input type="number" id="f-conf" value="${t.conf}" placeholder="4"></div>
+   </div>
+   <label style="margin-top:12px">Pre-Entry Emotion</label><div class="chipwrap" id="c-emo">${chip(['Calm','Confident','Anxious','Greedy','Bored','Revenge'],'emo',t.emo)}</div>
+   <label style="margin-top:12px">Mistake Tag (honesty = edge)</label><div class="chipwrap" id="c-mistake">${chip(MISTAKES,'mistake',t.mistake,'r')}</div>
+   <label style="margin-top:14px;display:flex;align-items:center;gap:8px;text-transform:none;font-size:14px;color:var(--ink)">
+     <input type="checkbox" id="f-news" ${t.newsWin?'checked':''} style="width:auto"> High-impact news within 30 min?</label>
+   <label style="margin-top:12px">Notes — what I saw vs. what happened</label><textarea id="f-note" rows="3" placeholder="Saw a clean SB FVG after London swept Asia low...">${esc(t.note)}</textarea>
+   <div class="row" style="margin-top:18px">
+     ${id?`<button class="btn red" onclick="delTrade('${id}')">Delete</button>`:''}
+     <button class="btn" onclick="saveTrade('${id||''}')">${id?'Update':'Save Trade'}</button>
+   </div>`);
+}
+let TMP={};
+function setF(k,v,el){TMP[k]=v;const p=el.parentElement;[...p.children].forEach(c=>c.classList.remove('on','g','r'));el.classList.add('on');if(k==='outcome'&&v==='win')el.classList.add('g');if((k==='outcome'&&v==='loss')||k==='mistake')el.classList.add('r')}
+function saveTrade(id){
+  const g=s=>$(s)?$(s).value:'';
+  const t={id:id||uid(),date:g('#f-date'),pair:g('#f-pair'),dir:TMP.dir||'long',outcome:TMP.outcome||'win',
+   r:g('#f-r'),session:TMP.session||'',model:TMP.model||'',grade:TMP.grade||'',htf:g('#f-htf'),conf:g('#f-conf'),
+   emo:TMP.emo||'',mistake:TMP.mistake||'None',newsWin:$('#f-news').checked,note:g('#f-note')};
+  if(t.outcome==='be'&&!t.r)t.r='0';
+  if(id){const i=DB.trades.findIndex(x=>x.id===id);DB.trades[i]=t}else{DB.trades.unshift(t)}
+  save();closeSheet();renderJournal();
+}
+function delTrade(id){DB.trades=DB.trades.filter(t=>t.id!==id);save();closeSheet();renderJournal()}
+
+/* ---- OPEN POSITION ---- */
+function openPosition(id){
+  const p=id?DB.open.find(x=>x.id===id):{id:uid(),pair:'AUD/USD',dir:'long',entry:'',sl:'',tp:'',model:'',beMoved:false,partial:false};
+  TMP=Object.assign({},p);
+  const chip=(arr,k,cur)=>arr.map(o=>`<span class="chip ${cur===o?'on':''}" onclick="setF('${k}','${o.replace(/'/g,"\\'")}',this)">${o}</span>`).join('');
+  sheet(`<h2 style="margin-bottom:16px">${id?'Manage':'Open'} Position</h2>
+   <label>Pair</label><select id="p-pair">${PAIRS.map(x=>`<option ${x===p.pair?'selected':''}>${x}</option>`).join('')}</select>
+   <label style="margin-top:12px">Direction</label><div class="chipwrap" id="cp-dir">${chip(['long','short'],'dir',p.dir)}</div>
+   <div class="grid3" style="margin-top:12px">
+    <div><label>Entry</label><input id="p-entry" value="${esc(p.entry)}"></div>
+    <div><label>Stop</label><input id="p-sl" value="${esc(p.sl)}"></div>
+    <div><label>Target</label><input id="p-tp" value="${esc(p.tp)}"></div></div>
+   <label style="margin-top:12px">Model</label><div class="chipwrap" id="cp-model">${chip(MODELS,'model',p.model)}</div>
+   <div class="row" style="margin-top:14px">
+    <label style="display:flex;gap:8px;align-items:center;text-transform:none;color:var(--ink)"><input type="checkbox" id="p-be" ${p.beMoved?'checked':''} style="width:auto">Stop at BE</label>
+    <label style="display:flex;gap:8px;align-items:center;text-transform:none;color:var(--ink)"><input type="checkbox" id="p-partial" ${p.partial?'checked':''} style="width:auto">Partial taken</label></div>
+   <div class="row" style="margin-top:18px">
+    ${id?`<button class="btn green" onclick="closePos('${id}')">Close → Log</button><button class="btn red" onclick="delPos('${id}')">Discard</button>`:''}
+    <button class="btn" onclick="savePos('${id||''}')">${id?'Update':'Open'}</button></div>`);
+}
+function savePos(id){
+  const p={id:id||uid(),pair:$('#p-pair').value,dir:TMP.dir||'long',entry:$('#p-entry').value,sl:$('#p-sl').value,tp:$('#p-tp').value,model:TMP.model||'',beMoved:$('#p-be').checked,partial:$('#p-partial').checked};
+  if(id){const i=DB.open.findIndex(x=>x.id===id);DB.open[i]=p}else{DB.open.unshift(p)}
+  save();closeSheet();renderJournal();
+}
+function delPos(id){DB.open=DB.open.filter(x=>x.id!==id);save();closeSheet();renderJournal()}
+function closePos(id){const p=DB.open.find(x=>x.id===id);DB.open=DB.open.filter(x=>x.id!==id);save();closeSheet();
+  openTrade();setTimeout(()=>{$('#f-pair').value=p.pair;TMP.dir=p.dir;TMP.model=p.model;},50);}
+
+console.log('part5 journal loaded');
+
+/* ---- CALCULATORS ---- */
+function renderCalc(){
+  $('#v-calc').innerHTML=`
+  <div class="card"><h3>Position Size</h3>
+    <div class="grid2">
+      <div><label>Account ($)</label><input type="number" id="ps-acct" value="${DB.settings.acct}" oninput="calcPos()"></div>
+      <div><label>Risk %</label><input type="number" step="0.1" id="ps-risk" value="${DB.settings.risk}" oninput="calcPos()"></div>
+      <div><label>Pair</label><select id="ps-pair" onchange="calcPos()">${PAIRS.map(p=>`<option>${p}</option>`).join('')}</select></div>
+      <div><label>Stop (pips)</label><input type="number" id="ps-sl" value="20" oninput="calcPos()"></div>
+    </div>
+    <div class="result"><div class="big" id="ps-out">—</div><div class="sub" id="ps-sub">Enter values to size your position</div></div>
+  </div>
+  <div class="card"><h3>Risk : Reward</h3>
+    <div class="grid3">
+      <div><label>Entry</label><input type="number" step="0.00001" id="rr-e" oninput="calcRR()"></div>
+      <div><label>Stop</label><input type="number" step="0.00001" id="rr-s" oninput="calcRR()"></div>
+      <div><label>Target</label><input type="number" step="0.00001" id="rr-t" oninput="calcRR()"></div>
+    </div>
+    <div class="result"><div class="big" id="rr-out">—</div><div class="sub" id="rr-sub">1:2 minimum to trade</div></div>
+  </div>
+  <div class="card"><h3>Profit / Loss</h3>
+    <div class="grid3">
+      <div><label>Pair</label><select id="pl-pair" onchange="calcPL()">${PAIRS.map(p=>`<option>${p}</option>`).join('')}</select></div>
+      <div><label>Lots</label><input type="number" step="0.01" id="pl-lots" value="0.10" oninput="calcPL()"></div>
+      <div><label>Pips</label><input type="number" id="pl-pips" value="20" oninput="calcPL()"></div>
+    </div>
+    <div class="result"><div class="big" id="pl-out">—</div><div class="sub">Standard lot = 100,000 units</div></div>
+  </div>
+  <div class="card"><h3>Drawdown Recovery</h3>
+    <label>Account loss %</label><input type="number" id="dd-in" value="20" oninput="calcDD()">
+    <div class="result"><div class="big" id="dd-out">—</div><div class="sub">Gain required to get back to breakeven</div></div>
+    <div class="note">Why this matters: a 50% loss needs a 100% gain to recover. Protecting capital beats chasing returns.</div>
+  </div>
+  <div class="card"><h3>Session Time Converter</h3>
+    <label>Your UTC offset</label><input type="number" id="tz-in" value="${DB.settings.tz}" step="0.5" oninput="calcTZ()">
+    <div id="tz-out" style="margin-top:12px"></div>
+  </div>`;
+  calcPos();calcRR();calcPL();calcDD();calcTZ();
+}
+function calcPos(){
+  const a=+$('#ps-acct').value,r=+$('#ps-risk').value,sl=+$('#ps-sl').value,pair=$('#ps-pair').value;
+  DB.settings.acct=a;DB.settings.risk=r;save();
+  if(!a||!r||!sl){$('#ps-out').textContent='—';return}
+  const riskAmt=a*r/100;
+  const pipVal=pair.includes('JPY')?0.91:pair==='XAU/USD'?1:1; // ~$ per pip per micro lot baseline
+  // standard: pip value per standard lot ≈ $10 (USD quote). lots = risk / (sl * 10)
+  const perPipStd=pair==='XAU/USD'?10:pair.includes('JPY')?9.1:10;
+  const lots=riskAmt/(sl*perPipStd);
+  $('#ps-out').textContent=fmt(lots,2)+' lots';
+  $('#ps-sub').innerHTML=`Risking <b>$${fmt(riskAmt,2)}</b> · ${fmt(lots*100000/1000,0)}k units · $${fmt(riskAmt/sl,2)}/pip`;
+}
+function calcRR(){
+  const e=+$('#rr-e').value,s=+$('#rr-s').value,t=+$('#rr-t').value;
+  if(!e||!s||!t){$('#rr-out').textContent='—';return}
+  const risk=Math.abs(e-s),rew=Math.abs(t-e),rr=rew/risk;
+  $('#rr-out').textContent='1 : '+fmt(rr,2);
+  $('#rr-out').className='big '+(rr>=2?'pos':rr>=1?'amber':'neg');
+  $('#rr-sub').textContent=rr>=2?'Strong setup ✓':rr>=1?'Marginal — want 1:2+':'Below 1:1 — skip it';
+}
+function calcPL(){
+  const pair=$('#pl-pair').value,lots=+$('#pl-lots').value,pips=+$('#pl-pips').value;
+  const perPip=(pair==='XAU/USD'?10:pair.includes('JPY')?9.1:10)*lots;
+  const pl=perPip*pips;
+  $('#pl-out').textContent=(pl>=0?'+':'')+'$'+fmt(pl,2);
+  $('#pl-out').className='big '+(pl>=0?'pos':'neg');
+}
+function calcDD(){
+  const l=+$('#dd-in').value;if(!l||l>=100){$('#dd-out').textContent='—';return}
+  const g=l/(100-l)*100; $('#dd-out').textContent='+'+fmt(g,1)+'%';
+  $('#dd-out').className='big '+(g>l?'neg':'amber');
+}
+function calcTZ(){
+  const off=+$('#tz-in').value;DB.settings.tz=off;save();
+  const win=[['Asia KZ',0,4],['London KZ',7,10],['NY AM KZ',12,15],['Silver Bullet',14,15],['NY PM KZ',18,20]];
+  $('#tz-out').innerHTML=win.map(w=>{
+    const lo=((w[1]+off)%24+24)%24,hi=((w[2]+off)%24+24)%24;
+    const f=h=>String(Math.floor(h)).padStart(2,'0')+':'+String(Math.round((h%1)*60)).padStart(2,'0');
+    return `<div class="kv"><b>${w[0]}</b><span class="mono">${f(lo)} – ${f(hi)} <span class="faint">local</span></span></div>`;
+  }).join('');
+}
+
+/* ---- NEWS ---- */
+function renderNews(){
+  const grp={USD:[],AUD:[],CNY:[]};NEWS_RECUR.forEach(n=>grp[n.cc].push(n));
+  const flag={USD:'🇺🇸 United States',AUD:'🇦🇺 Australia',CNY:'🇨🇳 China'};
+  $('#v-news').innerHTML=`
+   <div class="note">Recurring high-impact events affecting AUD/USD. Times in <b>UTC</b>. A static reference — confirm exact dates on a live calendar before trading the release.</div>
+   <div class="card"><h3>AUD Correlation Map</h3>
+    <div class="kv"><b>Inverse</b><span>${CORR.inverse.join(' · ')}</span></div>
+    <div class="kv"><b>Positive</b><span>${CORR.positive.join(' · ')}</span></div>
+    <div class="note">Don't stack correlated risk: AUD/USD long + NZD/USD long = one position at double size.</div>
+   </div>
+   ${Object.keys(grp).map(cc=>`<div class="card"><h3>${flag[cc]}</h3>
+     ${grp[cc].map(n=>`<div class="news-item"><span class="imp ${n.imp}"></span>
+       <span class="cc">${n.cc}</span>
+       <span class="ev">${esc(n.ev)}<small>${esc(n.note)} · ${esc(n.when)}</small></span>
+       <span class="tm">${n.t}</span></div>`).join('')}</div>`).join('')}
+   <div class="note">⚠ News-window discipline: spreads widen 5–20× at release. The screen price is not your fill. If you must trade it, wait for the post-news FVG, never the spike.</div>`;
+}
+
+/* ---- ICT ---- */
+function renderICT(){
+  $('#v-ict').innerHTML=`<div class="note">Tap any model to expand the diagram and rules. Build trades from confluence, not single signals.</div>
+   ${ICT.map((m,i)=>`<div class="refcard" id="ict-${i}">
+     <div class="head" onclick="document.getElementById('ict-${i}').classList.toggle('open')">
+       <span class="n">${esc(m.n)}</span><span class="badge">${esc(m.badge)}</span>
+       <span class="arr">›</span></div>
+     <div class="body"><p class="lead">${esc(m.lead)}</p>${m.svg}${m.body}</div></div>`).join('')}`;
+}
+
+/* ---- EDU (candles + TA + methodology) ---- */
+function renderEdu(){
+  $('#v-edu').innerHTML=`
+   <div class="section-h">Methodology</div>
+   ${EDU.map((e,i)=>`<div class="refcard" id="edu-${i}">
+     <div class="head" onclick="document.getElementById('edu-${i}').classList.toggle('open')">
+       <span class="n">${esc(e.n)}</span><span class="arr">›</span></div>
+     <div class="body"><p class="lead">${esc(e.lead)}</p>
+       ${e.steps.map(s=>`<div class="kv"><b>${esc(s[0])}</b><span>${esc(s[1])}</span></div>`).join('')}
+       <div class="note">${esc(e.note)}</div></div></div>`).join('')}
+   <div class="section-h">Technical Analysis Cheat Sheets</div>
+   ${TA.map((t,i)=>`<div class="refcard" id="ta-${i}">
+     <div class="head" onclick="document.getElementById('ta-${i}').classList.toggle('open')">
+       <span class="n">${esc(t.n)}</span><span class="arr">›</span></div>
+     <div class="body"><ul style="margin:12px 0 0 18px;font-size:14px;color:var(--dim)">${t.pts.map(p=>`<li style="margin-bottom:7px">${esc(p)}</li>`).join('')}</ul></div></div>`).join('')}
+   <div class="section-h">Candlestick Patterns</div>
+   <div class="grid2">
+   ${CANDLES.map(c=>`<div class="refcard" style="margin-bottom:0"><div class="body" style="display:block;border:none;padding:13px">
+     <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px"><span style="font-weight:700;font-size:14px">${esc(c.n)}</span></div>
+     <span class="badge" style="font-size:9px">${esc(c.t)}</span>
+     ${c.svg}<p style="font-size:12px;margin:6px 0 0">${esc(c.d)}</p></div></div>`).join('')}
+   </div>`;
+}
+
+/* ---- PLAN BUILDER (custom checklists) ---- */
+/* Data: DB.plans = [{id,name,sections:[{id,title,items:[{id,text}]}]}], DB.activePlan, DB.runState={planId:{itemId:bool}} */
+function migratePlans(){
+  if(!DB.plans){DB.plans=[];DB.activePlan=null;DB.runState={}}
+}
+function renderPlan(){
+  migratePlans();
+  if(DB.editingPlan){return renderPlanEdit()}
+  const active=DB.plans.find(p=>p.id===DB.activePlan)||DB.plans[0]||null;
+  $('#v-plan').innerHTML=`
+   <div class="card"><h3>Trading Plans <span class="tag">${DB.plans.length} saved</span></h3>
+    <p class="dim" style="font-size:14px;margin:0 0 12px">Build your own checklists — sections and items, your words. Save as many as you want, run one live before each session.</p>
+    ${DB.plans.length?`<label>Active plan</label><select onchange="DB.activePlan=this.value;save();renderPlan()">
+      ${DB.plans.map(p=>`<option value="${p.id}" ${active&&p.id===active.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select>`:''}
+    <div class="row" style="margin-top:12px">
+      <button class="btn" onclick="newPlan()">+ New Plan</button>
+      ${active?`<button class="btn ghost" onclick="editPlan('${active.id}')">Edit</button>`:''}
+    </div>
+   </div>
+   ${active?runPlan(active):`<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3 8-8M3 12a9 9 0 1018 0 9 9 0 00-18 0"/></svg><div>No plans yet.<br>Build your first checklist — your rules, your structure.</div></div>`}`;
+}
+function runPlan(p){
+  const rs=(DB.runState&&DB.runState[p.id])||{};
+  const all=p.sections.flatMap(s=>s.items.map(i=>i.id));
+  const done=all.filter(id=>rs[id]).length;
+  const pct=all.length?Math.round(done/all.length*100):0;
+  return `<div class="card" style="border-color:var(--amber-d)">
+    <h3>${esc(p.name)} <span class="tag">${done}/${all.length} checked</span></h3>
+    <div class="bar" style="margin-bottom:4px"><div style="width:${pct}%;background:${pct===100?'var(--green)':'var(--amber)'}"></div></div>
+    <div class="faint mono" style="font-size:11px;margin-bottom:14px">${pct}% complete${pct===100?' · cleared to trade ✓':''}</div>
+    ${p.sections.map(s=>`<div class="section-h" style="margin:14px 0 8px">${esc(s.title)}</div>
+      ${s.items.map(it=>`<div class="check ${rs[it.id]?'done':''}" onclick="runToggle('${p.id}','${it.id}')">
+        <div class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#062013" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg></div>
+        <div class="txt">${esc(it.text)}</div></div>`).join('')}`).join('')}
+    <button class="btn ghost sm" style="margin-top:12px" onclick="resetRun('${p.id}')">Reset checklist</button>
+    <div class="note">A plan you don't follow is a wish. Run it top to bottom before every entry.</div>
+   </div>`;
+}
+function runToggle(pid,iid){DB.runState=DB.runState||{};DB.runState[pid]=DB.runState[pid]||{};DB.runState[pid][iid]=!DB.runState[pid][iid];save();renderPlan()}
+function resetRun(pid){if(DB.runState)DB.runState[pid]={};save();renderPlan()}
+
+function newPlan(){
+  const p={id:uid(),name:'New Plan',sections:[{id:uid(),title:'Section 1',items:[{id:uid(),text:''}]}]};
+  DB.plans.push(p);DB.activePlan=p.id;DB.editingPlan=p.id;save();renderPlan();
+}
+function editPlan(id){DB.editingPlan=id;renderPlan()}
+function renderPlanEdit(){
+  const p=DB.plans.find(x=>x.id===DB.editingPlan);
+  if(!p){DB.editingPlan=null;return renderPlan()}
+  $('#v-plan').innerHTML=`
+   <div class="card"><h3>Edit Plan</h3>
+     <label>Plan name</label>
+     <input id="pl-name" value="${esc(p.name)}" oninput="planSetName('${p.id}',this.value)" placeholder="e.g. AUD/USD Kill Zone Scalping">
+   </div>
+   ${p.sections.map((s,si)=>`<div class="card">
+     <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+       <input value="${esc(s.title)}" oninput="planSetSection('${p.id}','${s.id}',this.value)" placeholder="Section title" style="font-weight:700">
+       <button class="btn ghost sm" style="flex:none;padding:8px 11px" onclick="delSection('${p.id}','${s.id}')">✕</button>
+     </div>
+     ${s.items.map(it=>`<div style="display:flex;gap:7px;margin-bottom:7px;align-items:center">
+       <span class="faint" style="flex:none">☐</span>
+       <input value="${esc(it.text)}" oninput="planSetItem('${p.id}','${s.id}','${it.id}',this.value)" placeholder="Checklist item">
+       <button class="faint" style="flex:none;padding:4px 8px;font-size:18px" onclick="delItem('${p.id}','${s.id}','${it.id}')">×</button>
+     </div>`).join('')}
+     <button class="btn ghost sm" style="margin-top:4px" onclick="addItem('${p.id}','${s.id}')">+ Add item</button>
+   </div>`).join('')}
+   <button class="btn ghost" onclick="addSection('${p.id}')">+ Add Section</button>
+   <div style="height:10px"></div>
+   <div class="row">
+     <button class="btn red" onclick="deletePlan('${p.id}')">Delete Plan</button>
+     <button class="btn green" onclick="donePlan()">Done</button>
+   </div>`;
+}
+function planSetName(id,v){const p=DB.plans.find(x=>x.id===id);p.name=v;save()}
+function planSetSection(pid,sid,v){const s=DB.plans.find(x=>x.id===pid).sections.find(x=>x.id===sid);s.title=v;save()}
+function planSetItem(pid,sid,iid,v){const it=DB.plans.find(x=>x.id===pid).sections.find(x=>x.id===sid).items.find(x=>x.id===iid);it.text=v;save()}
+function addSection(pid){DB.plans.find(x=>x.id===pid).sections.push({id:uid(),title:'',items:[{id:uid(),text:''}]});save();renderPlan()}
+function delSection(pid,sid){const p=DB.plans.find(x=>x.id===pid);p.sections=p.sections.filter(s=>s.id!==sid);save();renderPlan()}
+function addItem(pid,sid){DB.plans.find(x=>x.id===pid).sections.find(x=>x.id===sid).items.push({id:uid(),text:''});save();renderPlan()}
+function delItem(pid,sid,iid){const s=DB.plans.find(x=>x.id===pid).sections.find(x=>x.id===sid);s.items=s.items.filter(i=>i.id!==iid);save();renderPlan()}
+function donePlan(){
+  const p=DB.plans.find(x=>x.id===DB.editingPlan);
+  // strip empty items/sections
+  p.sections.forEach(s=>s.items=s.items.filter(i=>i.text.trim()));
+  p.sections=p.sections.filter(s=>s.title.trim()||s.items.length);
+  if(!p.name.trim())p.name='Untitled Plan';
+  DB.activePlan=p.id;DB.editingPlan=null;save();renderPlan();
+}
+function deletePlan(id){DB.plans=DB.plans.filter(p=>p.id!==id);if(DB.activePlan===id)DB.activePlan=DB.plans[0]?DB.plans[0].id:null;DB.editingPlan=null;save();renderPlan()}
+
+/* ---- LIVE CHART (TradingView Lightweight Charts v5) ---- */
+const TF=[{k:'M5',n:'5m',sec:300},{k:'M15',n:'15m',sec:900},{k:'H1',n:'1H',sec:3600},{k:'H4',n:'4H',sec:14400},{k:'D',n:'1D',sec:86400}];
+let chartState={tf:'M15',chart:null,series:null,markers:null,instrument:'AUD_USD'};
+
+/* ===== DATA LAYER — the ONLY thing that changes when Supabase is live =====
+   To go live: set DATA_SOURCE='supabase' and SUPA_FN to your Edge Function URL.
+   The function should accept ?instrument=AUD_USD&tf=M15&n=200 and return
+   [{time:<unix sec>, open, high, low, close}, ...] oldest→newest.            */
+const DATA_SOURCE='sample';            // 'sample' | 'supabase'
+const SUPA_FN='';                      // e.g. 'https://<project>.supabase.co/functions/v1/oanda-candles'
+const SUPA_ANON='';                    // your Supabase anon key (safe to expose; the OANDA token stays server-side)
+
+async function fetchCandles(instrument,tf,n=200){
+  if(DATA_SOURCE==='supabase' && SUPA_FN){
+    try{
+      const r=await fetch(`${SUPA_FN}?instrument=${instrument}&tf=${tf}&n=${n}`,
+        {headers:SUPA_ANON?{Authorization:'Bearer '+SUPA_ANON}:{}});
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      return await r.json();
+    }catch(e){console.warn('Live feed failed, using sample:',e.message);}
+  }
+  return sampleCandles(tf,n);
+}
+/* Realistic AUD/USD random-walk sample so the chart works before the feed is wired */
+function sampleCandles(tf,n){
+  const sec=(TF.find(t=>t.k===tf)||TF[1]).sec;
+  const now=Math.floor(Date.now()/1000); const start=now-sec*n;
+  let price=0.6580; const out=[];
+  for(let i=0;i<n;i++){
+    const t=start+i*sec;
+    const drift=Math.sin(i/18)*0.0006 + (Math.random()-0.5)*0.0009;
+    const o=price; const c=+(o+drift).toFixed(5);
+    const hi=+(Math.max(o,c)+Math.random()*0.0006).toFixed(5);
+    const lo=+(Math.min(o,c)-Math.random()*0.0006).toFixed(5);
+    out.push({time:t,open:o,high:hi,low:lo,close:c}); price=c;
+  }
+  return out;
+}
+
+function renderChart(){
+  const live=DATA_SOURCE==='supabase'&&SUPA_FN;
+  $('#v-chart').innerHTML=`
+   <div class="card" style="padding:12px">
+     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+       <span class="mono" style="font-weight:700">AUD/USD</span>
+       <span class="badge" style="font-size:10px;padding:3px 8px;border-radius:5px;background:${live?'var(--green-d)':'var(--panel2)'};border:1px solid var(--line);color:${live?'#bff5d6':'var(--faint)'}">${live?'● LIVE':'○ SAMPLE'}</span>
+       <span class="faint" style="margin-left:auto;font-size:11px" id="chartPx"></span>
+     </div>
+     <div class="chipwrap" style="margin-bottom:10px">
+       ${TF.map(t=>`<span class="chip ${chartState.tf===t.k?'on':''}" onclick="setTF('${t.k}')">${t.n}</span>`).join('')}
+     </div>
+     <div id="lwchart" style="height:340px;width:100%"></div>
+     <div class="chipwrap" style="margin-top:10px">
+       <span class="chip ${chartState.showSess?'on':''}" onclick="toggleOverlay('showSess')">Killzones</span>
+       <span class="chip ${chartState.showPD?'on':''}" onclick="toggleOverlay('showPD')">PDH / PDL</span>
+     </div>
+   </div>
+   ${live?'':`<div class="note">Showing <b>sample data</b> so the chart works now. To go live: deploy the Supabase Edge Function (next step), then set <span class="mono">DATA_SOURCE='supabase'</span> and your function URL at the top of the chart module. The OANDA token stays server-side — never in this file.</div>`}
+   <div class="card"><h3>Educational Signal Engine <span class="tag">coming next</span></h3>
+     <p class="dim" style="font-size:14px;margin:0">Once live data flows, this is where the rules engine flags ICT setups (sweep → MSS → FVG in a killzone) as educational signal cards, and auto-logs each one so your Desk analytics can measure the real hit rate. For your eyes only — nothing shared.</p>
+   </div>`;
+  setTimeout(initChart,30);
+}
+async function initChart(){
+  const el=$('#lwchart'); if(!el)return;
+  if(typeof LightweightCharts==='undefined'){
+    el.innerHTML='<div class="empty" style="padding:30px">Chart library needs an internet connection to load.<br><span class="faint">Reconnect and reopen this tab.</span></div>';
+    return;
+  }
+  el.innerHTML='';
+  const chart=LightweightCharts.createChart(el,{
+    height:340, autoSize:true,
+    layout:{background:{type:LightweightCharts.ColorType?LightweightCharts.ColorType.Solid:'solid',color:'#0a0d10'},textColor:'#8a98a5',fontFamily:'monospace'},
+    grid:{vertLines:{color:'#1a2127'},horzLines:{color:'#1a2127'}},
+    rightPriceScale:{borderColor:'#262f38'},
+    timeScale:{borderColor:'#262f38',timeVisible:true,secondsVisible:false},
+    crosshair:{mode:0},
+  });
+  const series=chart.addSeries(LightweightCharts.CandlestickSeries,{
+    upColor:'#3ec77b',downColor:'#e0533b',borderVisible:false,wickUpColor:'#3ec77b',wickDownColor:'#e0533b'});
+  chartState.chart=chart; chartState.series=series;
+  const data=await fetchCandles(chartState.instrument,chartState.tf,200);
+  series.setData(data);
+  chart.timeScale().fitContent();
+  const last=data[data.length-1];
+  if(last)$('#chartPx').textContent='O '+last.open.toFixed(5)+'  H '+last.high.toFixed(5)+'  L '+last.low.toFixed(5)+'  C '+last.close.toFixed(5);
+  applyOverlays(data);
+}
+function setTF(tf){chartState.tf=tf;renderChart()}
+function toggleOverlay(k){chartState[k]=!chartState[k];renderChart()}
+function applyOverlays(data){
+  const s=chartState.series; if(!s)return;
+  // PDH/PDL: approximate "previous day" as the prior ~96 M15 bars window
+  if(chartState.showPD){
+    const day=data.slice(-Math.min(data.length,Math.floor(86400/(TF.find(t=>t.k===chartState.tf)||TF[1]).sec)));
+    const prev=data.slice(0,data.length-day.length);
+    if(prev.length){
+      const pdh=Math.max(...prev.map(d=>d.high)), pdl=Math.min(...prev.map(d=>d.low));
+      s.createPriceLine({price:pdh,color:'#e0533b',lineWidth:1,lineStyle:2,title:'PDH'});
+      s.createPriceLine({price:pdl,color:'#3ec77b',lineWidth:1,lineStyle:2,title:'PDL'});
+    }
+  }
+  // Killzone markers on bars that open inside a killzone (UTC)
+  if(chartState.showSess && LightweightCharts.createSeriesMarkers){
+    const kz=h=>(h>=7&&h<10)?{t:'LDN',c:'#e0a23b'}:(h>=12&&h<15)?{t:'NY',c:'#3ec77b'}:(h>=0&&h<4)?{t:'ASIA',c:'#4a90d9'}:null;
+    const marks=[];
+    data.forEach(d=>{const z=kz(new Date(d.time*1000).getUTCHours());
+      if(z&&Math.random()<0.04)marks.push({time:d.time,position:'aboveBar',color:z.c,shape:'circle',text:z.t})});
+    try{LightweightCharts.createSeriesMarkers(s,marks)}catch(e){}
+  }
+}
+
+
+/* ---- MODAL + EXPORT + INIT ---- */
+function sheet(html){$('#sheetBody').innerHTML=html;$('#modal').classList.add('on')}
+function closeSheet(){$('#modal').classList.remove('on')}
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeSheet()});
+function exportData(){
+  const blob=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='true-balance-trader-'+new Date().toISOString().slice(0,10)+'.json';a.click();
+}
+tickClock();nav('dash');
+console.log('TBT ready');
+
+/* ============ ICT LIBRARY — EXPANSION (from reference set) ============ */
+const ICT2=[
+{n:'CRT / Candle Range Theory',badge:'Model',lead:'Every candle is a range with three phases. Trade the distribution leg after manipulation sweeps the prior range.',
+ body:`<p>CRT treats one HTF candle as a full Accumulation → Manipulation → Distribution cycle (Power of 3). The candle's body is the range; the wick is the manipulation that grabs liquidity before the real move.</p>
+ <div class="kv"><b>CRT High/Low</b><span>The prior candle's range = the liquidity boundaries</span></div>
+ <div class="kv"><b>Sweep</b><span>Price runs CRT high (or low) — the manipulation wick</span></div>
+ <div class="kv"><b>Entry</b><span>After the sweep, on the FVG left by displacement back inside the range</span></div>
+ <div class="kv"><b>Target</b><span>Opposite side of the range (CRT low if you sold the high sweep)</span></div>
+ <div class="note">Read this on AUD/USD with the Daily as your CRT candle: Asia accumulates, London sweeps (manipulation), NY distributes. Same fractal, every timeframe.</div>`,
+ svg:svgWrap('',`
+  ${lvl(30,20,290,'#e0533b',1,'CRT High')}
+  ${lvl(140,20,290,'#3ec77b',1,'CRT Low')}
+  <rect x="35" y="55" width="26" height="60" fill="#3ec77b"/><line x1="48" y1="35" x2="48" y2="120" stroke="#3ec77b" stroke-width="1.5"/>
+  <text x="40" y="135" fill="#8a98a5" font-size="7" font-family="monospace">accum</text>
+  ${candle(85,60,25,68,48)}<text x="72" y="20" fill="#e0533b" font-size="8" font-family="monospace">sweep↑</text>
+  <rect x="100" y="48" width="60" height="16" fill="#e0a23b22" stroke="#e0a23b" stroke-dasharray="2 2"/><text x="130" y="44" fill="#e0a23b" font-size="7" font-family="monospace" text-anchor="middle">FVG</text>
+  ${candle(110,48,42,72,68)}${candle(135,68,62,95,90)}
+  ${candle(160,90,85,130,125)}${candle(185,125,118,145,140)}
+  <text x="150" y="160" fill="#8a98a5" font-size="8" font-family="monospace">manipulate → distribute to CRT low</text>
+ `,180)},
+{n:'IFVG / Inversion FVG',badge:'Entry',lead:'A failed FVG flips polarity. When price closes through an FVG, that gap inverts and becomes support/resistance from the other side.',
+ body:`<p>A bullish FVG that price closes <i>below</i> becomes a bearish IFVG — now it acts as resistance. The failure is the signal. Used as a precise entry trigger in the "One Setup for Life."</p>
+ <div class="kv"><b>Trigger</b><span>Candle closes through the original FVG → it inverts</span></div>
+ <div class="kv"><b>Entry</b><span>On the retest of the inverted gap; enter 2nd candle open after close</span></div>
+ <div class="kv"><b>Confluence</b><span>Stronger when it aligns with a Breaker (2nd confirmation)</span></div>
+ <div class="note">In "One Setup for Life": IFVG is the 1st entry confirmation, the Breaker is the 2nd. Stack both inside a Macro window for the A+ version.</div>`,
+ svg:svgWrap('',`
+  <rect x="80" y="40" width="90" height="22" fill="#3ec77b22" stroke="#3ec77b" stroke-dasharray="3 2"/><text x="125" y="36" fill="#3ec77b" font-size="7" font-family="monospace" text-anchor="middle">bull FVG</text>
+  ${candle(60,90,80,100,72)}${candle(85,72,50,78,58)}
+  ${candle(110,58,52,72,55)}
+  ${candle(135,55,48,90,85)}<text x="118" y="110" fill="#e0533b" font-size="7" font-family="monospace">close below → invert</text>
+  <rect x="150" y="40" width="80" height="22" fill="#e0533b22" stroke="#e0533b" stroke-dasharray="3 2"/><text x="190" y="54" fill="#e0533b" font-size="7" font-family="monospace" text-anchor="middle">IFVG resists</text>
+  ${candle(165,85,55,90,60)}${candle(190,60,40,65,45)}${candle(215,45,30,50,35)}
+ `)},
+{n:'ICT 2022 Model — Sell',badge:'Decision Tree',lead:'The full mechanical sell sequence: sweep buyside → MSS down → FVG → limit short in premium. Five checks, every one must pass.',
+ body:`<p class="lead">Trade only when all five gates are YES. This is the journalable version — each step is a logged condition.</p>
+ <div class="kv"><b>1</b><span>Has price taken obvious BUYSIDE liquidity (15m/Daily)?</span></div>
+ <div class="kv"><b>2</b><span>Swing low formed AFTER the highest swing high that took liquidity?</span></div>
+ <div class="kv"><b>3</b><span>Does that leg create a Fair Value Gap (3-candle, energetic middle)?</span></div>
+ <div class="kv"><b>4</b><span>Is the FVG at/above the 50% (premium) of the dealing range?</span></div>
+ <div class="kv"><b>5</b><span>Place limit SELL inside the FVG. SL above the swept high.</span></div>
+ <div class="tags"><span class="x">Premium only</span><span class="x">MSS required</span><span class="x">Limit entry</span></div>`,
+ svg:svgWrap('',`
+  ${lvl(28,20,300,'#e0533b',1,'BSL swept')}
+  ${candle(45,70,60,80,66)}${candle(68,66,55,75,72)}${candle(92,72,30,80,40)}
+  <text x="80" y="22" fill="#e0533b" font-size="7" font-family="monospace">sweep</text>
+  ${lvl(70,90,260,'#e0a23b',1,'50% premium')}
+  <rect x="130" y="48" width="70" height="22" fill="#e0533b22" stroke="#e0533b" stroke-dasharray="3 2"/><text x="165" y="44" fill="#e0533b" font-size="7" font-family="monospace" text-anchor="middle">FVG (short)</text>
+  ${candle(115,40,35,70,65)}<text x="100" y="95" fill="#e0a23b" font-size="7" font-family="monospace">MSS↓</text>
+  ${candle(140,65,58,75,60)}${candle(165,60,55,72,58)}
+  ${candle(190,58,48,62,52)}${candle(215,52,95,58,92)}
+  <text x="180" y="120" fill="#8a98a5" font-size="8" font-family="monospace">retrace to FVG → deliver down</text>
+ `,175)},
+{n:'ICT 2022 Model — Buy',badge:'Decision Tree',lead:'Mirror of the sell model: sweep sellside → MSS up → FVG → limit long in discount. Same five gates, inverted.',
+ body:`<p class="lead">All five must be YES before a long.</p>
+ <div class="kv"><b>1</b><span>Has price taken obvious SELLSIDE liquidity (15m/Daily)?</span></div>
+ <div class="kv"><b>2</b><span>Swing high formed BEFORE the lowest swing low that took liquidity?</span></div>
+ <div class="kv"><b>3</b><span>Does the leg up create an FVG (energetic displacement)?</span></div>
+ <div class="kv"><b>4</b><span>Is the FVG at/below the 50% (discount) of the range?</span></div>
+ <div class="kv"><b>5</b><span>Place limit BUY inside the FVG. SL below the swept low.</span></div>
+ <div class="note">Underlined difference vs. sell: sellside not buyside, swing high BEFORE not after, discount not premium. Everything else mirrors.</div>`,
+ svg:svgWrap('',`
+  ${lvl(140,20,300,'#3ec77b',1,'SSL swept')}
+  ${candle(45,95,88,105,100)}${candle(68,100,92,108,96)}${candle(92,96,90,140,130)}
+  <text x="80" y="155" fill="#3ec77b" font-size="7" font-family="monospace">sweep</text>
+  ${lvl(95,90,260,'#e0a23b',1,'50% discount')}
+  <rect x="130" y="95" width="70" height="22" fill="#3ec77b22" stroke="#3ec77b" stroke-dasharray="3 2"/><text x="165" y="91" fill="#3ec77b" font-size="7" font-family="monospace" text-anchor="middle">FVG (long)</text>
+  ${candle(115,130,95,135,100)}<text x="100" y="80" fill="#e0a23b" font-size="7" font-family="monospace">MSS↑</text>
+  ${candle(140,100,92,110,105)}${candle(165,105,95,112,108)}
+  ${candle(190,108,45,115,50)}
+  <text x="170" y="40" fill="#8a98a5" font-size="8" font-family="monospace">retrace to FVG → deliver up</text>
+ `,175)},
+{n:'ICT Macros (NY Time)',badge:'Time',lead:'Short algorithmic windows where price is most likely to run to a draw on liquidity. Trade the macro, not the noise between them.',
+ body:`<p>Macros are ~20-minute windows when the algorithm seeks the nearest liquidity / rebalances price. High-probability execution times.</p>
+ <div class="kv"><b>AM Macros</b><span>07:50–08:10 · 08:50–09:10 · 09:50–10:10 · 10:50–11:10 · 11:50–12:10</span></div>
+ <div class="kv"><b>PM Macros</b><span>13:20–13:40 · 14:50–15:10 · 15:15–15:45 · 15:50–16:10</span></div>
+ <div class="kv"><b>Use</b><span>Set alerts. Look for the sweep + IFVG/Breaker inside the window.</span></div>
+ <div class="note">All times NY (ET). For AUD/USD the AM macros overlap NY data releases (08:30 ET = 12:30/13:30 UTC). The 09:50–10:10 macro is a frequent reversal window.</div>`,
+ svg:svgWrap('',`
+  <rect x="40" y="20" width="34" height="120" fill="#e0a23b18" stroke="#e0a23b" stroke-dasharray="3 2"/><text x="57" y="15" fill="#e0a23b" font-size="7" font-family="monospace" text-anchor="middle">macro</text>
+  <rect x="150" y="20" width="34" height="120" fill="#e0a23b18" stroke="#e0a23b" stroke-dasharray="3 2"/><text x="167" y="15" fill="#e0a23b" font-size="7" font-family="monospace" text-anchor="middle">macro</text>
+  ${candle(50,90,60,95,65)}${candle(64,65,55,72,60)}
+  ${candle(90,60,55,90,85)}${candle(110,85,80,98,92)}${candle(130,92,85,100,95)}
+  ${candle(158,95,62,100,68)}${candle(172,68,40,74,46)}
+  <text x="105" y="135" fill="#5a6772" font-size="7" font-family="monospace">drift between macros</text>
+ `)},
+{n:'ICT Bread & Butter',badge:'Setup',lead:'Ken\'s founding setup: sweep HTF buyside → strong MSS down → enter the FVG in the premium half of the entry range. Fixed 2R.',
+ body:`<p>The "let the trade come to you" setup. Plot the dealing range, wait for price to retrace into the premium FVG (0.5 EQ), enter, fixed 2R target.</p>
+ <div class="kv"><b>1. Liquidity</b><span>Price runs HTF BSL (triggers breakout longs' stops)</span></div>
+ <div class="kv"><b>2. MSB</b><span>Strong market structure break back beneath the level, leaving FVGs</span></div>
+ <div class="kv"><b>3. Range</b><span>Fib the last leg down; entry valid in FVG within the premium (0.5–1) half</span></div>
+ <div class="kv"><b>4. Entry/SL/TP</b><span>Enter premium FVG EQ (0.5) · SL above sweep high (1R) · TP fixed 2R</span></div>`,
+ svg:svgWrap('',`
+  ${lvl(28,20,200,'#e0a23b',1,'HTF BSL')}
+  ${candle(45,80,70,90,76)}${candle(68,76,30,82,40)}<text x="55" y="22" fill="#e0533b" font-size="7" font-family="monospace">sweep</text>
+  <line x1="30" y1="40" x2="280" y2="40" stroke="#e0533b" stroke-dasharray="2 2"/><text x="248" y="38" fill="#e0533b" font-size="7" font-family="monospace">1 / SL</text>
+  <line x1="30" y1="80" x2="280" y2="80" stroke="#e0a23b" stroke-dasharray="2 2"/><text x="248" y="78" fill="#e0a23b" font-size="7" font-family="monospace">.5 entry</text>
+  <line x1="30" y1="130" x2="280" y2="130" stroke="#3ec77b" stroke-dasharray="2 2"/><text x="248" y="128" fill="#3ec77b" font-size="7" font-family="monospace">2R TP</text>
+  <rect x="95" y="58" width="50" height="20" fill="#e0a23b22" stroke="#e0a23b" stroke-dasharray="2 2"/>
+  ${candle(90,40,35,60,55)}${candle(112,55,50,80,75)}<text x="100" y="100" fill="#e0a23b" font-size="7" font-family="monospace">MSB↓</text>
+  ${candle(140,75,68,82,70)}${candle(165,70,60,128,122)}
+ `,160)},
+{n:'Supply/Demand + Imbalance',badge:'Concept',lead:'A zone is only valid with imbalance (FVG) inside it. Price returns to rebalance the gap, then respects the zone.',
+ body:`<p>Marries SMC supply/demand with ICT imbalance. The origin of a strong move (last opposing candle) is the zone; the gap left by the move is the imbalance that draws price back.</p>
+ <div class="kv"><b>Supply</b><span>Last up-move before a strong drop + the imbalance below it</span></div>
+ <div class="kv"><b>Demand</b><span>Last down-move before a strong rally + imbalance above it</span></div>
+ <div class="kv"><b>Valid only if</b><span>The zone contains an FVG/imbalance — no gap, no trade</span></div>
+ <div class="note">"The Order Block is NOT the Order Block unless it has imbalance." A clean OB with no FVG is low probability.</div>`,
+ svg:svgWrap('',`
+  <rect x="20" y="30" width="80" height="20" fill="#e0533b18" stroke="#e0533b"/><text x="60" y="26" fill="#e0533b" font-size="7" font-family="monospace" text-anchor="middle">supply</text>
+  ${candle(40,55,48,62,52)}${candle(62,52,46,68,64)}
+  <rect x="78" y="55" width="50" height="18" fill="#9a7bd033" stroke="#9a7bd0"/><text x="103" y="67" fill="#9a7bd0" font-size="7" font-family="monospace" text-anchor="middle">IMB</text>
+  ${candle(78,64,58,110,105)}${candle(100,105,98,125,120)}
+  ${candle(130,120,50,128,58)}${candle(155,58,45,64,48)}
+  <text x="130" y="145" fill="#8a98a5" font-size="8" font-family="monospace">fill imbalance → respect supply → drop</text>
+ `)},
+{n:'Intraday Session Templates',badge:'Templates',lead:'Recurring daily profiles. Knowing which template is unfolding tells you whether to expect reversal, trend, or stop-raid.',
+ body:`<p>Five profiles that repeat across the London→NY sessions:</p>
+ <div class="kv"><b>London→NY Reversal</b><span>London sets high/low, NY reverses it — turtle soup / range close</span></div>
+ <div class="kv"><b>Classic Buy/Sell Day</b><span>Wide trend day (often Mon–Wed). NY retraces then continues London's trend</span></div>
+ <div class="kv"><b>Range→NY Rally</b><span>Consolidation into a London-close / NY directional run</span></div>
+ <div class="kv"><b>Consolidation Raid on News</b><span>Pre-news chop → spike to grab stops → true move. NFP/FOMC days</span></div>
+ <div class="kv"><b>Seek & Destroy</b><span>Both-side stop raids, choppy. Pre-news / EQ of HTF range — often skip</span></div>
+ <div class="note">For AUD: the "Consolidation Raid on News" template dominates on RBA, NFP, and CPI days. Identify it early and you avoid the chop before the real move.</div>`,
+ svg:svgWrap('',`
+  <polyline points="20,90 45,70 60,95 85,55 110,80 130,40 155,75 180,30 210,60 240,35" fill="none" stroke="#3ec77b" stroke-width="1.5"/>
+  <text x="40" y="115" fill="#5a6772" font-size="7" font-family="monospace">London</text>
+  <text x="150" y="115" fill="#5a6772" font-size="7" font-family="monospace">NY trend continuation</text>
+ `,140)},
+{n:'High-Probability Order Block',badge:'Setup',lead:'An OB qualifies as high-probability only when it (1) runs liquidity, (2) holds imbalance, and (3) creates a structure shift.',
+ body:`<p>Three filters separate an A+ order block from a random candle:</p>
+ <div class="kv"><b>1. Runs liquidity</b><span>Sweeps buyside or sellside before forming</span></div>
+ <div class="kv"><b>2. Has imbalance</b><span>SIBI/BISI (FVG) attached — the candle isn't the OB without it</span></div>
+ <div class="kv"><b>3. Makes a shift</b><span>Causes an MSS in the opposing direction</span></div>
+ <div class="tags"><span class="x">SIBI = Sell-side Imbalance Buy-side Inefficiency</span></div>
+ <div class="tags"><span class="x">BISI = Buy-side Imbalance Sell-side Inefficiency</span></div>`,
+ svg:svgWrap('',`
+  ${lvl(28,20,200,'#e0533b',1,'BSL')}
+  ${candle(45,70,60,80,66)}${candle(68,66,55,72,70)}${candle(92,70,28,76,38)}<text x="80" y="22" fill="#e0533b" font-size="7" font-family="monospace">run</text>
+  <rect x="105" y="45" width="22" height="20" fill="#e0533b33" stroke="#e0533b"/><text x="116" y="40" fill="#e0533b" font-size="6" font-family="monospace" text-anchor="middle">OB</text>
+  <rect x="105" y="65" width="50" height="14" fill="#9a7bd033" stroke="#9a7bd0"/><text x="160" y="76" fill="#9a7bd0" font-size="7" font-family="monospace">SIBI</text>
+  ${candle(116,38,33,68,62)}<text x="100" y="100" fill="#e0a23b" font-size="7" font-family="monospace">shift↓</text>
+  ${candle(140,62,55,70,58)}${candle(165,58,48,64,50)}${candle(190,50,38,56,42)}
+ `)},
+{n:'One Setup for Life',badge:'Setup',lead:'Stack two confirmations inside a Macro window: IFVG (1st entry) then Breaker (2nd entry). Patience over frequency — 1–2 A+ trades a day.',
+ body:`<p>The high-discipline setup: wait for a stop hunt off the HTF PD array, then take two sequential confirmations. Aim for 1–2 quality trades per day, not volume.</p>
+ <div class="kv"><b>Context</b><span>Price at HTF PD array (premium/discount), inside a Macro time window</span></div>
+ <div class="kv"><b>Stop hunt</b><span>Liquidity sweep + SMT confirmation</span></div>
+ <div class="kv"><b>1st entry</b><span>INVERSION — candle closes below IFVG low, enter 2nd candle open</span></div>
+ <div class="kv"><b>2nd entry</b><span>BREAKER — candle closes below breaker low, enter 2nd candle open</span></div>
+ <div class="kv"><b>R:R</b><span>Target a minimum 1:2</span></div>
+ <div class="note">Checklist form: Key Level → Stop Hunt → SMT → Macro Time → IFVG/Breaker entry → 1:2 R. This maps cleanly to a custom plan in the Plan tab.</div>`,
+ svg:svgWrap('',`
+  <text x="50" y="20" fill="#8a98a5" font-size="7" font-family="monospace">PD array</text>
+  ${lvl(35,90,250,'#e0533b',0,'stop hunt')}
+  ${candle(40,90,80,100,85)}${candle(62,85,75,95,80)}
+  ${candle(88,80,30,86,42)}<text x="74" y="26" fill="#e0533b" font-size="7" font-family="monospace">hunt</text>
+  <rect x="100" y="50" width="70" height="18" fill="#8a98a544" stroke="#8a98a5"/><text x="135" y="46" fill="#8a98a5" font-size="7" font-family="monospace" text-anchor="middle">Inversion</text>
+  ${candle(110,42,38,55,50)}${candle(132,50,44,60,46)}
+  ${lvl(72,100,250,'#4a90d9',0,'Breaker')}
+  ${candle(155,46,42,75,70)}${candle(177,70,40,76,46)}
+  ${candle(200,46,38,52,40)}<text x="160" y="120" fill="#8a98a5" font-size="8" font-family="monospace">IFVG → Breaker → deliver</text>
+ `,150)},
+];
+ICT.push(...ICT2);
+console.log('ICT expanded to',ICT.length,'models');
+
+</script>
+</body>
+</html>
