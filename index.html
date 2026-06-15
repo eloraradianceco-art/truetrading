@@ -178,7 +178,28 @@ canvas{max-width:100%}
 <div class="tabbar" id="tabbar"></div>
 <div class="modal" id="modal"><div class="sheet" id="sheet"><div class="grab"></div><div id="sheetBody"></div></div></div>
 
-<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@5.2.0/dist/lightweight-charts.standalone.production.js"></script>
+<script>
+// Fallback loader: if jsDelivr didn't define the library, try unpkg, then a second jsDelivr path.
+window.__lwcReady=function(){return typeof LightweightCharts!=='undefined'&&LightweightCharts.createChart;};
+(function(){
+  var fallbacks=[
+    'https://unpkg.com/lightweight-charts@5.2.0/dist/lightweight-charts.standalone.production.js',
+    'https://cdn.jsdelivr.net/npm/lightweight-charts/dist/lightweight-charts.standalone.production.js'
+  ];
+  function tryNext(i){
+    if(window.__lwcReady()||i>=fallbacks.length)return;
+    var s=document.createElement('script');
+    s.src=fallbacks[i];
+    s.onload=function(){};
+    s.onerror=function(){tryNext(i+1);};
+    document.head.appendChild(s);
+    // also advance if it loads but still undefined after a beat
+    setTimeout(function(){if(!window.__lwcReady())tryNext(i+1);},1500);
+  }
+  if(!window.__lwcReady())tryNext(0);
+})();
+</script>
 <script>
 /* ============ TRUE BALANCE TRADER ============ */
 const LS='tbt_v1';
@@ -992,18 +1013,24 @@ let chartState={tf:'M15',chart:null,series:null,markers:null,instrument:'AUD_USD
    To go live: set DATA_SOURCE='supabase' and SUPA_FN to your Edge Function URL.
    The function should accept ?instrument=AUD_USD&tf=M15&n=200 and return
    [{time:<unix sec>, open, high, low, close}, ...] oldest→newest.            */
-const DATA_SOURCE='sample';            // 'sample' | 'supabase'
-const SUPA_FN='';                      // e.g. 'https://<project>.supabase.co/functions/v1/oanda-candles'
-const SUPA_ANON='';                    // your Supabase anon key (safe to expose; the OANDA token stays server-side)
+const DATA_SOURCE='supabase';          // 'sample' | 'supabase'
+const SUPA_FN='https://knnfctsuvrnrqeglbctt.supabase.co/functions/v1/oanda-candles';
+const SUPA_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubmZjdHN1dnJucnFlZ2xiY3R0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0OTQzNDksImV4cCI6MjA5NzA3MDM0OX0.YHb_8aQJzoO3T0dgr-E47esQ4aCwa-Vn7U5zn1PqMeQ';
+const APP_SECRET='';                   // optional: set if you later lock the function with an APP_SECRET secret
 
 async function fetchCandles(instrument,tf,n=200){
   if(DATA_SOURCE==='supabase' && SUPA_FN){
     try{
-      const r=await fetch(`${SUPA_FN}?instrument=${instrument}&tf=${tf}&n=${n}`,
-        {headers:SUPA_ANON?{Authorization:'Bearer '+SUPA_ANON}:{}});
+      const headers={};
+      if(SUPA_ANON){headers['Authorization']='Bearer '+SUPA_ANON;headers['apikey']=SUPA_ANON;}
+      if(APP_SECRET){headers['x-app-secret']=APP_SECRET;}
+      const r=await fetch(`${SUPA_FN}?instrument=${instrument}&tf=${tf}&n=${n}`,{headers});
       if(!r.ok)throw new Error('HTTP '+r.status);
-      return await r.json();
-    }catch(e){console.warn('Live feed failed, using sample:',e.message);}
+      const data=await r.json();
+      if(!Array.isArray(data))throw new Error(data&&data.error?data.error:'bad response');
+      if(!data.length)throw new Error('no candles');
+      return data;
+    }catch(e){console.warn('Live feed failed, using sample:',e.message);chartState.feedError=e.message;}
   }
   return sampleCandles(tf,n);
 }
@@ -1041,16 +1068,22 @@ function renderChart(){
        <span class="chip ${chartState.showPD?'on':''}" onclick="toggleOverlay('showPD')">PDH / PDL</span>
      </div>
    </div>
-   ${live?'':`<div class="note">Showing <b>sample data</b> so the chart works now. To go live: deploy the Supabase Edge Function (next step), then set <span class="mono">DATA_SOURCE='supabase'</span> and your function URL at the top of the chart module. The OANDA token stays server-side — never in this file.</div>`}
+   ${live?'':`<div class="note">Showing <b>sample data</b>. Set <span class="mono">DATA_SOURCE='supabase'</span> and your function URL at the top of the chart module to go live.</div>`}
+   <div id="feedNote"></div>
    <div class="card"><h3>Educational Signal Engine <span class="tag">coming next</span></h3>
-     <p class="dim" style="font-size:14px;margin:0">Once live data flows, this is where the rules engine flags ICT setups (sweep → MSS → FVG in a killzone) as educational signal cards, and auto-logs each one so your Desk analytics can measure the real hit rate. For your eyes only — nothing shared.</p>
+     <p class="dim" style="font-size:14px;margin:0">Now that live data flows, this is where the rules engine flags ICT setups (sweep → MSS → FVG in a killzone) as educational signal cards, and auto-logs each one so your Desk analytics can measure the real hit rate. For your eyes only — nothing shared.</p>
    </div>`;
   setTimeout(initChart,30);
 }
-async function initChart(){
+async function initChart(attempt){
+  attempt=attempt||0;
   const el=$('#lwchart'); if(!el)return;
-  if(typeof LightweightCharts==='undefined'){
-    el.innerHTML='<div class="empty" style="padding:30px">Chart library needs an internet connection to load.<br><span class="faint">Reconnect and reopen this tab.</span></div>';
+  if(typeof LightweightCharts==='undefined'||!LightweightCharts.createChart){
+    if(attempt<24){ // retry up to ~6s while the CDN script loads
+      if(attempt===0)el.innerHTML='<div class="empty" style="padding:30px"><div class="faint">Loading chart library…</div></div>';
+      return setTimeout(()=>initChart(attempt+1),250);
+    }
+    el.innerHTML='<div class="empty" style="padding:30px">Chart library couldn\'t load.<br><span class="faint">Check your internet connection and reopen this tab. If it persists, a network/firewall may be blocking the CDN.</span></div>';
     return;
   }
   el.innerHTML='';
@@ -1065,12 +1098,19 @@ async function initChart(){
   const series=chart.addSeries(LightweightCharts.CandlestickSeries,{
     upColor:'#3ec77b',downColor:'#e0533b',borderVisible:false,wickUpColor:'#3ec77b',wickDownColor:'#e0533b'});
   chartState.chart=chart; chartState.series=series;
+  chartState.feedError=null;
   const data=await fetchCandles(chartState.instrument,chartState.tf,200);
   series.setData(data);
   chart.timeScale().fitContent();
   const last=data[data.length-1];
   if(last)$('#chartPx').textContent='O '+last.open.toFixed(5)+'  H '+last.high.toFixed(5)+'  L '+last.low.toFixed(5)+'  C '+last.close.toFixed(5);
   applyOverlays(data);
+  const fn=$('#feedNote');
+  if(fn){
+    if(chartState.feedError){fn.innerHTML=`<div class="note" style="border-left-color:var(--red-d)">Live feed unavailable (${esc(chartState.feedError)}) — showing sample data. Check the Supabase function or your connection.</div>`;
+      const b=$('#v-chart .badge'); if(b){b.textContent='○ SAMPLE';b.style.background='var(--panel2)';b.style.color='var(--faint)';}}
+    else{fn.innerHTML='';}
+  }
 }
 function setTF(tf){chartState.tf=tf;renderChart()}
 function toggleOverlay(k){chartState[k]=!chartState[k];renderChart()}
