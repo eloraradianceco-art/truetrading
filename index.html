@@ -1021,8 +1021,9 @@ const APP_SECRET='';                   // optional: set if you later lock the fu
 async function fetchCandles(instrument,tf,n=200){
   if(DATA_SOURCE==='supabase' && SUPA_FN){
     try{
+      // Function has verify_jwt OFF and no APP_SECRET, so it needs NO auth headers.
+      // (Sending Authorization/apikey here causes the gateway to 401.)
       const headers={};
-      if(SUPA_ANON){headers['Authorization']='Bearer '+SUPA_ANON;headers['apikey']=SUPA_ANON;}
       if(APP_SECRET){headers['x-app-secret']=APP_SECRET;}
       const r=await fetch(`${SUPA_FN}?instrument=${instrument}&tf=${tf}&n=${n}`,{headers});
       if(!r.ok)throw new Error('HTTP '+r.status);
