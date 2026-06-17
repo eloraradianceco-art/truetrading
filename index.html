@@ -534,6 +534,231 @@ const EDU=[
   note:'The goal is not to be right. The goal is to make more when right than you lose when wrong, repeatedly, without blowing up.'},
 ];
 
+/* ============ SMART MONEY MECHANICS (deep reference, researched) ============ */
+const SMC=[
+{n:'Liquidity Pools',badge:'Foundation',lead:'Resting orders price is engineered to reach. The fuel for every move — find the pool and you find the magnet.',
+ body:`<p>Liquidity pools are concentrations of stop orders that cluster in predictable places. Institutions need them filled to move size, so price is drawn toward them.</p>
+ <div class="kv"><b>Buy-side (BSL)</b><span>Above swing highs, equal highs, trendline tops — buy stops of shorts + breakout buyers</span></div>
+ <div class="kv"><b>Sell-side (SSL)</b><span>Below swing lows, equal lows — sell stops of longs + breakout sellers</span></div>
+ <div class="kv"><b>Strongest pools</b><span>Equal highs/lows (a clean double-top/bottom) act as the biggest magnets</span></div>
+ <div class="kv"><b>Internal vs external</b><span>Internal = liquidity inside the current range; external = the prior major swing high/low</span></div>
+ <div class="note">These are probabilistic zones of interest where stops likely cluster — not guarantees. Price seeks liquidity, but which pool and when is context-dependent.</div>`},
+{n:'Liquidity Sweep (Grab)',badge:'Trigger',lead:'A wick beyond a pool that snaps back. The manipulation that precedes the real move — and the single most important confirmation in the model.',
+ body:`<p>A sweep takes the resting orders, then price rejects. The distinction below is the whole game:</p>
+ <div class="kv"><b>Wick-only sweep</b><span>A clean grab + rejection = likely reversal fuel (the high-value signal)</span></div>
+ <div class="kv"><b>Body close beyond</b><span>If price closes and holds past the level, it may be a genuine break, not a grab</span></div>
+ <div class="kv"><b>Why it matters</b><span>Smart money creates grabs to fill orders at concentrated stop levels before reversing</span></div>
+ <div class="note">A wick-only breach suggests a simple liquidity grab — often a brief reversal, not a trend change. A decisive body close is a different event. Reading this distinction is what separates a sweep from a breakout.</div>`},
+{n:'Break of Structure (BOS)',badge:'Continuation',lead:'Price breaks a swing point in the direction of the existing trend. Confirmation that the trend continues.',
+ body:`<p>A BOS occurs when price breaks beyond a recent swing point <i>in the direction of the existing trend</i> — it signals continuation, not reversal.</p>
+ <div class="kv"><b>Bullish BOS</b><span>Uptrend makes a new higher high, breaking the prior high</span></div>
+ <div class="kv"><b>Bearish BOS</b><span>Downtrend makes a new lower low, breaking the prior low</span></div>
+ <div class="kv"><b>Requires a close</b><span>A candle must CLOSE beyond the level — a wick alone is a stop hunt, not a BOS</span></div>
+ <div class="kv"><b>Inducement</b><span>A "true" BOS takes out inducement (minor liquidity) first; a break without it is a minor BOS</span></div>
+ <div class="note">Reliable when confirmed by candle close + retest. Unconfirmed breaks (wicks) are the #1 false signal. Trade in the direction of the BOS.</div>`},
+{n:'Change of Character (CHoCH)',badge:'Reversal Warning',lead:'Price breaks structure AGAINST the trend — the first sign the trend may be weakening. An alert, not an entry.',
+ body:`<p>In an uptrend (HH/HL), a CHoCH is the break of the most recent higher <i>low</i>. In a downtrend, the break of the most recent lower <i>high</i>. It's the earliest reversal cue.</p>
+ <div class="kv"><b>Bullish CHoCH</b><span>Downtrend breaks above its last lower high — possible bottom</span></div>
+ <div class="kv"><b>Bearish CHoCH</b><span>Uptrend breaks below its last higher low — possible top</span></div>
+ <div class="kv"><b>Sequence</b><span>CHoCH (warning) → wait for displacement + BOS in the new direction (confirmation)</span></div>
+ <div class="kv"><b>CHoCH+ / MSB</b><span>A stronger variant signaling a more decisive reversal</span></div>
+ <div class="note">CHoCH is an alert, not a trade. Most CHoCHs resolve as pullbacks within the larger trend. Treat it as "structure is now broken — wait for clarification," and demand it occur at a HTF key level (FVG, OB, S/R). A CHoCH at a random price is unreliable.</div>`},
+{n:'BOS vs CHoCH vs MSS',badge:'Disambiguation',lead:'These get conflated constantly. The precise differences, since your indicator depends on defining them exactly.',
+ body:`<div class="kv"><b>BOS</b><span>Break WITH the trend = continuation</span></div>
+ <div class="kv"><b>CHoCH</b><span>Break AGAINST the trend = first reversal warning</span></div>
+ <div class="kv"><b>MSS</b><span>Market Structure Shift — the initial decisive counter-trend break WITH displacement; the confirmed reversal trigger</span></div>
+ <div class="kv"><b>The nuance</b><span>Some define MSS as the first shift and BOS as the larger confirmed shift after inducement is taken. Camps differ — pick one definition and be consistent.</span></div>
+ <div class="note">For an indicator, the ambiguity here IS the problem: "whose definition of a swing point? does a wick count? what's the inducement?" Every SMC indicator lives or dies on how rigorously these are coded. Define them numerically (e.g. swing = N bars each side, break = body close beyond) and never hand-wave.</div>`},
+{n:'Order Blocks (OB)',badge:'Entry Zone',lead:'The last opposing candle before an impulsive move. The institutional footprint price often returns to — IF it meets strict validity rules.',
+ body:`<p>A bullish OB is the last <i>down</i>-candle before a strong up-move; bearish OB is the last <i>up</i>-candle before a strong drop. The theory: institutions absorbed orders there, leaving residual liquidity to react to on retest.</p>
+ <div class="kv"><b>Validity rule 1</b><span>The move out must create displacement (a strong, multi-bar impulsive move)</span></div>
+ <div class="kv"><b>Validity rule 2</b><span>That move must break structure (cause a BOS or CHoCH)</span></div>
+ <div class="kv"><b>Validity rule 3</b><span>It should leave an FVG/imbalance — "not an OB unless it has imbalance"</span></div>
+ <div class="kv"><b>Mitigation</b><span>Untested OB = unmitigated (strongest). Each test fills orders and weakens it. Once price reacts, it's "mitigated."</span></div>
+ <div class="kv"><b>OB vs S/D zone</b><span>An OB is a single specific candle; a supply/demand zone is the broader base. OB is the precise version.</span></div>
+ <div class="note">The last opposing candle, displacement out, structure break, and imbalance — together — separate a real OB from a random candle. A clean OB with no displacement/FVG is low probability.</div>`},
+{n:'Does Price Actually React? — The Honest Data',badge:'Reliability',lead:'The core question for any indicator. The measured answer: reliability is a function of CONTEXT, not the raw pattern. This is where consistency is won or lost.',
+ body:`<p class="lead">From backtests and practitioner data across SMC concepts:</p>
+ <div class="kv"><b>HTF OBs (4H/D)</b><span>~60–70% rejection rate WITH proper confirmation</span></div>
+ <div class="kv"><b>LTF OBs (5m/15m)</b><span>~50–60% — much noisier, more failures</span></div>
+ <div class="kv"><b>OBs without confluence</b><span>~50/50 — a coin flip</span></div>
+ <div class="kv"><b>With HTF context + confluence</b><span>~60–75% rejection — a measurable edge</span></div>
+ <div class="kv"><b>FVG fill rate</b><span>Gaps fill roughly ~70% of the time (commonly cited)</span></div>
+ <div class="note">The "80%+ win rate" marketing figures are typically cherry-picked and NOT representative. The real edge is modest and entirely context-dependent: timeframe + HTF alignment + confluence (sweep, premium/discount, FVG). "Displacement guarantees a retest" is FALSE — many strong moves don't retrace immediately; continuation is common.</div>
+ <div class="note" style="border-left-color:var(--amber)">Implication for your indicator: don't chase a single magic pattern. Build it to score CONFLUENCE (how many conditions align) and FILTER by HTF context — then MEASURE its actual hit rate with the replay/backtest engine before trusting it. Consistency comes from measurement, not faith.</div>`},
+{n:'Building a Consistent Edge',badge:'Synthesis',lead:'How the pieces combine into something testable — the blueprint for what you are trying to build.',
+ body:`<p>The reliable sequence every source converges on:</p>
+ <div class="kv"><b>1. HTF bias</b><span>Daily/4H structure sets direction. Only trade with it.</span></div>
+ <div class="kv"><b>2. Liquidity</b><span>Identify the pool price is drawn to (equal highs/lows, prior swing)</span></div>
+ <div class="kv"><b>3. Sweep</b><span>Wait for the grab + rejection of that pool (the trigger)</span></div>
+ <div class="kv"><b>4. Shift</b><span>CHoCH/MSS with displacement confirms the turn</span></div>
+ <div class="kv"><b>5. Entry zone</b><span>OB or FVG left by the displacement, in premium (short) / discount (long)</span></div>
+ <div class="kv"><b>6. Entry</b><span>Retest of the zone after inducement is swept; SL beyond the sweep; TP at next liquidity</span></div>
+ <div class="note">Each layer is a FILTER that raises the probability — a single OB is 50/50, but an OB that (a) formed from displacement, (b) broke structure, (c) sits in discount, (d) after a HTF-aligned sweep is the 60–75% case. Your indicator's job is to COUNT these confluences and only flag when enough align. That's the difference between a noisy signal and a consistent one.</div>`},
+];
+console.log('SMC module loaded:',SMC.length,'cards');
+
+/* ============ CANDLESTICK THEORY — DEEP (researched) ============ */
+/* Helpers for big annotated candles */
+function bigCandle(x,yO,yC,yH,yL,w,bull){
+  const col=bull?'#3ec77b':'#e0533b';const bt=Math.min(yO,yC),bb=Math.max(yO,yC);
+  return `<line x1="${x}" y1="${yH}" x2="${x}" y2="${yL}" stroke="${col}" stroke-width="2"/><rect x="${x-w/2}" y="${bt}" width="${w}" height="${Math.max(bb-bt,2)}" fill="${col}"/>`;
+}
+function lbl(x,y,t,c){return `<text x="${x}" y="${y}" fill="${c||'#8a98a5'}" font-size="8" font-family="monospace">${t}</text>`}
+
+const CANDLE_THEORY=[
+{n:'OHLC — The Four Prices',badge:'Foundation',lead:'Every candle is just four numbers: Open, High, Low, Close. Their relationship is the entire language.',
+ body:`<p>A candle records where price <b>started</b> (open), the <b>extremes</b> it reached (high/low), and where it <b>settled</b> (close) within one time window. Color is only close-vs-open: close above open = bullish (green), below = bearish (red).</p>
+ <div class="kv"><b>Body</b><span>Open→Close distance. The directional <i>conviction</i> — who won the period.</span></div>
+ <div class="kv"><b>Upper wick</b><span>High→body top. Price went up but was <i>rejected</i> back down.</span></div>
+ <div class="kv"><b>Lower wick</b><span>Low→body bottom. Price went down but was <i>rejected</i> back up.</span></div>
+ <div class="note">Three questions decode any candle: <b>Who won?</b> (body size/color) · <b>What was rejected?</b> (the wicks) · <b>Where did it happen?</b> (location vs structure). Master the single candle and every multi-candle pattern becomes intuitive.</div>`,
+ svg:svgWrap('',`
+  ${bigCandle(110,55,95,25,130,34,true)}
+  <line x1="127" y1="25" x2="180" y2="25" stroke="#5a6772" stroke-dasharray="2 2"/>${lbl(183,28,'High','#8a98a5')}
+  <line x1="127" y1="55" x2="200" y2="55" stroke="#3ec77b" stroke-dasharray="2 2"/>${lbl(203,58,'Close','#3ec77b')}
+  <line x1="127" y1="95" x2="200" y2="95" stroke="#e0533b" stroke-dasharray="2 2"/>${lbl(203,98,'Open','#e0533b')}
+  <line x1="127" y1="130" x2="180" y2="130" stroke="#5a6772" stroke-dasharray="2 2"/>${lbl(183,133,'Low','#8a98a5')}
+  ${lbl(60,78,'body','#8a98a5')}${lbl(58,40,'upper wick','#8a98a5')}${lbl(58,115,'lower wick','#8a98a5')}
+ `,160)},
+{n:'The Candle Is Fractal',badge:'Core Concept',lead:'A 4H candle is NOT one event — it is sixteen 15-minute candles compressed. Every HTF candle contains a full lower-timeframe story.',
+ body:`<p class="lead">This is the deepest idea in candle reading. A single higher-timeframe candle is a <i>container</i> for a sequence of lower-timeframe price action that forms the same structural behavior at smaller scale.</p>
+ <div class="kv"><b>1 Daily</b><span>= 6 × 4H = 24 × 1H = 96 × 15m candles</span></div>
+ <div class="kv"><b>1 × 4H</b><span>= 16 × 15m = 48 × 5m candles</span></div>
+ <div class="kv"><b>What this means</b><span>A clean green 4H body might internally be: a sweep down, a reversal, a sharp rally, and a small pullback — invisible at 4H, obvious at 15m.</span></div>
+ <div class="note">The skill: when you see an HTF candle, mentally "open" it. A big bullish 4H candle with a long lower wick = on the 15m, price sold off (building the wick), got swept, then aggressive buyers drove it up all session (building the body). The wick is where the manipulation happened; the body is where the delivery happened.</div>`,
+ svg:svgWrap('',`
+  ${lbl(20,15,'One 4H candle...','#e8aa42')}
+  ${bigCandle(55,80,40,100,115,40,true)}
+  <path d="M80 70 L140 70" stroke="#5a6772" stroke-width="1" marker-end="url(#a)"/>
+  <text x="150" y="15" fill="#e8aa42" font-size="8" font-family="monospace">...is 16 × 15m internally</text>
+  ${candle(165,108,102,112,100)}${candle(176,100,96,104,92)}${candle(187,92,90,96,98)}
+  ${candle(198,98,70,100,74)}${candle(209,74,66,78,60)}${candle(220,60,54,64,56)}
+  ${candle(231,56,52,60,50)}${candle(242,50,46,54,48)}${candle(253,48,44,52,42)}
+  ${candle(264,42,40,46,44)}${candle(275,44,42,48,46)}
+  ${lbl(160,130,'sweep ↓ then deliver ↑ = the green body','#8a98a5')}
+ `,150)},
+{n:'Anatomy of a Strong Bull Candle',badge:'Internal Structure',lead:'A large bullish HTF candle, opened up: open near the low, minimal upper wick, close near the high. Pure one-sided delivery.',
+ body:`<p>When a 4H candle closes as a big green body with little wick, the internal 15m story is <b>directional</b>:</p>
+ <div class="kv"><b>Open</b><span>Near the candle's low — buyers in control from the start</span></div>
+ <div class="kv"><b>Internal</b><span>15m candles mostly bullish, shallow pullbacks that get bought immediately (continuation, no deep retrace)</span></div>
+ <div class="kv"><b>Small/no upper wick</b><span>Closed at/near the highs = no rejection, buyers never gave back ground</span></div>
+ <div class="kv"><b>Lower wick (if any)</b><span>An early dip that was swept and reclaimed — the launch point</span></div>
+ <div class="note">A full body with no wicks (Marubozu) = total control, strong continuation signal. Internally it's a staircase of higher highs and higher lows on the LTF with no meaningful counter-move.</div>`,
+ svg:svgWrap('',`
+  ${lbl(15,15,'4H view','#e8aa42')}${bigCandle(45,105,35,100,118,34,true)}
+  ${lbl(110,15,'15m internal','#e8aa42')}
+  ${candle(120,110,106,114,104)}${candle(132,104,100,108,98)}
+  ${candle(144,98,94,102,88)}${candle(156,88,84,92,80)}${candle(168,80,78,84,74)}
+  ${candle(180,74,70,78,66)}${candle(192,66,62,70,58)}${candle(204,58,54,62,50)}
+  ${candle(216,50,46,54,42)}${candle(228,42,38,46,40)}${candle(240,40,36,44,38)}
+  ${lbl(120,135,'staircase up: HH/HL, shallow dips bought','#8a98a5')}
+ `,150)},
+{n:'Anatomy of a Rejection Candle',badge:'Internal Structure',lead:'Long wick, small body (pin bar / hammer / shooting star). The footprint of price reaching a level and being violently refused.',
+ body:`<p>A long wick means price <i>traveled there and could not stay</i>. Internally on the LTF, a long lower wick on a 4H candle is a complete round-trip:</p>
+ <div class="kv"><b>First half</b><span>15m candles push DOWN hard into a level (building the wick's depth)</span></div>
+ <div class="kv"><b>The turn</b><span>A sweep of liquidity at the extreme — the lowest 15m candle is itself often a rejection</span></div>
+ <div class="kv"><b>Second half</b><span>Aggressive 15m bullish candles reclaim all the lost ground, closing back near the open</span></div>
+ <div class="kv"><b>Strength rule</b><span>Wick ≥ 2–3× the body = a strong rejection. Slightly longer than body = weak, treat with caution.</span></div>
+ <div class="note">The close back inside the range is the confirmation — a wick without follow-through (next candle closing strong in the rejection direction) can be a false alarm, especially in thin liquidity (Asia open, late Friday) or on news spikes. A single wick says far less than the sequence around it.</div>`,
+ svg:svgWrap('',`
+  ${lbl(15,15,'4H hammer','#e8aa42')}${bigCandle(48,55,45,50,120,30,true)}
+  ${lbl(45,30,'small body','#8a98a5')}${lbl(20,110,'long lower wick','#8a98a5')}
+  ${lbl(120,15,'15m internal: down then reclaim','#e8aa42')}
+  ${candle(130,55,50,58,44)}${candle(142,44,38,48,34)}${candle(154,34,28,38,24)}
+  ${candle(166,24,18,30,16)}
+  <circle cx="166" cy="16" r="4" fill="none" stroke="#9a7bd0"/>${lbl(150,135,'sweep low','#9a7bd0')}
+  ${candle(178,16,24,30,20)}${candle(190,20,34,38,30)}${candle(202,30,44,48,40)}
+  ${candle(214,40,50,56,48)}${candle(226,48,52,58,50)}
+  ${lbl(120,148,'V-shape: drive down → sweep → reclaim','#8a98a5')}
+ `,165)},
+{n:'Anatomy of a Continuation Candle',badge:'Internal Structure',lead:'A medium body in the trend direction after a pause. Internally: a shallow pullback that gets absorbed, then resumption.',
+ body:`<p>Continuation candles look unremarkable but tell a clear LTF story — the trend pauses just enough to refuel:</p>
+ <div class="kv"><b>Internal pullback</b><span>A few counter-trend 15m candles (the pause) — but shallow, never breaking LTF structure</span></div>
+ <div class="kv"><b>Absorption</b><span>The pullback stalls at an FVG/OB from the prior leg, then trend-direction candles resume</span></div>
+ <div class="kv"><b>Body in trend direction</b><span>Closes showing the trend reasserted control</span></div>
+ <div class="kv"><b>Inside bar</b><span>A candle fully within the prior candle's range = compression/pause before expansion — break in trend direction</span></div>
+ <div class="note">Key distinction from reversal: a continuation pullback does NOT break lower-timeframe structure (no CHoCH). The moment the internal pullback makes a CHoCH against the trend, you're looking at a possible reversal candle instead.</div>`,
+ svg:svgWrap('',`
+  ${lbl(15,15,'4H continuation','#e8aa42')}${bigCandle(48,90,45,40,98,30,true)}
+  ${lbl(110,15,'15m internal','#e8aa42')}
+  ${candle(125,92,88,96,84)}${candle(137,84,80,88,76)}
+  ${lbl(120,118,'shallow pullback','#8a98a5')}
+  ${candle(149,76,80,84,82)}${candle(161,82,84,88,86)}
+  <rect x="143" y="80" width="26" height="10" fill="#e8aa4222" stroke="#e8aa42" stroke-dasharray="2 2"/>${lbl(172,86,'OB/FVG','#e8aa42')}
+  ${candle(173,86,78,90,72)}${candle(185,72,64,76,60)}${candle(197,60,52,64,48)}
+  ${candle(209,48,44,52,42)}
+  ${lbl(120,138,'pause at zone → trend resumes','#8a98a5')}
+ `,150)},
+{n:'Power of 3 Inside One Candle',badge:'Internal Structure',lead:'Every HTF candle delivers in three internal acts: Accumulation → Manipulation → Distribution. The open and close positions reveal which.',
+ body:`<p>A single HTF candle is a complete AMD cycle on the LTF. Reading where the open and close sit tells you the manipulation direction:</p>
+ <div class="kv"><b>Accumulation</b><span>Near the open — price ranges quietly (early in the candle's life)</span></div>
+ <div class="kv"><b>Manipulation</b><span>The wick against the true direction — a sweep that traps traders (the "Judas" move)</span></div>
+ <div class="kv"><b>Distribution</b><span>The body — the real delivery toward the close</span></div>
+ <div class="kv"><b>Bullish read</b><span>Open high-ish, long lower wick (manipulation down), close at the top (distribution up)</span></div>
+ <div class="note">This is why the open price matters so much. A bullish candle that opens, wicks below the open (manipulation), then closes far above = textbook Power of 3. The lower wick IS the manipulation leg. Mark the open of HTF candles — price returning to it is significant.</div>`,
+ svg:svgWrap('',`
+  ${bigCandle(120,70,35,95,30,46,true)}
+  <line x1="97" y1="70" x2="240" y2="70" stroke="#e8aa42" stroke-dasharray="3 2"/>${lbl(243,73,'OPEN','#e8aa42')}
+  <line x1="143" y1="35" x2="240" y2="35" stroke="#3ec77b" stroke-dasharray="3 2"/>${lbl(243,38,'CLOSE','#3ec77b')}
+  ${lbl(60,55,'1 accum','#4a90d9')}
+  ${lbl(55,90,'2 manip ↓','#e0533b')}
+  ${lbl(150,55,'3 distribute ↑','#3ec77b')}
+  <path d="M118 92 Q100 80 112 72" stroke="#e0533b" stroke-width="1" fill="none"/>
+ `,140)},
+{n:'Reversal vs Continuation — Reading Which',badge:'Application',lead:'The same long-wick candle means opposite things depending on location and what the internal structure did. Context decides.',
+ body:`<p>A hammer at the bottom of a downtrend at support = powerful reversal. The identical hammer mid-range = meaningless noise. The candle's <i>location</i> changes its meaning entirely.</p>
+ <div class="kv"><b>Reversal signal</b><span>Rejection candle AT a key level (S/R, OB, liquidity pool) + internal CHoCH against the prior trend</span></div>
+ <div class="kv"><b>Continuation signal</b><span>Pause/pullback candle in the trend, at an FVG/OB, internal structure stays intact (no CHoCH)</span></div>
+ <div class="kv"><b>The filter</b><span>Did the internal LTF action break structure? CHoCH = reversal bias. No CHoCH = continuation bias.</span></div>
+ <div class="kv"><b>Confirmation</b><span>Wait for the NEXT candle. Rejection + follow-through close = real. No follow-through = likely false.</span></div>
+ <div class="note">Most dangerous mistake: treating a single large candle spiking through a level as a genuine break. These often reverse within 1–2 candles because they lack sustained order flow. Demand a body close beyond the level, not a wick — a wick through structure is a stop hunt, not a break.</div>`,
+ svg:svgWrap('',`
+  ${lvl(40,20,150,'#e0533b',1,'resistance')}
+  ${cstick(60,70,30,78,75,13)}${lbl(45,20,'reject @ level','#e0533b')}
+  ${lbl(40,100,'= reversal','#e0533b')}
+  ${lvl(70,180,300,'#5a6772',1,'mid-range')}
+  ${cstick(230,90,55,98,94,13)}${lbl(200,115,'same candle, no level','#5a6772')}
+  ${lbl(205,135,'= noise','#5a6772')}
+ `,150)},
+{n:'Candlestick Bible — Core Patterns',badge:'Homma / Reference',lead:'The classic Japanese patterns (Munehisa Homma, 17th c.) codified into the modern "Candlestick Trading Bible." Patterns are just named combinations of the anatomy you now understand.',
+ body:`<p>Homma — the 17th-century rice trader called the "god of markets" — pioneered reading market psychology through candle shapes. The modern compilation organizes the highest-value patterns. They all reduce to body/wick anatomy + location:</p>
+ <div class="kv"><b>Engulfing</b><span>Candle 2's body fully swallows candle 1's. Reversal — strongest at S/R after a trend.</span></div>
+ <div class="kv"><b>Doji</b><span>Open ≈ close. Indecision. Dragonfly (long lower wick) = bullish; Gravestone (long upper) = bearish.</span></div>
+ <div class="kv"><b>Hammer / Shooting Star</b><span>Small body, one long wick. Hammer = bottom reversal; shooting star = top reversal.</span></div>
+ <div class="kv"><b>Morning / Evening Star</b><span>3-candle reversals: big candle → small indecision → big opposite candle.</span></div>
+ <div class="kv"><b>Harami</b><span>Small candle inside the prior large body. Momentum stalling — potential reversal.</span></div>
+ <div class="kv"><b>Tweezers</b><span>Two candles with matching highs (top) or lows (bottom). Rejection of the same level twice.</span></div>
+ <div class="note">The bible's real lesson isn't memorizing shapes — it's that each pattern encodes a shift in the battle between buyers and sellers. Pin bars and engulfing bars at confluence (S/R + trend + a second signal) are the highest-probability plays it teaches. Pattern + location + confirmation, never the pattern alone.</div>`,
+ svg:svgWrap('',`
+  ${cstick(35,70,60,85,80,12)}${cstick(58,82,35,90,40,15)}${lbl(30,108,'engulf','#8a98a5')}
+  ${cstick(105,60,40,95,62,12)}${lbl(92,108,'doji','#8a98a5')}
+  ${cstick(150,55,48,100,62,12)}${lbl(135,108,'hammer','#8a98a5')}
+  ${cstick(195,70,28,78,66,12)}${lbl(178,108,'star','#8a98a5')}
+  ${cstick(245,50,42,95,60,12)}${cstick(262,58,40,64,52,8)}${lbl(232,108,'harami','#8a98a5')}
+ `,125)},
+{n:'How to Actually Use This',badge:'Synthesis',lead:'Reading internal candle structure is a confluence tool, not a standalone system. Here is the disciplined workflow.',
+ body:`<p>Internal candle reading makes you better at <i>timing and conviction</i> within the SMC framework you already have:</p>
+ <div class="kv"><b>1. HTF context first</b><span>Mark the key levels and bias on 4H/Daily before zooming in</span></div>
+ <div class="kv"><b>2. Watch the HTF candle form</b><span>As a 4H candle builds at a key level, "open it" on the 15m to see the internal story</span></div>
+ <div class="kv"><b>3. Read the internal structure</b><span>Is the LTF sweeping + reversing (CHoCH = reversal) or pulling back + continuing (no CHoCH)?</span></div>
+ <div class="kv"><b>4. Demand confirmation</b><span>Body close beyond the level (not a wick). Follow-through on the next candle.</span></div>
+ <div class="kv"><b>5. Locate the entry</b><span>The OB/FVG left by the internal displacement is your refined entry zone</span></div>
+ <div class="note">Probabilistic, not certain. Wicks and patterns are reads on order flow, not guarantees — a meaningful share fail even in clean conditions. The edge comes from stacking: right pattern + right location + right internal structure + confirmation. That's the same confluence-counting principle behind a consistent indicator.</div>`,
+ svg:svgWrap('',`
+  ${lvl(40,20,290,'#e8aa42',1,'HTF level')}
+  ${candle(60,80,72,88,84)}${candle(80,84,76,92,86)}
+  ${candle(100,86,44,90,50)}<circle cx="100" cy="44" r="4" fill="none" stroke="#9a7bd0"/>${lbl(86,36,'sweep','#9a7bd0')}
+  ${candle(120,50,56,60,58)}${lbl(108,75,'CHoCH','#e8aa42')}
+  ${candle(140,58,64,68,62)}${candle(160,62,90,66,86)}
+  ${candle(180,86,94,110,108)}${candle(200,108,112,128,124)}
+  ${lbl(130,145,'level → sweep → CHoCH → deliver','#8a98a5')}
+ `,160)},
+];
+console.log('Candle theory loaded:',CANDLE_THEORY.length,'cards');
+
+
+
 console.log('part3 content loaded');
 
 /* ============ NAVIGATION ============ */
@@ -919,6 +1144,16 @@ function renderEdu(){
   const capStyle='font-size:11px;color:var(--faint);font-style:italic;margin:6px 0 0;padding-left:8px;border-left:2px solid var(--line)';
   $('#v-edu').innerHTML=`
    <div class="note">Every card includes a diagram and a plain-language description of what the picture shows. Tap to expand.</div>
+   <div class="section-h">Smart Money Mechanics</div>
+   ${SMC.map((m,i)=>`<div class="refcard" id="smc-${i}">
+     <div class="head" onclick="document.getElementById('smc-${i}').classList.toggle('open')">
+       <span class="n">${esc(m.n)}</span><span class="badge">${esc(m.badge)}</span><span class="arr">›</span></div>
+     <div class="body"><p class="lead">${esc(m.lead)}</p>${m.body}</div></div>`).join('')}
+   <div class="section-h">Candlestick Theory — Deep</div>
+   ${CANDLE_THEORY.map((m,i)=>`<div class="refcard" id="ct-${i}">
+     <div class="head" onclick="document.getElementById('ct-${i}').classList.toggle('open')">
+       <span class="n">${esc(m.n)}</span><span class="badge">${esc(m.badge)}</span><span class="arr">›</span></div>
+     <div class="body"><p class="lead">${esc(m.lead)}</p>${m.svg||''}${m.body}</div></div>`).join('')}
    <div class="section-h">Methodology</div>
    ${EDU.map((e,i)=>`<div class="refcard" id="edu-${i}">
      <div class="head" onclick="document.getElementById('edu-${i}').classList.toggle('open')">
