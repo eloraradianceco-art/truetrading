@@ -78,7 +78,8 @@ label{display:block;font-size:11px;color:var(--dim);margin-bottom:5px;text-trans
 .row{display:flex;gap:10px}.row>*{flex:1}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-.section-h{font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--faint);margin:22px 4px 10px;font-weight:700}
+.section-h{font-size:11px;text-transform:uppercase;letter-spacing:0.14em;color:var(--dim);margin:26px 4px 12px;font-weight:700;display:flex;align-items:center;gap:9px}
+.section-h::before{content:'';width:3px;height:14px;background:linear-gradient(180deg,var(--amber),var(--amber-d));border-radius:2px;flex:none}
 
 /* Buttons */
 .btn{background:linear-gradient(180deg,#f0b556,var(--amber));color:#1a1206;font-weight:700;border-radius:10px;padding:12px 16px;font-size:14px;text-align:center;transition:transform .1s,box-shadow .2s,filter .15s;box-shadow:0 2px 8px rgba(232,170,66,.2)}
@@ -115,21 +116,31 @@ label{display:block;font-size:11px;color:var(--dim);margin-bottom:5px;text-trans
 .trade .meta{font-size:11px;color:var(--faint);display:flex;gap:10px;flex-wrap:wrap}
 
 /* Reference cards */
-.refcard{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:0;margin-bottom:12px;overflow:hidden}
-.refcard .head{padding:13px 15px;cursor:pointer;display:flex;align-items:center;gap:10px}
-.refcard .head .n{font-weight:700;font-size:15px}
-.refcard .head .badge{font-size:10px;padding:3px 8px;border-radius:5px;background:var(--panel);border:1px solid var(--line);color:var(--dim);text-transform:uppercase;letter-spacing:0.05em}
-.refcard .head .arr{margin-left:auto;color:var(--faint);transition:transform .2s}
-.refcard.open .head .arr{transform:rotate(90deg)}
-.refcard .body{display:none;padding:0 15px 16px;border-top:1px solid var(--line)}
-.refcard.open .body{display:block}
-.refcard .body p{font-size:14px;color:var(--dim);margin:12px 0}
-.refcard .body .lead{color:var(--ink);font-weight:500}
-.refcard svg{width:100%;height:auto;background:#0a0d10;border:1px solid var(--line);border-radius:8px;margin:8px 0}
-.kv{display:flex;gap:8px;font-size:13px;padding:5px 0;border-bottom:1px solid var(--line)}
-.kv:last-child{border:none}.kv b{color:var(--amber);min-width:90px;flex:none}
-.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
-.tags .x{font-size:11px;padding:3px 8px;background:var(--panel);border:1px solid var(--line);border-radius:5px;color:var(--dim)}
+.refcard{background:linear-gradient(180deg,#1b232a,#161c22);border:1px solid var(--line);border-radius:14px;padding:0;margin-bottom:12px;overflow:hidden;transition:border-color .2s,box-shadow .2s}
+.refcard.open{border-color:var(--amber-d);box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.refcard .head{padding:15px 16px;cursor:pointer;display:flex;align-items:center;gap:10px}
+.refcard .head .n{font-weight:700;font-size:15.5px;letter-spacing:-0.01em}
+.refcard .head .badge{font-size:9px;padding:3px 9px;border-radius:6px;background:var(--amber-glow);border:1px solid var(--amber-d);color:var(--amber);text-transform:uppercase;letter-spacing:0.07em;font-weight:700}
+.refcard .head .arr{margin-left:auto;color:var(--faint);transition:transform .25s;font-size:18px}
+.refcard.open .head .arr{transform:rotate(90deg);color:var(--amber)}
+.refcard .body{display:none;padding:0 16px 18px;border-top:1px solid var(--line-soft)}
+.refcard.open .body{display:block;animation:fade .3s}
+.refcard .body p{font-size:14.5px;color:var(--dim);margin:13px 0;line-height:1.62}
+.refcard .body .lead{color:var(--ink);font-weight:500;font-size:15px;line-height:1.6;padding:13px 14px;background:rgba(232,170,66,.05);border-radius:10px;border:1px solid rgba(232,170,66,.12);margin:14px 0}
+.refcard svg{width:100%;height:auto;background:radial-gradient(circle at 50% 30%,#0d1116,#080a0d);border:1px solid var(--line);border-radius:10px;margin:12px 0;box-shadow:inset 0 1px 3px rgba(0,0,0,.4)}
+.kv{display:flex;gap:11px;font-size:13.5px;padding:9px 2px;border-bottom:1px solid var(--line-soft);line-height:1.5}
+.kv:last-child{border:none}
+.kv b{color:var(--amber);min-width:96px;flex:none;font-weight:650}
+.kv span{color:var(--dim)}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.tags .x{font-size:11px;padding:4px 9px;background:var(--panel);border:1px solid var(--line);border-radius:6px;color:var(--dim)}
+/* deeper explanatory blocks */
+.why{font-size:13.5px;color:var(--dim);background:rgba(74,144,217,.07);border-left:3px solid var(--blue);padding:11px 14px;border-radius:0 10px 10px 0;margin:12px 0;line-height:1.6}
+.why b{color:#7db4ec;font-weight:650}
+.eg{font-size:13.5px;color:var(--dim);background:rgba(62,199,123,.06);border-left:3px solid var(--green-d);padding:11px 14px;border-radius:0 10px 10px 0;margin:12px 0;line-height:1.6}
+.eg b{color:#5dd693;font-weight:650}
+.cap{font-size:11.5px;color:var(--faint);font-style:italic;margin:2px 0 10px;padding-left:10px;border-left:2px solid var(--line);line-height:1.5}
+.cap b{color:var(--dim);font-style:normal;font-weight:650}
 
 /* News */
 .news-item{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--line)}
@@ -377,7 +388,7 @@ const ICT=[
   <text x="150" y="135" fill="#8a98a5" font-size="8" font-family="monospace">return to OB → launch</text>
  `)},
 {n:'Silver Bullet',badge:'Setup',lead:'A fixed one-hour window (14:00–15:00 UTC). Take the first FVG after a liquidity sweep. Time-boxed and mechanical.',
- body:`<p class="lead">The most rule-bound ICT setup — ideal for journaling because the variables are fixed.</p>
+ body:`<p>The most rule-bound ICT setup — ideal for journaling because the variables are fixed.</p>
  <div class="kv"><b>Window</b><span>14:00–15:00 UTC (NY AM). Also 03–04 & 19–20 variants.</span></div>
  <div class="kv"><b>Trigger</b><span>1) Liquidity sweep → 2) displacement → 3) FVG forms → enter the FVG</span></div>
  <div class="kv"><b>Target</b><span>Opposing liquidity pool; min 1:2 R</span></div>
@@ -576,9 +587,11 @@ const SMC=[
  <div class="kv"><b>Validity rule 3</b><span>It should leave an FVG/imbalance — "not an OB unless it has imbalance"</span></div>
  <div class="kv"><b>Mitigation</b><span>Untested OB = unmitigated (strongest). Each test fills orders and weakens it. Once price reacts, it's "mitigated."</span></div>
  <div class="kv"><b>OB vs S/D zone</b><span>An OB is a single specific candle; a supply/demand zone is the broader base. OB is the precise version.</span></div>
+ <div class="why"><b>Why it works:</b> institutions can't fill a large position in one print without moving price against themselves. They absorb orders quietly in that last opposing candle, then displace. Unfilled orders may remain at that level — so when price returns, there's residual interest to defend it. The FVG requirement matters because real displacement is so aggressive it skips price levels, leaving the gap; no gap means the move wasn't truly impulsive, so the "institutional footprint" claim is weak.</div>
+ <div class="eg"><b>Worked example:</b> on AUD/USD 15m, price grinds down then prints one last red candle at 0.6580 — immediately followed by three strong green candles that gap up through 0.6595 (an FVG) and break the prior swing high (BOS). That last red candle (0.6578–0.6582) is your bullish OB. Hours later price pulls back to 0.6581, taps the unmitigated block, and rallies. The entry was the OB; the stop sat just below 0.6578.</div>
  <div class="note">The last opposing candle, displacement out, structure break, and imbalance — together — separate a real OB from a random candle. A clean OB with no displacement/FVG is low probability.</div>`},
 {n:'Does Price Actually React? — The Honest Data',badge:'Reliability',lead:'The core question for any indicator. The measured answer: reliability is a function of CONTEXT, not the raw pattern. This is where consistency is won or lost.',
- body:`<p class="lead">From backtests and practitioner data across SMC concepts:</p>
+ body:`<p>From backtests and practitioner data across SMC concepts:</p>
  <div class="kv"><b>HTF OBs (4H/D)</b><span>~60–70% rejection rate WITH proper confirmation</span></div>
  <div class="kv"><b>LTF OBs (5m/15m)</b><span>~50–60% — much noisier, more failures</span></div>
  <div class="kv"><b>OBs without confluence</b><span>~50/50 — a coin flip</span></div>
@@ -622,11 +635,13 @@ const CANDLE_THEORY=[
   ${lbl(60,78,'body','#8a98a5')}${lbl(58,40,'upper wick','#8a98a5')}${lbl(58,115,'lower wick','#8a98a5')}
  `,160)},
 {n:'The Candle Is Fractal',badge:'Core Concept',lead:'A 4H candle is NOT one event — it is sixteen 15-minute candles compressed. Every HTF candle contains a full lower-timeframe story.',
- body:`<p class="lead">This is the deepest idea in candle reading. A single higher-timeframe candle is a <i>container</i> for a sequence of lower-timeframe price action that forms the same structural behavior at smaller scale.</p>
+ body:`<p>This is the deepest idea in candle reading. A single higher-timeframe candle is a <i>container</i> for a sequence of lower-timeframe price action that forms the same structural behavior at smaller scale.</p>
  <div class="kv"><b>1 Daily</b><span>= 6 × 4H = 24 × 1H = 96 × 15m candles</span></div>
  <div class="kv"><b>1 × 4H</b><span>= 16 × 15m = 48 × 5m candles</span></div>
  <div class="kv"><b>What this means</b><span>A clean green 4H body might internally be: a sweep down, a reversal, a sharp rally, and a small pullback — invisible at 4H, obvious at 15m.</span></div>
- <div class="note">The skill: when you see an HTF candle, mentally "open" it. A big bullish 4H candle with a long lower wick = on the 15m, price sold off (building the wick), got swept, then aggressive buyers drove it up all session (building the body). The wick is where the manipulation happened; the body is where the delivery happened.</div>`,
+ <div class="why"><b>Why it works:</b> price is delivered by an algorithm that operates across all timeframes at once. The same logic — seek liquidity, displace, rebalance — repeats at every scale. So the structure inside a 4H candle mirrors the structure of the 4H candles themselves. Learn it once, apply it everywhere.</div>
+ <div class="eg"><b>Worked example:</b> AUD/USD prints a big bullish 4H candle with a 15-pip lower wick. Drop to 15m: the first 4 candles sold off 15 pips into a prior demand zone (that's the wick), the 5th swept the low and closed back up (the turn), and the next 11 candles rallied 40 pips into the close (the body). At 4H you saw "a green candle." At 15m you saw a textbook sweep-and-deliver you could have traded.</div>
+ <div class="note">The skill: when you see an HTF candle, mentally "open" it. The wick is where the manipulation happened; the body is where the delivery happened.</div>`,
  svg:svgWrap('',`
   ${lbl(20,15,'One 4H candle...','#e8aa42')}
   ${bigCandle(55,80,40,100,115,40,true)}
@@ -1767,7 +1782,7 @@ const ICT2=[
   ${candle(165,85,55,90,60)}${candle(190,60,40,65,45)}${candle(215,45,30,50,35)}
  `)},
 {n:'ICT 2022 Model — Sell',badge:'Decision Tree',lead:'The full mechanical sell sequence: sweep buyside → MSS down → FVG → limit short in premium. Five checks, every one must pass.',
- body:`<p class="lead">Trade only when all five gates are YES. This is the journalable version — each step is a logged condition.</p>
+ body:`<p>Trade only when all five gates are YES. This is the journalable version — each step is a logged condition.</p>
  <div class="kv"><b>1</b><span>Has price taken obvious BUYSIDE liquidity (15m/Daily)?</span></div>
  <div class="kv"><b>2</b><span>Swing low formed AFTER the highest swing high that took liquidity?</span></div>
  <div class="kv"><b>3</b><span>Does that leg create a Fair Value Gap (3-candle, energetic middle)?</span></div>
@@ -1786,7 +1801,7 @@ const ICT2=[
   <text x="180" y="120" fill="#8a98a5" font-size="8" font-family="monospace">retrace to FVG → deliver down</text>
  `,175)},
 {n:'ICT 2022 Model — Buy',badge:'Decision Tree',lead:'Mirror of the sell model: sweep sellside → MSS up → FVG → limit long in discount. Same five gates, inverted.',
- body:`<p class="lead">All five must be YES before a long.</p>
+ body:`<p>All five must be YES before a long.</p>
  <div class="kv"><b>1</b><span>Has price taken obvious SELLSIDE liquidity (15m/Daily)?</span></div>
  <div class="kv"><b>2</b><span>Swing high formed BEFORE the lowest swing low that took liquidity?</span></div>
  <div class="kv"><b>3</b><span>Does the leg up create an FVG (energetic displacement)?</span></div>
