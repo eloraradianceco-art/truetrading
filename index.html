@@ -195,6 +195,24 @@ canvas{max-width:100%}
 .result .big{font-family:var(--mono);font-size:28px;font-weight:750;letter-spacing:-0.03em}
 .result .sub{font-size:12px;color:var(--faint);margin-top:5px}
 .result .big.pos{color:var(--green)}.result .big.neg{color:var(--red)}.result .big.amber{color:var(--amber)}
+/* Learn topic groups */
+.topicgroup{border:1px solid var(--line);border-radius:13px;margin-bottom:10px;overflow:hidden;background:var(--panel)}
+.topicgroup.open{border-color:var(--amber-d)}
+.topichead{display:flex;align-items:center;gap:10px;padding:15px 15px;cursor:pointer;user-select:none}
+.topicname{font-size:15.5px;font-weight:700;letter-spacing:-0.01em;color:var(--ink)}
+.topicdesc{font-size:11.5px;color:var(--faint);margin-top:2px}
+.topicmeta{margin-left:auto;display:flex;align-items:center;gap:10px;flex:none}
+.topiccount{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--faint);background:var(--panel2);border:1px solid var(--line);border-radius:20px;min-width:22px;height:22px;display:flex;align-items:center;justify-content:center;padding:0 6px}
+.topicarr{color:var(--faint);font-size:20px;transition:transform .2s;line-height:1}
+.topicgroup.open .topicarr{transform:rotate(90deg)}
+.topicgroup.open .topiccount{color:var(--amber);border-color:var(--amber-d)}
+.topicbody{display:none;padding:0 12px 12px}
+.topicgroup.open .topicbody{display:block}
+.topicbody .refcard{margin-bottom:8px}
+.tierdot{width:8px;height:8px;border-radius:50%;flex:none;display:inline-block;margin-right:2px}
+.tierdot.beg{background:#4dd68a}.tierdot.int{background:#e8aa42}.tierdot.adv{background:#e0533b}
+.refcard .head .tierdot{margin-right:4px}
+.chip .tierdot{margin-right:5px;vertical-align:middle}
 
 /* Boot splash */
 #splash{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:radial-gradient(800px 500px at 50% 40%,rgba(232,170,66,.08),transparent 60%),var(--bg);transition:opacity .5s ease,visibility .5s}
@@ -1008,7 +1026,134 @@ const ADVANCED=[
   <circle cx="192" cy="24" r="4" fill="none" stroke="#9a7bd0"/>
   <polyline points="205,26 235,60 260,90 280,110" fill="none" stroke="#e0533b" stroke-width="1.5"/>
   <text x="235" y="80" fill="#e0533b" font-size="7" font-family="monospace">markdown</text>
- `,150)}
+ `,150)},
+{n:'Inducement — The Trap Before the Move',badge:'Liquidity',tier:'adv',lead:'A false setup Smart Money creates to lure retail into the wrong position before the real move. It looks like a valid BOS or FVG, but it is bait to generate liquidity for the actual trade.',
+ body:`<p>Inducement (IDM) is the minor liquidity that sits <i>before</i> the real point of interest. Smart money engineers an obvious-looking setup to trap breakout traders, then sweeps them to fuel the genuine move.</p>
+ <div class="kv"><b>What it looks like</b><span>A small BOS with a weak displacement candle, or a tiny FVG that forms too early — tempting but fragile</span></div>
+ <div class="kv"><b>The trap</b><span>Retail enters the obvious setup; their stops become the liquidity for the real entry deeper in</span></div>
+ <div class="kv"><b>True BOS vs inducement</b><span>A real BOS takes out inducement FIRST, then breaks with strong displacement. A break without taking inducement is itself likely the inducement.</span></div>
+ <div class="kv"><b>The sequence</b><span>Sweep inducement → THEN the real OB/FVG → THEN displacement. The inducement comes before the real setup.</span></div>
+ <div class="why"><b>Why it works:</b> institutions need someone to sell to when they buy. By printing an obvious early setup, they bait breakout traders into positions, then run those stops — that pool of stops is the liquidity that fills the institutional order at the real, deeper level. Retail provides the fuel without knowing it.</div>
+ <div class="eg"><b>Worked example:</b> AUD/USD makes a small higher high (looks like a BOS — retail buys). Price wicks just above, grabs those breakout stops, then reverses hard to a deeper demand zone where the <i>real</i> long sets up. The first "BOS" was inducement; the real entry was 15 pips lower after the trap sprung.</div>
+ <div class="note">The fix: wait for the setup that forms AFTER price sweeps a key level. If a BOS happens BEFORE the sweep, it is almost always a trap. Patience past the inducement is the antidote.</div>`,
+ svg:svgWrap('',`
+  ${lvl(40,30,250,'#e0533b',1,'real OB')}
+  ${candle(50,95,85,100,88)}${candle(66,88,78,92,72)}
+  ${candle(82,72,80,84,82)}<text x="70" y="100" fill="#e8aa42" font-size="7" font-family="monospace">inducement</text>
+  ${candle(98,82,68,86,64)}<circle cx="98" cy="64" r="4" fill="none" stroke="#9a7bd0"/>
+  ${candle(114,64,72,90,86)}<text x="116" y="96" fill="#e0533b" font-size="7" font-family="monospace">retail trapped long</text>
+  ${candle(132,86,44,90,40)}${candle(150,40,30,46,34)}
+  <text x="40" y="150" fill="#8a98a5" font-size="8" font-family="monospace">trap retail → sweep → real move down</text>
+ `,160)},
+{n:'Multi-Timeframe Alignment',badge:'Structure',tier:'int',lead:'The top-down workflow: Daily sets bias, 4H confirms, 15M finds the zone, 5M executes. HTF decides direction, LTF decides entry — never trade the LTF against the HTF.',
+ body:`<p>Each timeframe tells a different story. Alignment means reading them in order so a small-timeframe entry serves a big-timeframe idea.</p>
+ <div class="kv"><b>Daily — Bias</b><span>Bullish or bearish? HH/HL or LH/LL? This sets the only direction you'll trade. (2 min)</span></div>
+ <div class="kv"><b>4H — Structure</b><span>Confirm the daily. Mark major OB, FVG, liquidity zones. (3 min)</span></div>
+ <div class="kv"><b>1H / 15M — Zones</b><span>Refine to the precise FVG/OB you'll trade. Mark OTE. (5 min)</span></div>
+ <div class="kv"><b>5M / 1M — Execution</b><span>Wait for the tap + CHoCH/BOS, enter on the confirmation candle close. (10 min watch)</span></div>
+ <div class="kv"><b>Aligned</b><span>Daily bullish + 4H pulling back to demand + 15M bullish at OTE = high probability</span></div>
+ <div class="kv"><b>Conflicting</b><span>Daily bullish but 4H breaking down = low probability. Wait for alignment or skip.</span></div>
+ <div class="why"><b>Why it works:</b> a 15M bullish move <i>inside</i> a Daily uptrend is a continuation with the institutional flow behind it. The same 15M move against a Daily downtrend is just a pullback about to fail. Aligning timeframes means your entry rides the dominant order flow instead of fighting it.</div>
+ <div class="eg"><b>Worked example:</b> Daily AUD/USD is bullish (HH/HL). 4H pulls back into a demand zone at 0.6580. You drop to 15M, see a CHoCH up off the zone, then a 5M FVG forms — you enter long at CE. Every timeframe agreed; the entry was small-risk for a HTF-sized target.</div>
+ <div class="note">Never force entries when timeframes disagree. HTF decides direction. LTF decides entry. When they conflict, the higher timeframe always wins — wait or skip.</div>`,
+ svg:svgWrap('',`
+  ${['Daily ↑','4H ↓ pullback','15M ↑ entry'].map((t,i)=>`<text x="20" y="${28+i*42}" fill="#e8aa42" font-size="8" font-family="monospace">${t}</text>`).join('')}
+  <polyline points="120,40 150,30 140,36 175,22 165,28 200,15" fill="none" stroke="#3ec77b" stroke-width="1.4"/>
+  <polyline points="120,82 145,90 138,86 165,98 158,94 185,104" fill="none" stroke="#e0533b" stroke-width="1.4"/>
+  ${candle(130,120,110,124,106)}${candle(146,106,96,110,92)}${candle(162,92,78,96,82)}${candle(178,82,66,86,70)}
+  <text x="120" y="150" fill="#8a98a5" font-size="8" font-family="monospace">HTF direction → LTF entry, aligned</text>
+ `,160)},
+{n:'DXY & Intermarket Analysis',badge:'Structure',tier:'adv',lead:'The Dollar Index is the hidden force behind every Forex and Gold move. DXY up = USD strength; check it before trading gold or any USD pair. It is your compass.',
+ body:`<p>DXY measures the dollar against a basket of major currencies. Because the dollar is on one side of most pairs, DXY direction quietly drives them all.</p>
+ <div class="kv"><b>Inverse correlation</b><span>DXY up → EUR/USD down, GBP/USD down, Gold down. DXY down → those rise.</span></div>
+ <div class="kv"><b>Gold & DXY</b><span>Strong inverse. DXY rising = look for Gold SHORTS. DXY falling = look for Gold LONGS.</span></div>
+ <div class="kv"><b>AUD/USD</b><span>USD is the quote — DXY up pressures AUD/USD down. Check DXY before any AUD/USD entry.</span></div>
+ <div class="kv"><b>SMT divergence</b><span>If DXY makes a new high but EUR/USD does NOT make a new low, that's a divergence — a reversal tell.</span></div>
+ <div class="why"><b>Why it works:</b> the dollar is one leg of every major pair, so a strong dollar mechanically pushes USD-quoted pairs down and lifts USD-based ones. DXY is the upstream cause; the pairs are downstream effects. Checking it first stops you taking a long on a pair while the dollar is ripping — a hidden headwind you'd otherwise miss.</div>
+ <div class="eg"><b>Worked example:</b> you spot a clean Gold long setup, but DXY is breaking structure UP into its own demand zone. The dollar strength will fight your gold long. You skip it — and gold drops as DXY rallies, exactly as the compass warned.</div>
+ <div class="note">Always check DXY before trading Gold or Forex. If DXY bias is unclear, the pair bias is unclear — wait. Trading gold without checking DXY is driving without GPS.</div>`,
+ svg:svgWrap('',`
+  <text x="20" y="40" fill="#4a90d9" font-size="9" font-family="monospace">DXY ↑</text>
+  <polyline points="55,45 80,35 105,25 130,18" fill="none" stroke="#4a90d9" stroke-width="1.5"/>
+  <text x="20" y="95" fill="#e8aa42" font-size="9" font-family="monospace">Gold ↓</text>
+  <polyline points="55,90 80,100 105,110 130,118" fill="none" stroke="#e8aa42" stroke-width="1.5"/>
+  <text x="160" y="60" fill="#8a98a5" font-size="8" font-family="monospace">inverse correlation:</text>
+  <text x="160" y="76" fill="#8a98a5" font-size="8" font-family="monospace">dollar up = gold down</text>
+  <text x="160" y="98" fill="#8a98a5" font-size="8" font-family="monospace">check DXY before</text>
+  <text x="160" y="112" fill="#8a98a5" font-size="8" font-family="monospace">every gold/forex trade</text>
+ `,140)},
+{n:'Algorithmic Price Delivery',badge:'Structure',tier:'adv',lead:'Price is not random — it is delivered by an algorithm that seeks liquidity and rebalances inefficiency in a repeatable sequence. You are not predicting; you are reading the algorithm.',
+ body:`<p>ICT's core premise: modern price is delivered by central-bank dealing algorithms that move price between liquidity pools and fill imbalances in a logical, repeatable order.</p>
+ <div class="kv"><b>1 · Seek liquidity</b><span>The algo targets the larger pool of resting orders (equal highs/lows, prior swing)</span></div>
+ <div class="kv"><b>2 · Create displacement</b><span>After grabbing liquidity, it moves aggressively, creating FVG imbalances</span></div>
+ <div class="kv"><b>3 · Rebalance</b><span>Price often returns to fill the FVG/inefficiency before continuing</span></div>
+ <div class="kv"><b>4 · Deliver to target</b><span>It moves to the next liquidity pool, and the sequence repeats</span></div>
+ <div class="why"><b>Why it works:</b> if price delivery follows an algorithmic logic — take liquidity, displace, rebalance, repeat — then the "patterns" you trade (sweep → FVG → continuation) aren't coincidence, they're the visible footprint of that sequence. You stop guessing direction and start reading which step of the cycle price is in.</div>
+ <div class="eg"><b>Worked example:</b> AUD/USD sweeps the prior day low (step 1: liquidity), displaces up leaving a 15M FVG (step 2), retraces to fill the FVG (step 3), then runs to the prior day high (step 4: next pool). You didn't predict it — you read each step and positioned for the next.</div>
+ <div class="note">When you trade ICT you are not predicting — you are reading the algorithm. Liquidity → displacement → FVG fill → target. Learn the sequence and you stop forcing trades that aren't part of it.</div>`,
+ svg:svgWrap('',`
+  ${lvl(30,30,290,'#4a90d9',1,'target pool')}
+  ${lvl(120,30,290,'#9a7bd0',1,'liquidity')}
+  ${candle(45,108,100,124,118)}<text x="36" y="138" fill="#9a7bd0" font-size="7" font-family="monospace">1 sweep</text>
+  ${candle(63,100,70,104,74)}${candle(81,74,52,78,56)}<text x="84" y="64" fill="#e8aa42" font-size="7" font-family="monospace">2 displace+FVG</text>
+  ${candle(99,56,66,70,62)}<text x="100" y="84" fill="#3ec77b" font-size="7" font-family="monospace">3 rebalance</text>
+  ${candle(117,62,46,66,42)}${candle(135,42,32,46,28)}<text x="138" y="40" fill="#4a90d9" font-size="7" font-family="monospace">4 deliver</text>
+ `,160)},
+{n:'Trading Psychology — The Real Edge',badge:'Psychology',tier:'adv',lead:'90% of traders lose to their own emotions, not their strategy. Fear, greed, FOMO, and revenge destroy more accounts than any bad setup. The edge is between your ears.',
+ body:`<p>The strategy is maybe 10% of the outcome. Psychology and discipline are the other 90%. The same setup wins for a disciplined trader and loses for an emotional one.</p>
+ <div class="kv"><b>Fear</b><span>Hesitate on valid setups, close winners early, refuse to take losses. Fix: pre-accept the 1% risk before entry.</span></div>
+ <div class="kv"><b>Greed</b><span>Oversize, move targets, hold too long. One bad trade wipes weeks of progress. Fix: fixed risk, fixed targets.</span></div>
+ <div class="kv"><b>FOMO</b><span>Chasing a move you missed. Lowest win rate of any entry. Fix: there's a setup every day — missing one costs nothing.</span></div>
+ <div class="kv"><b>Revenge</b><span>Impulsive trades after a loss to "make it back." One loss becomes three. Fix: after a loss, ask "did I follow my checklist?"</span></div>
+ <div class="kv"><b>The losing cycle</b><span>New strategy → loss → blame system → quit → repeat. Break it by committing to ONE method for 12 months.</span></div>
+ <div class="why"><b>Why it works:</b> your brain is wired by evolution to avoid loss and chase reward — the exact opposite of what trading requires (accept small losses, let winners run). Emotions hijack good strategies. Building rules and routines outsources the decision to your disciplined pre-market self, not your emotional in-trade self.</div>
+ <div class="eg"><b>Worked example:</b> you take a -1R loss at 9:45. The urge to immediately re-enter to "get it back" is revenge. The disciplined move: note it, check the next setup against the checklist, and if nothing qualifies, close the charts. The trader who walks away keeps the other 99% of the account.</div>
+ <div class="note">You do not need a better strategy. You need a better relationship with fear, greed, and patience. Grade yourself on process, not profit — a correct loss beats a lucky win.</div>`,
+ svg:svgWrap('',`
+  <text x="60" y="40" fill="#e0533b" font-size="10" font-family="monospace">FEAR</text>
+  <text x="200" y="40" fill="#3ec77b" font-size="10" font-family="monospace">GREED</text>
+  <line x1="40" y1="70" x2="280" y2="70" stroke="#28323d"/>
+  <polygon points="160,55 150,70 170,70" fill="#e8aa42"/>
+  <text x="120" y="95" fill="#e8aa42" font-size="8" font-family="monospace">DISCIPLINE = balance</text>
+  <text x="50" y="120" fill="#8a98a5" font-size="7.5" font-family="monospace">you feel both on every trade —</text>
+  <text x="50" y="134" fill="#8a98a5" font-size="7.5" font-family="monospace">the goal is to follow rules despite them</text>
+ `,150)},
+{n:'Economic Data & News Mechanics',badge:'Fundamentals',tier:'adv',lead:'NFP, CPI, and FOMC create the biggest moves and the biggest traps. The data sets the fundamental fuel; ICT tells you how to trade the aftermath, never the event.',
+ body:`<p>High-impact releases move price 100-300+ pips and create the month's largest FVGs. Trading the event is gambling; trading the aftermath is an edge.</p>
+ <div class="kv"><b>NFP</b><span>Non-Farm Payrolls. First Friday, 8:30 AM EST. The most volatile event — can move Gold 200-500 pips.</span></div>
+ <div class="kv"><b>CPI</b><span>Inflation. Second in volatility after NFP. Higher than expected → USD strengthens (Fed may hike).</span></div>
+ <div class="kv"><b>FOMC</b><span>Fed rate decision, 8/year, 2 PM EST. Controls all markets. Hawkish → USD up. Dovish → USD down.</span></div>
+ <div class="kv"><b>Interest rates</b><span>The force behind everything. Rates rise → currency strengthens, gold falls. Rates cut → opposite.</span></div>
+ <div class="kv"><b>The rule</b><span>Close trades 30 min before. Wait 15-30 min after. Trade the post-news FVG, not the spike.</span></div>
+ <div class="why"><b>Why it works:</b> a surprise vs expectation is what moves price — and the violent repricing skips levels, leaving huge FVGs. Spreads widen 5-20× during the release so your fill is unpredictable. But once the dust settles, that fresh institutional FVG provides A+ entries on the retrace. The event is chaos; the aftermath is opportunity.</div>
+ <div class="eg"><b>Worked example:</b> NFP prints far above expectations at 8:30. AUD/USD gaps down 60 pips leaving a clean bearish FVG. You don't touch the spike. At 9:00 price retraces into that FVG at premium — you short with the dollar strength, riding the aftermath the data created.</div>
+ <div class="note">Check the calendar every Sunday. News creates the biggest FVGs and sweeps of the month — but trade the aftermath, not the event. Be the trader who waits, not the one who gambles the release.</div>`,
+ svg:svgWrap('',`
+  <rect x="100" y="20" width="120" height="20" fill="#e0533b22" stroke="#e0533b"/><text x="160" y="34" fill="#e0533b" font-size="8" font-family="monospace" text-anchor="middle">NEWS SPIKE — skip</text>
+  ${candle(60,80,76,84,72)}${candle(76,72,76,80,74)}
+  ${bigCandle(96,74,44,78,40,12,false)}
+  ${candle(116,44,40,48,30)}
+  <rect x="108" y="48" width="40" height="16" fill="#e8aa4222" stroke="#e8aa42" stroke-dasharray="2 2"/><text x="152" y="60" fill="#e8aa42" font-size="7" font-family="monospace">FVG</text>
+  ${candle(136,30,44,48,46)}<text x="140" y="78" fill="#3ec77b" font-size="7" font-family="monospace">retrace</text>
+  ${candle(154,46,34,50,30)}${candle(172,30,20,34,16)}
+  <text x="40" y="150" fill="#8a98a5" font-size="8" font-family="monospace">skip the spike → trade the FVG retrace</text>
+ `,160)},
+{n:'Prop Firms & The Funded Path',badge:'Business',tier:'adv',lead:'Prop firms fund traders who pass an evaluation — you trade their capital and keep 70-90% of profits. They are not free money; you must already be consistently profitable before attempting.',
+ body:`<p>The funded path: pass a challenge (hit a profit target without breaching drawdown rules), get funded, withdraw monthly, scale up. The challenge tests discipline, not strategy.</p>
+ <div class="kv"><b>How it works</b><span>Pay challenge fee → hit ~8-10% target with ≤5% drawdown → get funded → keep 70-90% of profits → scale</span></div>
+ <div class="kv"><b>Static drawdown</b><span>Max loss from STARTING balance. Simpler — the floor never moves.</span></div>
+ <div class="kv"><b>Trailing drawdown</b><span>Max loss from HIGHEST equity reached. Stricter — the floor rises as you profit.</span></div>
+ <div class="kv"><b>Challenge rules</b><span>Risk 0.5% per trade. Max 1 trade/day. Kill zones only. Slow and steady passes; oversizing fails.</span></div>
+ <div class="kv"><b>Why 90% fail</b><span>Oversizing, overtrading, revenge after a loss, trading the news — not bad strategy</span></div>
+ <div class="why"><b>Why it works:</b> the firm profits from challenge fees and from skilled traders' edge. For you, it's leverage: master a small account, then manage 50-200k of their capital without risking your own. But it only works if you're already profitable — the challenge is a discipline filter, and an unprofitable trader just donates the fee.</div>
+ <div class="eg"><b>Worked example:</b> you take a 50k challenge: 8% target ($4,000), 5% max drawdown ($2,500). Risking 0.5% ($250) per trade in kill zones only, one trade a day, you need ~16 winning R over a month. Slow, boring, mechanical — and you pass by treating every day like a rule-test, not a race.</div>
+ <div class="note">Prop firms are leverage for the already-disciplined. Be consistently profitable on demo for 3 months FIRST. Treat the funded account like the challenge that earned it — the discipline that passed must continue forever.</div>`,
+ svg:svgWrap('',`
+  ${['1 · Pass challenge','2 · Get funded','3 · Withdraw monthly','4 · Scale up'].map((t,i)=>`
+   <rect x="30" y="${24+i*28}" width="200" height="20" rx="5" fill="${i===3?'#3ec77b22':'#1c242c'}" stroke="${i===3?'#3ec77b':'#28323d'}"/>
+   <text x="40" y="${38+i*28}" fill="#eaeff4" font-size="9" font-family="monospace">${t}</text>`).join('')}
+  <text x="40" y="150" fill="#8a98a5" font-size="8" font-family="monospace">0.5% risk · 1 trade/day · kill zones only</text>
+ `,160)}
 ];
 console.log('Advanced concepts loaded:',ADVANCED.length);
 
@@ -1360,75 +1505,133 @@ function calcTZ(){
 }
 
 /* ---- EDU (candles + TA + methodology) ---- */
+/* Topic taxonomy — every card maps to ONE topic group. Groups are the primary
+   structure; the tier filter (beg/int/adv) cross-cuts and filters within each group. */
+const EDU_TOPICS=[
+ {k:'foundations',n:'Foundations',d:'What a candle and a chart actually are'},
+ {k:'structure',n:'Market Structure',d:'Trend, breaks, and the language of price'},
+ {k:'liquidity',n:'Liquidity',d:'Where the stops are — and why price hunts them'},
+ {k:'orderblocks',n:'Order Blocks & Zones',d:'Institutional footprints: OB, supply/demand, breakers'},
+ {k:'fvg',n:'FVG & Imbalance',d:'Inefficiencies price returns to fill'},
+ {k:'entries',n:'Entry Models',d:'The setups: OTE, Silver Bullet, Unicorn, and more'},
+ {k:'time',n:'Time & Sessions',d:'Kill zones, AMD, and the daily cycle'},
+ {k:'orderflow',n:'Order Flow & Volume',d:'Reading control: bodies, wicks, volume, Wyckoff'},
+ {k:'analysis',n:'Top-Down Analysis',d:'Bias, multi-timeframe, DXY, the algorithm'},
+ {k:'patterns',n:'Patterns & Indicators',d:'Candlesticks, classic patterns, Fibonacci'},
+ {k:'risk',n:'Risk & Management',d:'Position sizing, trade management, the math of survival'},
+ {k:'psychology',n:'Psychology & Business',d:'Mindset, discipline, prop firms, news'},
+];
+const TOPIC_MAP={
+ // Foundations
+ 'OHLC — The Four Prices':'foundations','The Candle Is Fractal':'foundations','Anatomy of a Strong Bull Candle':'foundations','Anatomy of a Rejection Candle':'foundations','Anatomy of a Continuation Candle':'foundations','Reversal vs Continuation — Reading Which':'foundations','How to Actually Use This':'foundations',
+ // Structure
+ 'Market Structure':'structure','Break of Structure (BOS)':'structure','Change of Character (CHoCH)':'structure','BOS vs CHoCH vs MSS':'structure','Support & Resistance':'structure','Trend & Momentum':'structure',
+ // Liquidity
+ 'Liquidity (BSL / SSL)':'liquidity','Liquidity Pools':'liquidity','Liquidity Sweep (Grab)':'liquidity','Internal vs External Liquidity':'liquidity','Inducement — The Trap Before the Move':'liquidity',
+ // Order blocks & zones
+ 'Order Block (OB)':'orderblocks','Order Blocks (OB)':'orderblocks','Mitigation Block':'orderblocks','Vacuum Block':'orderblocks','Rejection Block (RJB)':'orderblocks','Order Block Curve Selection':'orderblocks','Supply & Demand Zones':'orderblocks',
+ // FVG
+ 'Fair Value Gap (FVG)':'fvg',
+ // Entry models
+ 'Silver Bullet':'entries','Unicorn Model':'entries','Turtle Soup':'entries','Judas Swing':'entries','OTE (Optimal Trade Entry)':'entries','Confluence Stack (A+ setup)':'entries',
+ // Time & sessions
+ 'Killzones (Time Theory)':'time','Power of 3 (AMD)':'time','Power of 3 Inside One Candle':'time','Weekly AMD Profile':'time',
+ // Order flow & volume
+ 'Order Flow — Who Is in Control':'orderflow','Order Flow Shift':'orderflow','Reading Wicks for Trapped Traders':'orderflow','Volume Profile — HVN, LVN, POC':'orderflow','Wyckoff Basics':'orderflow',
+ // Top-down analysis
+ 'Top-Down Analysis (HTF → LTF)':'analysis','Building Daily Bias':'analysis','Building a Consistent Edge':'analysis','Multi-Timeframe Alignment':'analysis','DXY & Intermarket Analysis':'analysis','Algorithmic Price Delivery':'analysis','Does Price Actually React? — The Honest Data':'analysis','Key Levels to Mark Daily':'analysis',
+ // ICT expansion (ICT2) cards
+ 'CRT / Candle Range Theory':'time','IFVG / Inversion FVG':'fvg','ICT 2022 Model — Sell':'entries','ICT 2022 Model — Buy':'entries','ICT Macros (NY Time)':'time','ICT Bread & Butter':'entries','Supply/Demand + Imbalance':'orderblocks','Intraday Session Templates':'time','High-Probability Order Block':'orderblocks','One Setup for Life':'entries',
+ // Patterns & indicators
+ 'Candlestick Bible — Core Patterns':'patterns','Classic Chart Patterns':'patterns','Fibonacci':'patterns',
+ // Risk & management
+ 'Risk Management (the real edge)':'risk','Trade Management':'risk',
+ // Psychology & business
+ 'Trading Psychology — The Real Edge':'psychology','Economic Data & News Mechanics':'psychology','Prop Firms & The Funded Path':'psychology',
+};
 function renderEdu(){
-  const capStyle='font-size:11px;color:var(--faint);font-style:italic;margin:6px 0 0;padding-left:8px;border-left:2px solid var(--line)';
-  // Assign a tier to every card. Default tiers per source, with explicit overrides by name.
+  // Assign a tier to every card.
   const tierOf=(name,fallback)=>{
-    const beg=['OHLC — The Four Prices','The Candle Is Fractal','Anatomy of a Strong Bull Candle','Anatomy of a Rejection Candle','Anatomy of a Continuation Candle','Reversal vs Continuation — Reading Which','Candlestick Bible — Core Patterns','Classic Chart Patterns','Market Structure','Support & Resistance','Key Levels to Mark Daily','Liquidity Pools'];
+    const beg=['OHLC — The Four Prices','The Candle Is Fractal','Anatomy of a Strong Bull Candle','Anatomy of a Rejection Candle','Anatomy of a Continuation Candle','Reversal vs Continuation — Reading Which','Candlestick Bible — Core Patterns','Classic Chart Patterns','Market Structure','Support & Resistance','Key Levels to Mark Daily','Liquidity Pools','How to Actually Use This'];
     const adv=['Power of 3 Inside One Candle','BOS vs CHoCH vs MSS','Does Price Actually React? — The Honest Data','Building a Consistent Edge','Mitigation Block','Vacuum Block','Rejection Block (RJB)','Weekly AMD Profile','Order Block Curve Selection','Risk Management (the real edge)','Trade Management'];
     if(beg.includes(name))return'beg';
     if(adv.includes(name))return'adv';
     return fallback;
   };
-  // Build a unified, normalized card list
+  // Build a unified, normalized card list, each tagged with topic + tier
   const cards=[];
-  ICT.forEach(m=>cards.push({...m,tier:'adv',render:'rich'}));
-  SMC.forEach(m=>cards.push({...m,tier:tierOf(m.n,'int'),render:'rich'}));
-  CANDLE_THEORY.forEach(m=>cards.push({...m,tier:m.tier||tierOf(m.n,'beg'),render:'rich'}));
-  ADVANCED.forEach(m=>cards.push({...m,tier:m.tier||tierOf(m.n,'adv'),render:'rich'}));
-  EDU.forEach(e=>cards.push({n:e.n,badge:'Method',tier:tierOf(e.n,'int'),lead:e.lead,svg:e.svg,cap:e.cap,steps:e.steps,note:e.note,render:'method'}));
-  TA.forEach(t=>cards.push({n:t.n,badge:'TA',tier:tierOf(t.n,'beg'),svg:t.svg,cap:t.cap,pts:t.pts,render:'ta'}));
+  const push=(m,extra)=>{const topic=TOPIC_MAP[m.n]||'analysis';cards.push({...m,...extra,topic});};
+  ICT.forEach(m=>push(m,{tier:'adv',render:'rich'}));
+  SMC.forEach(m=>push(m,{tier:tierOf(m.n,'int'),render:'rich'}));
+  CANDLE_THEORY.forEach(m=>push(m,{tier:m.tier||tierOf(m.n,'beg'),render:'rich'}));
+  ADVANCED.forEach(m=>push(m,{tier:m.tier||tierOf(m.n,'adv'),render:'rich'}));
+  EDU.forEach(e=>push({n:e.n,badge:'Method',lead:e.lead,svg:e.svg,cap:e.cap,steps:e.steps,note:e.note},{tier:tierOf(e.n,'int'),render:'method'}));
+  TA.forEach(t=>push({n:t.n,badge:'TA',svg:t.svg,cap:t.cap,pts:t.pts},{tier:tierOf(t.n,'beg'),render:'ta'}));
 
-  const TIERS=[
-   {k:'beg',n:'Beginner',d:'What price is — anatomy, structure, classic patterns'},
-   {k:'int',n:'Intermediate',d:'Smart-money mechanics — liquidity, structure breaks, blocks'},
-   {k:'adv',n:'Advanced',d:'Specialized applications, models, and the math of consistency'},
-  ];
+  const TIERS=[{k:'beg',n:'Beginner'},{k:'int',n:'Intermediate'},{k:'adv',n:'Advanced'}];
   const active=eduFilter||'all';
   const renderCard=(m,id)=>{
+    const tierBadge=`<span class="tierdot ${m.tier}" title="${m.tier==='beg'?'Beginner':m.tier==='int'?'Intermediate':'Advanced'}"></span>`;
     if(m.render==='ta')return `<div class="refcard" id="${id}">
        <div class="head" onclick="document.getElementById('${id}').classList.toggle('open')">
-         <span class="n">${esc(m.n)}</span><span class="badge">${esc(m.badge)}</span><span class="arr">›</span></div>
+         ${tierBadge}<span class="n">${esc(m.n)}</span><span class="badge">${esc(m.badge)}</span><span class="arr">›</span></div>
        <div class="body">${m.svg||''}${m.cap?`<p class="cap"><b>What you're seeing:</b> ${esc(m.cap)}</p>`:''}
          <ul style="margin:12px 0 0 18px;font-size:14px;color:var(--dim);line-height:1.6">${m.pts.map(p=>`<li style="margin-bottom:7px">${esc(p)}</li>`).join('')}</ul></div></div>`;
     if(m.render==='method')return `<div class="refcard" id="${id}">
        <div class="head" onclick="document.getElementById('${id}').classList.toggle('open')">
-         <span class="n">${esc(m.n)}</span><span class="badge">${esc(m.badge)}</span><span class="arr">›</span></div>
+         ${tierBadge}<span class="n">${esc(m.n)}</span><span class="badge">${esc(m.badge)}</span><span class="arr">›</span></div>
        <div class="body"><p class="lead">${esc(m.lead)}</p>${m.svg||''}${m.cap?`<p class="cap"><b>What you're seeing:</b> ${esc(m.cap)}</p>`:''}
          ${(m.steps||[]).map(s=>`<div class="kv"><b>${esc(s[0])}</b><span>${esc(s[1])}</span></div>`).join('')}
          ${m.note?`<div class="note">${esc(m.note)}</div>`:''}</div></div>`;
     return `<div class="refcard" id="${id}">
        <div class="head" onclick="document.getElementById('${id}').classList.toggle('open')">
-         <span class="n">${esc(m.n)}</span>${m.badge?`<span class="badge">${esc(m.badge)}</span>`:''}<span class="arr">›</span></div>
+         ${tierBadge}<span class="n">${esc(m.n)}</span>${m.badge?`<span class="badge">${esc(m.badge)}</span>`:''}<span class="arr">›</span></div>
        <div class="body"><p class="lead">${esc(m.lead)}</p>${m.svg||''}${m.body||''}</div></div>`;
   };
-  let html=`<div class="note">A full curriculum — Beginner to Advanced. Tap a card to expand. Use the filter to focus on one level.</div>
-   <div class="chipwrap" style="margin-bottom:6px">
-     <span class="chip ${active==='all'?'on':''}" onclick="eduFilter=null;renderEdu()">All</span>
-     ${TIERS.map(t=>`<span class="chip ${active===t.k?'on':''}" onclick="eduFilter='${t.k}';renderEdu()">${t.n}</span>`).join('')}
+  let html=`<div class="note">A full curriculum, grouped by topic. Tap a topic to open it, then tap any card to expand. The level filter narrows every topic at once.</div>
+   <div class="chipwrap" style="margin-bottom:12px">
+     <span class="chip ${active==='all'?'on':''}" onclick="eduFilter=null;renderEdu()">All Levels</span>
+     ${TIERS.map(t=>`<span class="chip ${active===t.k?'on':''}" onclick="eduFilter='${t.k}';renderEdu()"><span class="tierdot ${t.k}"></span>${t.n}</span>`).join('')}
    </div>`;
-  TIERS.forEach(t=>{
-    if(active!=='all'&&active!==t.k)return;
-    const tierCards=cards.filter(c=>c.tier===t.k);
-    if(!tierCards.length)return;
-    html+=`<div class="section-h">${t.n} <span style="font-weight:500;letter-spacing:0;text-transform:none;color:var(--faint);margin-left:6px">${tierCards.length}</span></div>
-      <p style="font-size:12px;color:var(--faint);margin:-4px 4px 10px">${t.d}</p>`;
-    tierCards.forEach((m,i)=>{html+=renderCard(m,'edu_'+t.k+'_'+i);});
+  EDU_TOPICS.forEach(topic=>{
+    let tc=cards.filter(c=>c.topic===topic.k);
+    if(active!=='all')tc=tc.filter(c=>c.tier===active);
+    if(!tc.length)return;
+    // tier ordering inside a group so beginner cards sit first
+    const ord={beg:0,int:1,adv:2};
+    tc.sort((a,b)=>ord[a.tier]-ord[b.tier]);
+    const gid='topic_'+topic.k;
+    const open=eduOpen[topic.k];
+    html+=`<div class="topicgroup ${open?'open':''}" id="${gid}">
+      <div class="topichead" onclick="toggleTopic('${topic.k}')">
+        <div><div class="topicname">${topic.n}</div><div class="topicdesc">${topic.d}</div></div>
+        <div class="topicmeta"><span class="topiccount">${tc.length}</span><span class="topicarr">›</span></div>
+      </div>
+      <div class="topicbody">${tc.map((m,i)=>renderCard(m,gid+'_'+i)).join('')}</div>
+    </div>`;
   });
-  // Candlestick pattern mini-grid (beginner reference) at the end of Beginner or All
+  // Candlestick pattern mini-grid — only in All or Beginner, under Patterns
   if(active==='all'||active==='beg'){
-    html+=`<div class="section-h">Candlestick Pattern Reference</div>
-     <div class="grid2">
-     ${CANDLES.map(c=>`<div class="refcard" style="margin-bottom:0"><div class="body" style="display:block;border:none;padding:13px">
-       <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px"><span style="font-weight:700;font-size:14px">${esc(c.n)}</span></div>
-       <span class="badge" style="font-size:9px">${esc(c.t)}</span>
-       ${c.svg}${c.cap?`<p style="font-size:10px;color:var(--faint);font-style:italic;margin:4px 0 0">${esc(c.cap)}</p>`:''}
-       <p style="font-size:12px;margin:6px 0 0">${esc(c.d)}</p></div></div>`).join('')}
-     </div>`;
+    const open=eduOpen['cspatterns'];
+    html+=`<div class="topicgroup ${open?'open':''}" id="topic_cspatterns">
+      <div class="topichead" onclick="toggleTopic('cspatterns')">
+        <div><div class="topicname">Candlestick Pattern Reference</div><div class="topicdesc">Quick visual cheat-grid of the core patterns</div></div>
+        <div class="topicmeta"><span class="topiccount">${CANDLES.length}</span><span class="topicarr">›</span></div>
+      </div>
+      <div class="topicbody"><div class="grid2">
+      ${CANDLES.map(c=>`<div class="refcard" style="margin-bottom:0"><div class="body" style="display:block;border:none;padding:13px">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px"><span style="font-weight:700;font-size:14px">${esc(c.n)}</span></div>
+        <span class="badge" style="font-size:9px">${esc(c.t)}</span>
+        ${c.svg}${c.cap?`<p style="font-size:10px;color:var(--faint);font-style:italic;margin:4px 0 0">${esc(c.cap)}</p>`:''}
+        <p style="font-size:12px;margin:6px 0 0">${esc(c.d)}</p></div></div>`).join('')}
+      </div></div>
+    </div>`;
   }
   $('#v-edu').innerHTML=html;
 }
 let eduFilter=null;
+let eduOpen={};
+function toggleTopic(k){eduOpen[k]=!eduOpen[k];const el=$('#topic_'+k);if(el)el.classList.toggle('open',eduOpen[k])}
 
 /* ---- PLAN BUILDER (custom checklists) ---- */
 /* Data: DB.plans = [{id,name,sections:[{id,title,items:[{id,text}]}]}], DB.activePlan, DB.runState={planId:{itemId:bool}} */
