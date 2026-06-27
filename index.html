@@ -1714,6 +1714,52 @@ function resetRun(pid){if(DB.runState)DB.runState[pid]={};save();renderPlan()}
 
 /* ---- PLAN TEMPLATES (click-to-load, fully editable after) ---- */
 const PLAN_TEMPLATES=[
+ {name:'★ TBT Primary Entry (A–Z)',desc:'Your one main entry plan — full SMC sequence, top to bottom',
+  sections:[
+   {title:'1 · Pre-Flight',items:['Slept 5+ hours, calm, not chasing yesterday?','Is it a kill zone right now? (London 2–5 AM / NY AM 9:30–11 AM CT)','Daily loss limit not hit, fewer than 2 trades taken today?','No high-impact news in the next 30 min?']},
+   {title:'2 · HTF Bias (Daily → 4H)',items:['Daily structure clear — HH/HL (bull) or LH/LL (bear)?','One-sentence bias written: "Expect price to sweep ___ then deliver to ___"','DXY checked — confirms (not fights) the bias?','Marked: PDH/PDL, prior week H/L, Asia range, key OB/FVG zones']},
+   {title:'3 · Liquidity (the WHY)',items:['Identified the draw — which pool is price targeting (BSL/SSL)?','Inducement noted — is the obvious move a trap before the real one?','Waited for the sweep — did price actually take the liquidity?']},
+   {title:'4 · Zone & OTE (the WHERE)',items:['Price reacting at a valid OB / FVG / Breaker after the sweep?','Fib drawn on the impulse leg — zone inside 61.8–78.6 OTE?','Long zone in discount / short zone in premium?','CE (50% of the FVG) marked as the exact entry price']},
+   {title:'5 · Trigger (the WHEN)',items:['Dropped to 5M/1M — CHoCH or BOS after the tap?','Displacement candle (not a drift) broke minor structure?','Confirmation candle CLOSED before you act — no early entry?']},
+   {title:'6 · Execute & Define Risk',items:['Limit order at CE (or market on confirmation close)','SL beyond the swept high/low + buffer — at structure, not comfort','Lot size calculated from 1% risk and the SL distance','Minimum 3R to the first target — if not, skip it']},
+   {title:'7 · Commit',items:['Setup is A or B grade — not a forced C?','All 6 steps above genuinely passed, not rationalized?','Entry, SL, TP1, TP2 all set before you click — then walk away']},
+  ]},
+ {name:'Risk & Recovery Protocol',desc:'What to do after a loss or a streak — the plan that saves the account',
+  sections:[
+   {title:'Per-Trade Limits',items:['Risk fixed at 1% — sized by SL distance, never by conviction','Minimum 3R target, or skip','Max 2 trades per day — the first 2 are usually the best']},
+   {title:'Daily Circuit Breaker',items:['Down 2% on the day → close the charts, no exceptions','2 losses today → done, even if under 2%','After any loss, ask: "Did I follow my checklist?" before the next trade']},
+   {title:'Weekly Circuit Breaker',items:['Down 5% on the week → flat until Monday','Reduced size all week if equity is below last week’s close']},
+   {title:'Streak Rules',items:['5 reds in a row → cut risk to 0.5% until 3 green trades','Tilt check: angry, anxious, or revenge-driven → step away','Recovery is made by good process, never by sizing up']},
+   {title:'Re-Entry After a Stop-Out',items:['Setup must re-qualify fully — no "it’ll come back" entries','No widening stops, no averaging down, ever','Walk, water, breathe before re-engaging']},
+  ]},
+ {name:'Weekend Prep / Sunday Routine',desc:'The homework that frames the whole week before it starts',
+  sections:[
+   {title:'Higher-Timeframe Map',items:['Weekly: macro trend + major liquidity marked','Daily: structure (HH/HL or LH/LL?), draw on liquidity','Mark prior week H/L, monthly open, major OB/FVG zones']},
+   {title:'Per-Pair Bias',items:['AUD/USD: one-sentence bias for the week','Gold/XAU: one-sentence bias + DXY context','Note where you’ll stand aside if price goes the wrong way']},
+   {title:'News & Events',items:['Scan the week’s calendar — mark NFP, CPI, FOMC, RBA','Flag the days/times you will NOT trade around releases']},
+   {title:'Set the Week’s Intent',items:['Write the ONE improvement goal from last week’s review','Pre-commit max risk for the week and trades per day','Charts marked and saved so weekday-you just executes']},
+  ]},
+ {name:'Trade Management',desc:'The in-trade decisions — where most edge is won or lost',
+  sections:[
+   {title:'After Entry',items:['Order filled at planned price — no chasing if it ran?','SL and both targets already set?','Hands off — let the trade breathe, no micro-managing']},
+   {title:'At TP1 (internal liquidity)',items:['Take partial (e.g. 50%) at the first structure target','Move SL to breakeven once partial is booked','Trade is now risk-free — let the runner work']},
+   {title:'Managing the Runner',items:['Trail behind structure (new HL in a long / LH in a short)','Target TP2 at external liquidity (equal H/L, session H/L)','Do NOT close early from boredom or fear']},
+   {title:'When to Cut Early',items:['Thesis invalidated — opposite CHoCH against you?','Major news suddenly inbound? Reduce or flatten','Otherwise: trust the plan, let SL/TP do their job']},
+  ]},
+ {name:'Prop Firm Challenge',desc:'Survival rules for a funded evaluation',
+  sections:[
+   {title:'Know Your Rules',items:['Profit target and exact % written down','Max daily loss + max overall drawdown known','Static or trailing drawdown? (trailing is stricter)']},
+   {title:'Conservative Risk',items:['0.5% per trade — half your normal size','Max 1 trade per day during the challenge','Aim 1–2% profit per week — slow and steady passes']},
+   {title:'Discipline Gates',items:['Kill zones only — no dead-hour trades','No news trading during the evaluation','Hit a bad day? Stop early — protecting the account IS the strategy']},
+   {title:'After Funding',items:['Treat the funded account exactly like the challenge','Withdraw on schedule, scale only per the firm’s plan','The discipline that passed must continue forever']},
+  ]},
+ {name:'Post-Trade Review',desc:'Fast per-trade debrief — closes the journal loop',
+  sections:[
+   {title:'Log It',items:['Trade logged in the Journal with R result','Screenshot saved (entry, SL, TP, what happened)','Model, session, and HTF bias tagged']},
+   {title:'Grade the Process',items:['Did I follow all 7 checklist steps? (yes/no)','Execution grade A/B/C — based on process, not profit','Was this an A/B setup or a forced one?']},
+   {title:'Name the Lesson',items:['Mistake tag set honestly (FOMO, revenge, early exit, none)','One sentence: what I’d repeat or change next time','Emotion before/during entry noted']},
+   {title:'Close the Loop',items:['A correct loss logged as a WIN of discipline','Anything recurring? Flag it for the weekly review']},
+  ]},
  {name:'AUD/USD Kill Zone Scalping',desc:'Your smart-money scalping checklist, start to finish',
   sections:[
    {title:'Bias Check (4H + 1H)',items:['Is structure bullish or bearish? (BOS/CHoCH)','Are we in discount (long) or premium (short) pricing?','Is price near a valid OB, FVG, or Breaker Block?']},
