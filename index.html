@@ -176,6 +176,25 @@ label{display:block;font-size:11px;color:var(--dim);margin-bottom:5px;text-trans
 .sheet .grab{width:38px;height:4px;background:var(--line);border-radius:2px;margin:0 auto 16px}
 .note{font-size:12px;color:var(--dim);background:var(--panel2);border-left:3px solid var(--amber);padding:11px 13px;border-radius:0 9px 9px 0;margin:10px 0;line-height:1.55}
 canvas{max-width:100%}
+.chkitem{display:flex;gap:12px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:11px;margin-bottom:8px;cursor:pointer;transition:all .15s;background:var(--panel2)}
+.chkitem.on{border-color:var(--green);background:rgba(62,199,123,.06)}
+.chkitem .chkbox{width:24px;height:24px;border-radius:7px;border:2px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all .15s}
+.chkitem.on .chkbox{background:var(--green);border-color:var(--green)}
+.chkitem .tick{color:#062013;font-weight:800;font-size:14px;opacity:0;transition:opacity .15s}
+.chkitem.on .tick{opacity:1}
+.fieldcard{background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:13px;margin-bottom:10px}
+.fieldcard .lbl{font-size:11px;color:var(--amber);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:6px}
+.ruleitem{display:flex;align-items:center;gap:11px;padding:11px 4px;border-bottom:1px solid var(--line-soft);cursor:pointer;transition:opacity .15s}
+.ruleitem:last-child{border-bottom:none}
+.ruleitem .rn{width:24px;height:24px;border-radius:6px;background:var(--panel2);border:1px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--faint)}
+.ruleitem.on .rn{background:var(--amber);border-color:var(--amber);color:#1a1206}
+.ruleitem .rt{font-size:13.5px;line-height:1.45;color:var(--dim)}
+.ruleitem.on .rt{color:var(--ink)}
+.ruleitem .rcheck{margin-left:auto;color:var(--green);font-weight:800;flex:none}
+.result{margin-top:14px;text-align:center;background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:16px}
+.result .big{font-family:var(--mono);font-size:28px;font-weight:750;letter-spacing:-0.03em}
+.result .sub{font-size:12px;color:var(--faint);margin-top:5px}
+.result .big.pos{color:var(--green)}.result .big.neg{color:var(--red)}.result .big.amber{color:var(--amber)}
 
 /* Boot splash */
 #splash{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:radial-gradient(800px 500px at 50% 40%,rgba(232,170,66,.08),transparent 60%),var(--bg);transition:opacity .5s ease,visibility .5s}
@@ -200,7 +219,7 @@ canvas{max-width:100%}
     <path d="M11 25 L17 18 L23 22 L29 11" stroke="#3ec77b" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>
   <div class="stitle">True Balance <span>Trader</span></div>
-  <div class="ssub">Time is the first edge</div>
+  <div class="ssub">Survival first · Profits second</div>
   <div class="sbar"><i></i></div>
 </div>
 <!-- content injected by app.js below -->
@@ -218,14 +237,12 @@ canvas{max-width:100%}
 </div>
 
 <div class="wrap">
-  <div class="view on" id="v-dash"></div>
-  <div class="view" id="v-chart"></div>
-  <div class="view" id="v-journal"></div>
-  <div class="view" id="v-calc"></div>
-  <div class="view" id="v-news"></div>
-  <div class="view" id="v-ict"></div>
-  <div class="view" id="v-edu"></div>
+  <div class="view on" id="v-journal"></div>
+  <div class="view" id="v-stats"></div>
   <div class="view" id="v-plan"></div>
+  <div class="view" id="v-rules"></div>
+  <div class="view" id="v-edu"></div>
+  <div class="view" id="v-ref"></div>
 </div>
 
 <div class="tabbar" id="tabbar"></div>
@@ -258,7 +275,7 @@ window.__lwcReady=function(){return typeof LightweightCharts!=='undefined'&&Ligh
 const LS='tbt_v1';
 const DB=load();
 function load(){try{return JSON.parse(localStorage.getItem(LS))||seed()}catch(e){return seed()}}
-function seed(){return{trades:[],open:[],signals:[],plan:{},checklist:{},settings:{tz:-(new Date().getTimezoneOffset()/60),acct:10000,risk:1}}}
+function seed(){return{trades:[],open:[],plan:{},planDoc:{},checklist:{},reviews:[],rulesCheck:{},settings:{tz:-(new Date().getTimezoneOffset()/60),acct:10000,risk:1}}}
 function save(){localStorage.setItem(LS,JSON.stringify(DB))}
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const fmt=(n,d=2)=>Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
@@ -292,26 +309,6 @@ setInterval(tickClock,15000);
 
 /* ============ NEWS CALENDAR (recurring high-impact) ============ */
 /* Times in UTC. AUD-relevant: USD, AUD, CNY */
-const NEWS_RECUR=[
- {cc:'USD',ev:'Non-Farm Payrolls',note:'1st Friday — biggest USD mover',imp:'high',when:'1st Fri',t:'12:30'},
- {cc:'USD',ev:'CPI (Inflation)',note:'Mid-month — Fed rate driver',imp:'high',when:'~mid-month',t:'12:30'},
- {cc:'USD',ev:'FOMC Rate Decision',note:'8x/yr — highest impact session',imp:'high',when:'8x/year',t:'18:00'},
- {cc:'USD',ev:'Core PCE',note:'Fed preferred inflation gauge',imp:'high',when:'Late month',t:'12:30'},
- {cc:'USD',ev:'Retail Sales',note:'Consumer strength',imp:'med',when:'~mid-month',t:'12:30'},
- {cc:'USD',ev:'ISM Manufacturing PMI',note:'1st business day',imp:'med',when:'1st b-day',t:'14:00'},
- {cc:'USD',ev:'Unemployment Claims',note:'Weekly — Thursday',imp:'med',when:'Every Thu',t:'12:30'},
- {cc:'AUD',ev:'RBA Rate Decision',note:'~1st Tue most months — direct AUD',imp:'high',when:'Monthly Tue',t:'03:30'},
- {cc:'AUD',ev:'CPI (Quarterly)',note:'Jan/Apr/Jul/Oct — RBA driver',imp:'high',when:'Quarterly',t:'00:30'},
- {cc:'AUD',ev:'Employment Change',note:'Mid-month — AUD volatility',imp:'high',when:'~mid-month',t:'00:30'},
- {cc:'AUD',ev:'Wage Price Index',note:'Quarterly — inflation input',imp:'med',when:'Quarterly',t:'00:30'},
- {cc:'AUD',ev:'RBA Meeting Minutes',note:'2 weeks after decision',imp:'med',when:'Monthly',t:'00:30'},
- {cc:'CNY',ev:'GDP',note:'Quarterly — risk sentiment / AUD proxy',imp:'high',when:'Quarterly',t:'02:00'},
- {cc:'CNY',ev:'Caixin Manufacturing PMI',note:'1st b-day — AUD leading signal',imp:'high',when:'1st b-day',t:'01:45'},
- {cc:'CNY',ev:'CPI / PPI',note:'~9th — China demand gauge',imp:'med',when:'~9th',t:'01:30'},
- {cc:'CNY',ev:'Trade Balance',note:'AUD commodity demand read',imp:'med',when:'~7th-14th',t:'03:00'},
- {cc:'CNY',ev:'Retail Sales & Ind. Production',note:'Mid-month — growth pulse',imp:'med',when:'~15th',t:'02:00'},
-];
-const CORR={inverse:['USD/CAD','USD/CHF','USD/JPY','DXY'],positive:['NZD/USD','XAU/USD','Copper','China data']};
 
 console.log('part1 loaded');
 
@@ -772,25 +769,266 @@ const CANDLE_THEORY=[
 ];
 console.log('Candle theory loaded:',CANDLE_THEORY.length,'cards');
 
+/* ============ ADVANCED CONCEPTS (from reference set) ============ */
+const ADVANCED=[
+{n:'Internal vs External Liquidity',badge:'Liquidity',tier:'int',lead:'Price cycles between two liquidity types: internal (pools inside the range) and external (the range extremes). Knowing which is being targeted tells you where price goes next.',
+ body:`<p>External liquidity sits at the major swing high/low that defines the range. Internal liquidity sits <i>inside</i> that range — minor equal highs/lows, small swing points. Price oscillates: it grabs internal liquidity, then runs to external, then reverses.</p>
+ <div class="kv"><b>External (EXT)</b><span>The big swing high/low — the range boundary, the ultimate draw</span></div>
+ <div class="kv"><b>Internal (INT)</b><span>Minor pools within the range — fuel for the move toward external</span></div>
+ <div class="kv"><b>The cycle</b><span>Sweep INT → deliver toward EXT → sweep EXT → reverse to the other side</span></div>
+ <div class="why"><b>Why it works:</b> the algorithm needs liquidity to fill orders at every leg. Internal pools fund the trip to the external target; the external sweep funds the reversal. Mapping both tells you whether the current move is "going somewhere" (toward external) or just collecting internal stops before the real move.</div>
+ <div class="eg"><b>Worked example:</b> AUD/USD ranges between 0.6550 (external low) and 0.6620 (external high). Price wicks an internal equal-low at 0.6575 (INT sweep), rallies to tag 0.6620 (EXT high), sweeps it by 3 pips, then reverses hard. The internal sweep was the tell that price wanted the external high next — and the external sweep was the reversal signal.</div>
+ <div class="note">For your indicator: classify every pool as INT or EXT. A sweep of EXT is a far stronger reversal signal than a sweep of INT — INT sweeps are often just continuation fuel.</div>`,
+ svg:svgWrap('',`
+  ${lvl(28,20,300,'#4a90d9',1,'EXT high')}
+  ${lvl(135,20,300,'#4a90d9',1,'EXT low')}
+  ${lvl(70,20,200,'#e0533b',0,'INT')}
+  ${lvl(100,20,200,'#e0533b',0,'INT')}
+  ${candle(50,120,110,128,100)}${candle(68,100,85,105,75)}${candle(86,75,95,100,98)}
+  ${candle(104,98,68,102,72)}${candle(122,72,55,76,48)}${candle(140,48,40,70,66)}
+  ${candle(160,66,50,72,40)}${candle(180,40,30,46,34)}
+  ${candle(200,34,40,50,32)}${candle(220,32,24,60,55)}
+  <text x="120" y="155" fill="#8a98a5" font-size="8" font-family="monospace">sweep INT → run to EXT → reverse</text>
+ `,165)},
+{n:'Mitigation Block',badge:'Block',tier:'adv',lead:'A broken order block that forms WITHOUT a new high/low first. Price returns to the last down/up candle to let trapped traders "mitigate" (exit) — then continues.',
+ body:`<p>After a market structure break (MSB), focus on the last candle before the break. Traders who entered on the losing side (the 1→2 swing) are now offside. When price returns to that level (point 1), they exit at reduced loss — that exit flow fuels continuation toward the next leg (point 3 and beyond).</p>
+ <div class="kv"><b>Formation</b><span>MSB shifts structure; the last opposing candle becomes the mitigation block</span></div>
+ <div class="kv"><b>vs Order Block</b><span>An OB forms from fresh institutional orders; a mitigation block is about <i>trapped</i> traders exiting</span></div>
+ <div class="kv"><b>Bearish MB</b><span>Price breaks down, returns to point 1 (the rally origin), sells off again</span></div>
+ <div class="kv"><b>Bullish MB</b><span>Mirror — price breaks up, returns to the drop origin, rallies again</span></div>
+ <div class="why"><b>Why it works:</b> the move from 1→2 trapped longs (in a bearish case). When price falls 2→3 then rallies back to 1, those trapped traders finally get a chance to exit near breakeven. Their selling to exit adds supply exactly where smart money wants to re-enter short — so price reacts and continues lower.</div>
+ <div class="eg"><b>Worked example:</b> AUD/USD rallies from 0.6580 (point 1) to 0.6610 (point 2), then breaks structure down through 0.6580 to 0.6560 (point 3). Price then rallies back to 0.6580 — the trapped longs from the first rally exit here, and price rejects, continuing toward the HTF support below.</div>
+ <div class="note">Key tell: the failure swing — no new low (bullish MB) or no new high (bearish MB) before the structural break. That's what distinguishes it from a standard order block.</div>`,
+ svg:svgWrap('',`
+  ${lvl(60,20,300,'#e0533b',1,'pt 1 / MB')}
+  ${candle(45,95,85,100,80)}
+  ${candle(63,80,60,84,58)}<circle cx="63" cy="60" r="5" fill="none" stroke="#e8aa42"/><text x="48" y="52" fill="#e8aa42" font-size="7" font-family="monospace">1</text>
+  ${candle(81,58,40,62,42)}<text x="78" y="34" fill="#8a98a5" font-size="7" font-family="monospace">2</text>
+  ${candle(99,42,55,62,58)}${candle(117,58,70,90,86)}
+  ${candle(135,86,75,95,78)}<circle cx="135" cy="62" r="5" fill="none" stroke="#e8aa42"/><text x="138" y="58" fill="#8a98a5" font-size="7" font-family="monospace">3 (return to 1)</text>
+  ${candle(153,78,95,100,92)}${candle(171,92,100,128,124)}
+  <text x="60" y="150" fill="#8a98a5" font-size="8" font-family="monospace">trapped longs exit at 1 → continuation down</text>
+ `,165)},
+{n:'Vacuum Block',badge:'Block',tier:'adv',lead:'A gap created by a volatility event (NFP, session open) where liquidity vanished. Treat the gap as a single candle/range — price often returns to fill it.',
+ body:`<p>When a high-impact event hits, price can leap with almost no trades in between — a "vacuum" of liquidity. That empty range behaves like one big candle: define its high and low and treat it as a zone.</p>
+ <div class="kv"><b>Cause</b><span>NFP, FOMC, or a futures session open — a volatility shock</span></div>
+ <div class="kv"><b>Treat as</b><span>A single candle/range: the gap's high and low are your levels</span></div>
+ <div class="kv"><b>Stops the fill</b><span>A bearish order block / up-candle inside the gap can halt the fill — a selling opportunity</span></div>
+ <div class="kv"><b>Full fill</b><span>If 100% filled (full return), price is rebalanced — then if it declines, you don't want it back inside the filled vacuum</span></div>
+ <div class="why"><b>Why it works:</b> the gap is pure inefficiency — price moved without two-sided trade. Markets dislike inefficiency and often return to "fill" it, the same logic as an FVG but caused by an event rather than displacement. The fill gives institutions the two-sided liquidity the spike denied them.</div>
+ <div class="eg"><b>Worked example:</b> NFP drops and AUD/USD gaps from 0.6600 to 0.6635 in seconds with no trades between. That 35-pip vacuum is your zone. Price later drifts back to 0.6635, stalls at a bearish order block inside the gap at 0.6620, and that becomes the short entry as the gap partially fills.</div>
+ <div class="note">Corrective fill in the trend direction = more probable. A full fill that becomes an exhaustion gap = less probable, higher risk. Pair vacuum blocks with the News tab — they form on exactly the events listed there.</div>`,
+ svg:svgWrap('',`
+  ${candle(50,100,92,106,96)}${candle(66,96,90,102,94)}
+  <rect x="80" y="60" width="30" height="34" fill="#e8aa4218" stroke="#e8aa42" stroke-dasharray="3 2"/><text x="95" y="55" fill="#e8aa42" font-size="7" font-family="monospace" text-anchor="middle">vacuum</text>
+  <text x="113" y="70" fill="#8a98a5" font-size="7" font-family="monospace">high</text><text x="113" y="92" fill="#8a98a5" font-size="7" font-family="monospace">low</text>
+  ${candle(130,58,48,62,52)}${candle(146,52,44,56,40)}
+  ${candle(170,40,55,60,58)}<text x="158" y="48" fill="#e0533b" font-size="7" font-family="monospace">OB stops fill</text>
+  ${candle(188,58,44,62,40)}${candle(206,40,30,46,34)}
+  <text x="60" y="150" fill="#8a98a5" font-size="8" font-family="monospace">event gap → partial fill → continuation</text>
+ `,165)},
+{n:'Rejection Block (RJB)',badge:'Block',tier:'adv',lead:'A refinement of the order block that focuses purely on the WICK of the stop-run candle — when the wick is ~40%+ of the candle, that wick zone holds the aggressive orders.',
+ body:`<p>Where an order block uses the candle body, a rejection block uses the <i>wick</i>. When price spikes to grab liquidity and rejects hard, the long wick marks where the most aggressive orders transacted — and price often respects that wick zone on return.</p>
+ <div class="kv"><b>Trigger</b><span>A stop-run candle with a wick ~40% or more of total candle size</span></div>
+ <div class="kv"><b>The zone</b><span>The wick itself (not the body) — open/close of the wick range</span></div>
+ <div class="kv"><b>Why the wick</b><span>The long wick = aggressive rejection; imbalances were left inside that narrow, fast-moving zone</span></div>
+ <div class="why"><b>Why it works:</b> a long wick means price went somewhere and was violently refused — the speed of that move leaves inefficiency inside the wick. Aggressive market orders that caused the rejection sit in that band. On return, that residual interest defends the level, often more precisely than the candle body would.</div>
+ <div class="eg"><b>Worked example:</b> AUD/USD prints a candle that wicks down to 0.6555 but closes at 0.6575 — a 20-pip lower wick on a 5-pip body. That lower wick (0.6555–0.6560) is the rejection block. Price returns days later, taps 0.6558, and rallies — the wick zone held.</div>
+ <div class="note">RJB is one of the family of CRT key levels (with FVG, IFVG, OB, Breaker). Use it when a clean OB isn't obvious but a dramatic rejection wick is.</div>`,
+ svg:svgWrap('',`
+  ${candle(60,80,74,86,78)}
+  ${bigCandle(110,70,64,118,72,26,true)}
+  <rect x="92" y="90" width="36" height="28" fill="#9a7bd033" stroke="#9a7bd0" stroke-dasharray="2 2"/><text x="135" y="106" fill="#9a7bd0" font-size="7" font-family="monospace">RJB (wick)</text>
+  ${candle(150,72,66,80,76)}${candle(168,76,70,84,72)}
+  ${candle(190,72,96,100,104)}${candle(208,104,90,114,96)}
+  <text x="60" y="150" fill="#8a98a5" font-size="8" font-family="monospace">long wick = rejection zone, holds on return</text>
+ `,165)},
+{n:'Weekly AMD Profile',badge:'Time / Cycle',tier:'adv',lead:'The week unfolds in a cycle: Monday accumulates, Tuesday manipulates, Wed–Thu expand, Friday returns to range. Knowing the day tells you what behavior to expect.',
+ body:`<p>The weekly candle is itself a Power-of-3 (Accumulation → Manipulation → Distribution) spread across the days. Each day has a character:</p>
+ <div class="kv"><b>Monday</b><span>Accumulation. Small range, weekly open, often a Judas swing. Not ideal to trade.</span></div>
+ <div class="kv"><b>Tuesday</b><span>Manipulation. Typically sets the week's high or low. Judas swing / raid of Monday's H-L. Good to trade.</span></div>
+ <div class="kv"><b>Wed–Thu</b><span>Expansion / distribution. The real directional move toward the weekly draw on liquidity. Best days.</span></div>
+ <div class="kv"><b>Friday</b><span>Return into the range (~20–30% retrace), profit-taking, weekly close. Not ideal to trade.</span></div>
+ <div class="why"><b>Why it works:</b> institutional positioning follows a weekly rhythm — early week builds positions and traps breakout traders, midweek delivers the move, end of week takes profit. Aligning with this cycle means you trade when expansion is likely (mid-week) and stand aside when chop is likely (Mon/Fri).</div>
+ <div class="eg"><b>Worked example:</b> Monday AUD/USD ranges quietly around the weekly open. Tuesday spikes up to raid Monday's high (manipulation), then reverses — that's the week's high. Wed–Thu it trends down toward the weekly sell-side draw on liquidity. Friday it retraces 25% into the range and closes. A short taken Tuesday at the manipulation high, targeting the weekly DOL, rode the expansion.</div>
+ <div class="note">Pair with the News tab: high-impact news Mon–Wed is the catalyst for the manipulation + expansion. If Mon–Wed news fails to manipulate the external range, anticipate a consolidation/reversal week instead.</div>`,
+ svg:svgWrap('',`
+  ${['Mon','Tue','Wed','Thu','Fri'].map((d,i)=>`<line x1="${40+i*55}" y1="20" x2="${40+i*55}" y2="140" stroke="#1e262e"/><text x="${44+i*55}" y="15" fill="#5a6772" font-size="8" font-family="monospace">${d}</text>`).join('')}
+  <polyline points="50,90 70,80 95,95 110,55 130,70 150,40 175,60 190,85 215,105 240,120 255,100" fill="none" stroke="#3ec77b" stroke-width="1.5"/>
+  <text x="55" y="115" fill="#4a90d9" font-size="7" font-family="monospace">accum</text>
+  <text x="105" y="40" fill="#e0533b" font-size="7" font-family="monospace">manip↑</text>
+  <text x="180" y="135" fill="#e8aa42" font-size="7" font-family="monospace">expansion↓</text>
+ `,160)},
+{n:'Order Block Curve Selection',badge:'Block (Pro)',tier:'adv',lead:'When multiple order blocks stack, which do you trade? The "curve" method ranks them by freshness and position (premium/discount) to pick the highest-probability zone.',
+ body:`<p>Advanced OB work: in a leg, several supply/demand zones may exist. You choose based on whether zones are <i>fresh</i> (untested) and where they sit on the curve (premium vs discount of the move).</p>
+ <div class="kv"><b>All fresh zones</b><span>Simple — take the zone at ~50% (mid-range), the cleanest single choice</span></div>
+ <div class="kv"><b>Mix of fresh/non-fresh</b><span>Favor the fresh zone in control; may need to look "left and above" for an untested one</span></div>
+ <div class="kv"><b>Stacked options</b><span>Fresh counter-trend zone + fresh opposite zone → deeper entries (~25% / discount) for better R</span></div>
+ <div class="kv"><b>Principle</b><span>Fresh + extreme position (deep discount for longs) = best reaction + best reward-to-risk</span></div>
+ <div class="why"><b>Why it works:</b> a fresh (unmitigated) zone still holds its full institutional interest — each prior tap drains it. And a zone deeper in discount gives a tighter stop and larger target, improving R even if the hit rate is similar. You're optimizing two things at once: probability (freshness) and payoff (position on the curve).</div>
+ <div class="eg"><b>Worked example:</b> price drops leaving three demand zones — one at 0.6600 (tested twice), one at 0.6580 (fresh), one at 0.6560 (fresh, deep discount). Skip 0.6600 (drained). The 0.6560 fresh discount zone offers the best R: tighter stop below it, bigger run to the external high. You set a limit there rather than chasing the shallower zone.</div>
+ <div class="note">This is niche/pro-level. For most setups, the single fresh zone nearest your bias is enough — curve selection matters when zones stack and you must rank them.</div>`,
+ svg:svgWrap('',`
+  ${candle(50,40,32,46,36)}${candle(66,36,30,44,40)}
+  <rect x="40" y="50" width="200" height="14" fill="#e0533b18" stroke="#e0533b" stroke-dasharray="2 2"/><text x="245" y="60" fill="#e0533b" font-size="7" font-family="monospace">tested ✕</text>
+  <rect x="40" y="80" width="200" height="14" fill="#3ec77b22" stroke="#3ec77b"/><text x="245" y="90" fill="#3ec77b" font-size="7" font-family="monospace">fresh ~50%</text>
+  <rect x="40" y="110" width="200" height="14" fill="#3ec77b33" stroke="#3ec77b"/><text x="245" y="120" fill="#3ec77b" font-size="7" font-family="monospace">fresh deep ✓</text>
+  ${candle(90,64,58,86,82)}${candle(110,82,76,100,96)}${candle(130,96,90,118,114)}
+  <text x="60" y="150" fill="#8a98a5" font-size="8" font-family="monospace">rank zones: freshness + curve position</text>
+ `,165)},
+{n:'Classic Chart Patterns',badge:'Pattern',tier:'beg',lead:'The traditional continuation and reversal patterns every trader should recognize: flags, pennants, triangles, cup & handle, double bottoms. Pure price geometry.',
+ body:`<p>Before smart-money concepts, these classic patterns formed the foundation of technical analysis. Each implies a measured move and a logical stop. They still work as structure-reading tools and pair well with SMC (a bull flag often hides an order block at its base).</p>
+ <div class="kv"><b>Bull Flag</b><span>Sharp rally (pole) → small downward channel (flag) → break up. Buy the breakout, stop below flag.</span></div>
+ <div class="kv"><b>Pennant</b><span>Like a flag but the consolidation is a small symmetrical triangle. Same logic.</span></div>
+ <div class="kv"><b>Cup & Handle</b><span>Rounded bottom (cup) + small pullback (handle) → breakout. Continuation.</span></div>
+ <div class="kv"><b>Ascending Scallop</b><span>Rounded base curving up → breakout from the rim.</span></div>
+ <div class="kv"><b>Triangles</b><span>Symmetrical (compression), Ascending (flat top, rising lows = bullish). Break in trend direction.</span></div>
+ <div class="kv"><b>Double Bottom</b><span>Two lows at the same level (a "W") → break the middle peak = reversal up.</span></div>
+ <div class="kv"><b>3 Rising Valleys</b><span>Three higher lows stair-stepping up → continuation.</span></div>
+ <div class="why"><b>Why they work:</b> each encodes the same thing in different shapes — a pause that resolves in the dominant direction. The flag/pennant is profit-taking inside a trend; the triangle is compressing volatility before expansion; the double bottom is a failed second attempt to push lower. SMC explains the <i>why</i> (liquidity, absorption); these patterns are the visible <i>shape</i> of it.</div>
+ <div class="eg"><b>Worked example:</b> AUD/USD rallies 40 pips (pole), then drifts down in a tight channel for six candles (flag) on declining momentum. Price breaks the upper flag line — entry on the break, stop below the flag low, target = pole height projected from the breakout (~40 pips).</div>
+ <div class="note">Buy the breakout/retest, stop beyond the pattern, target the measured move. Treat them as confluence with your SMC read, not standalone signals — a pattern at a key level beats a pattern in no-man's-land.</div>`,
+ svg:svgWrap('',`
+  <text x="30" y="20" fill="#8a98a5" font-size="8" font-family="monospace">bull flag</text>
+  <polyline points="25,120 35,70 45,75 55,85 50,90 60,95 70,100 80,55" fill="none" stroke="#3ec77b" stroke-width="1.5"/>
+  <line x1="42" y1="70" x2="72" y2="92" stroke="#5a6772" stroke-dasharray="2 2"/><line x1="48" y1="88" x2="78" y2="108" stroke="#5a6772" stroke-dasharray="2 2"/>
+  <text x="120" y="20" fill="#8a98a5" font-size="8" font-family="monospace">double bottom</text>
+  <polyline points="110,50 125,95 140,75 155,95 175,45" fill="none" stroke="#3ec77b" stroke-width="1.5"/>
+  ${lvl(95,108,180,'#e0533b',1,'')}
+  <text x="210" y="20" fill="#8a98a5" font-size="8" font-family="monospace">asc. triangle</text>
+  ${lvl(50,205,290,'#3ec77b',0,'')}
+  <polyline points="205,110 220,60 235,95 250,60 265,80 280,55" fill="none" stroke="#3ec77b" stroke-width="1.5"/>
+ `,150)},,
+{n:'Order Flow — Who Is in Control',badge:'Order Flow',tier:'adv',lead:'The real-time battle between buyers and sellers, read through candle bodies, wick length, and close location — no indicator required.',
+ body:`<p>Order flow is reading <i>who is winning right now</i> from the candles themselves. Big green bodies = buyers in control. Big red bodies = sellers in control. Small mixed candles = nobody in control, wait.</p>
+ <div class="kv"><b>Bullish order flow</b><span>Large green bodies, small upper wicks, each candle closing near its high</span></div>
+ <div class="kv"><b>Bearish order flow</b><span>Large red bodies, small lower wicks, each candle closing near its low</span></div>
+ <div class="kv"><b>Neutral</b><span>Small mixed bodies, wicks both sides — the battle is undecided, stand aside</span></div>
+ <div class="why"><b>Why it works:</b> price is the footprint of executed orders. A large body means one side overwhelmed the other and kept control from open to close. Wick length shows where a side <i>tried</i> and got rejected. You're reading the actual transactions, not a lagging average of them — which is why it confirms a setup faster than any indicator.</div>
+ <div class="eg"><b>Worked example:</b> AUD/USD taps your demand zone at 0.6580. The next three 5m candles print large green bodies closing near their highs with tiny wicks — order flow just confirmed buyers stepped in. That's your entry trigger. If instead they were small dojis, the zone is being tested weakly — you wait.</div>
+ <div class="note">Order flow does not replace your SMC setup — it validates it. The setup tells you WHERE; order flow tells you WHEN the zone is actually holding.</div>`,
+ svg:svgWrap('',`
+  <text x="20" y="15" fill="#3ec77b" font-size="8" font-family="monospace">bullish control</text>
+  ${candle(30,95,75,98,88)}${candle(46,88,64,90,70)}${candle(62,70,48,74,54)}${candle(78,54,34,58,40)}
+  <text x="120" y="15" fill="#8a98a5" font-size="8" font-family="monospace">neutral</text>
+  ${candle(130,60,56,68,52)}${candle(146,56,60,66,50)}${candle(162,60,54,64,50)}
+  <text x="210" y="15" fill="#e0533b" font-size="8" font-family="monospace">bearish control</text>
+  ${candle(225,40,60,42,68)}${candle(241,60,80,62,86)}${candle(257,80,100,82,106)}${candle(273,100,118,102,124)}
+  <text x="20" y="150" fill="#8a98a5" font-size="8" font-family="monospace">body size + close location = who won the candle</text>
+ `,160)},
+{n:'Order Flow Shift',badge:'Order Flow',tier:'adv',lead:'The moment control changes hands. Candle bodies start shrinking in the current direction, then an opposite candle engulfs — control has flipped.',
+ body:`<p>An order flow shift is the earliest read that a move is exhausting. You see it before structure officially breaks, in the size and character of the candles.</p>
+ <div class="kv"><b>Sign 1</b><span>Bodies shrinking in the current direction (momentum fading)</span></div>
+ <div class="kv"><b>Sign 2</b><span>Wicks growing in the trend direction (rejection appearing)</span></div>
+ <div class="kv"><b>Sign 3</b><span>A single large opposite candle appears, bigger than recent candles</span></div>
+ <div class="kv"><b>Sign 4</b><span>That opposite candle engulfs or covers multiple previous candles</span></div>
+ <div class="why"><b>Why it works:</b> control doesn't vanish instantly — it fades. Shrinking bodies mean the dominant side is running out of orders; growing counter-wicks mean the other side is testing. The engulfing candle is the confirmation that order flow has actually changed hands. This is the candle-level version of a CHoCH.</div>
+ <div class="eg"><b>Worked example:</b> price is dropping into your demand zone — but the red bodies get smaller each candle (8, 5, 3 pips) while lower wicks grow. Then one large green candle engulfs the last three reds. Order flow shifted from sellers to buyers <i>at your zone</i> — that's the confirmation to enter long.</div>
+ <div class="note">An order flow shift at a key level (OB/FVG/OTE) is high-probability. The same shift at a random mid-range price is far less reliable — location still matters.</div>`,
+ svg:svgWrap('',`
+  ${candle(40,40,55,44,58)}${candle(56,58,68,60,72)}${candle(72,72,80,74,84)}${candle(88,84,90,86,94)}
+  <text x="36" y="108" fill="#e0533b" font-size="7" font-family="monospace">bodies shrinking ↓</text>
+  ${candle(110,94,90,98,86)}
+  ${bigCandle(150,92,40,96,36,16,true)}
+  <text x="128" y="30" fill="#3ec77b" font-size="8" font-family="monospace">engulfing — flow flips</text>
+  ${candle(180,40,30,44,26)}${candle(196,26,16,30,12)}
+  <text x="40" y="150" fill="#8a98a5" font-size="8" font-family="monospace">fade → engulf → new control</text>
+ `,160)},
+{n:'Reading Wicks for Trapped Traders',badge:'Order Flow',tier:'adv',lead:'A wick at a key level shows who got trapped. Long lower wick = shorts trapped (buy signal). Long upper wick = longs trapped (sell signal). At a random level it means nothing.',
+ body:`<p>Wicks are where price went and got rejected — which means a group of traders is now offside. Reading which group got trapped tells you the likely next move.</p>
+ <div class="kv"><b>Long lower wick at demand/OTE</b><span>Shorts got trapped below — they must buy to cover = fuel up. BUY signal.</span></div>
+ <div class="kv"><b>Long upper wick at supply/premium</b><span>Longs got trapped above — they must sell to exit = fuel down. SELL signal.</span></div>
+ <div class="kv"><b>Long wick at a random level</b><span>Just a wick. No trapped cluster. Means nothing — ignore.</span></div>
+ <div class="kv"><b>Equal wicks / no wicks</b><span>Indecision or pure control respectively — read with the bodies.</span></div>
+ <div class="why"><b>Why it works:</b> a long wick into a liquidity level means stops were triggered and breakout traders entered — right before price reversed. Those traders are now trapped on the wrong side. Their forced exit (covering) becomes the fuel for the move in your direction. The level is what makes the wick meaningful; without trapped orders, a wick is just noise.</div>
+ <div class="eg"><b>Worked example:</b> price spikes below the previous day low (where sell-stops and breakout shorts cluster), prints a long lower wick, and closes back above. Those shorts are trapped. As they cover, price rallies — you enter long on the close back inside, stop below the wick.</div>
+ <div class="note">Wick reading only works AT key levels — demand/supply, OTE, PDH/PDL, liquidity pools. At a random mid-range price, a wick tells you nothing.</div>`,
+ svg:svgWrap('',`
+  ${lvl(95,30,300,'#3ec77b',1,'demand')}
+  ${candle(50,80,72,86,76)}${candle(66,76,84,80,70)}
+  ${bigCandle(86,70,55,118,58,14,true)}
+  <circle cx="86" cy="112" r="5" fill="none" stroke="#9a7bd0"/><text x="60" y="130" fill="#9a7bd0" font-size="7" font-family="monospace">shorts trapped</text>
+  ${candle(110,55,44,60,40)}${candle(126,40,30,44,26)}${candle(142,26,16,30,12)}
+  <text x="170" y="60" fill="#3ec77b" font-size="8" font-family="monospace">long lower wick</text>
+  <text x="170" y="74" fill="#8a98a5" font-size="8" font-family="monospace">at level = BUY</text>
+ `,150)},
+{n:'Supply & Demand Zones',badge:'Order Flow',tier:'int',lead:'The broad areas where price exploded from — supply (sellers overwhelmed buyers) pushes price down, demand (buyers overwhelmed sellers) pushes price up. The base of an order block.',
+ body:`<p>A supply or demand zone is drawn from the last consolidation candle before a strong displacement move. It's the broader cousin of the order block — same idea, wider zone.</p>
+ <div class="kv"><b>Supply zone</b><span>The last green candle(s) before a strong red drop. Price returns → sellers step in. Acts as resistance.</span></div>
+ <div class="kv"><b>Demand zone</b><span>The last red candle(s) before a strong green rally. Price returns → buyers step in. Acts as support.</span></div>
+ <div class="kv"><b>Strong zone</b><span>Displacement away was fast with big candles, left an FVG, price never retested. 5/5 = full position.</span></div>
+ <div class="kv"><b>Weak zone</b><span>Slow departure, no FVG, already tested twice. Reduce size or skip.</span></div>
+ <div class="why"><b>Why it works:</b> a strong move from a zone means institutions left unfilled orders there — they couldn't fill their entire position before price ran. When price returns, those resting orders execute, defending the zone. The freshness matters because each retest consumes more of those orders.</div>
+ <div class="eg"><b>Worked example:</b> AUD/USD consolidates at 0.6600 then explodes up 50 pips leaving an FVG. That consolidation is your demand zone. Hours later price drifts back to 0.6600, taps the zone (still fresh), prints bullish order flow, and rallies — entry long, stop below the zone.</div>
+ <div class="note">Supply/Demand is the FOUNDATION; SMC order blocks are the REFINEMENT. The OB is the single precise candle inside the broader S/D zone. Use S/D to find the area, the OB to find the exact entry.</div>`,
+ svg:svgWrap('',`
+  <rect x="30" y="30" width="260" height="16" fill="#e0533b22" stroke="#e0533b" stroke-dasharray="2 2"/><text x="34" y="26" fill="#e0533b" font-size="7" font-family="monospace">supply</text>
+  <rect x="30" y="104" width="260" height="16" fill="#3ec77b22" stroke="#3ec77b"/><text x="34" y="134" fill="#3ec77b" font-size="7" font-family="monospace">demand (fresh)</text>
+  ${candle(60,112,108,116,104)}${candle(76,108,90,112,86)}${candle(92,86,64,90,60)}${candle(108,60,44,64,40)}${candle(124,40,38,46,34)}
+  ${candle(150,38,42,50,46)}${candle(166,46,40,52,36)}
+  ${candle(200,108,112,116,110)}<text x="180" y="128" fill="#3ec77b" font-size="7" font-family="monospace">retest → rally</text>
+  ${candle(216,110,92,114,88)}${candle(232,88,66,92,62)}
+ `,150)},
+{n:'Volume Profile — HVN, LVN, POC',badge:'Order Flow',tier:'adv',lead:'Shows where orders are stacked by price, not by time. High-volume nodes act as magnets, low-volume nodes get crossed fast, and the Point of Control is the strongest magnet of all.',
+ body:`<p>Volume Profile plots how much trading happened at each <i>price</i> level (not each time bar). It reveals where institutions filled the most orders.</p>
+ <div class="kv"><b>HVN (High Volume Node)</b><span>Where the most trading happened. Price consolidates here and is drawn back to it — acts as a magnet and as support/resistance.</span></div>
+ <div class="kv"><b>LVN (Low Volume Node)</b><span>Where very little traded. Price moves through it fast — thin air, no orders to slow it. Acts like a speed zone.</span></div>
+ <div class="kv"><b>POC (Point of Control)</b><span>The single price with the highest volume. The strongest magnet on the chart — price gravitates toward it.</span></div>
+ <div class="why"><b>Why it works:</b> price is auction-driven. Where lots of volume traded (HVN), both sides agreed value exists, so price returns there to do business. Where little traded (LVN), there's an imbalance — price slices through because there are no resting orders to absorb it. This is the volume-based explanation for why FVGs (which are LVNs) get filled and why HVNs act as support/resistance.</div>
+ <div class="eg"><b>Worked example:</b> the POC on AUD/USD sits at 0.6595. Price spikes up to 0.6630 into a thin LVN, finds no buyers, and falls back toward the 0.6595 POC magnet — where your demand zone also sits. That HVN + demand confluence is a double-confirmation long.</div>
+ <div class="note">Volume Profile does not replace SMC — it adds a layer. When your order block or demand zone sits at an HVN, or your FVG aligns with an LVN, the probability doubles. POC as a take-profit target is high-probability.</div>`,
+ svg:svgWrap('',`
+  <line x1="40" y1="20" x2="40" y2="140" stroke="#28323d"/>
+  ${[[30,'',12],[45,'',20],[58,'',34],[70,'POC',60],[82,'',30],[95,'',16],[108,'',8],[120,'',40],[130,'',22]].map((b,i)=>{
+    const y=28+i*13; const w=b[2]*2.4; const isP=b[1]==='POC'; const isL=b[2]<12;
+    return `<rect x="40" y="${y}" width="${w}" height="9" fill="${isP?'#e8aa42':isL?'#e0533b88':'#4a90d9'}"/>${b[1]?`<text x="${44+w}" y="${y+8}" fill="#e8aa42" font-size="8" font-family="monospace">${b[1]}</text>`:''}${isL?`<text x="${44+w}" y="${y+8}" fill="#e0533b" font-size="7" font-family="monospace">LVN</text>`:''}`;
+  }).join('')}
+  <text x="210" y="95" fill="#4a90d9" font-size="8" font-family="monospace">HVN = magnet</text>
+  <text x="210" y="110" fill="#8a98a5" font-size="7" font-family="monospace">volume by price</text>
+ `,160)},
+{n:'Wyckoff Basics',badge:'Order Flow',tier:'adv',lead:'The original smart-money framework (1930s). Accumulation → Markup → Distribution → Markdown. ICT is a modern evolution of exactly this.',
+ body:`<p>Richard Wyckoff described how large operators accumulate positions quietly, mark price up, distribute to the public, then mark it down. The terminology changed; the behavior didn't.</p>
+ <div class="kv"><b>Accumulation</b><span>Smart money quietly builds longs in a range. = ICT Asian range / demand zone building.</span></div>
+ <div class="kv"><b>Spring</b><span>A fake breakdown below the range to grab liquidity before markup. = ICT liquidity sweep / SSL grab.</span></div>
+ <div class="kv"><b>Markup</b><span>The real move up. = ICT bullish displacement / BOS.</span></div>
+ <div class="kv"><b>Distribution</b><span>Smart money sells to the public at the top in a range. = ICT supply zone / BSL building.</span></div>
+ <div class="kv"><b>Upthrust</b><span>A fake breakout above to grab buy-side liquidity before markdown. = ICT BSL sweep.</span></div>
+ <div class="kv"><b>Markdown</b><span>The real move down. = ICT bearish displacement.</span></div>
+ <div class="why"><b>Why it works:</b> Wyckoff reverse-engineered institutional behavior a century ago — the need to fill large orders without moving price against yourself forces a repeatable cycle. ICT's liquidity-sweep-then-displace model is the same mechanic with modern names. Understanding Wyckoff shows you the WHY behind the ICT patterns you trade.</div>
+ <div class="eg"><b>Worked example:</b> AUD/USD ranges all Asian session (accumulation), spikes below the range low at London open and snaps back (spring / SSL sweep), then trends up all NY AM (markup). If you know Wyckoff, you recognized the spring as your long entry the moment it reclaimed the range.</div>
+ <div class="note">Wyckoff described in the 1930s what ICT teaches today. The market hasn't changed — only the terminology has. The spring IS the sweep. Accumulation IS the Asian range.</div>`,
+ svg:svgWrap('',`
+  <polyline points="30,90 45,88 38,95 55,90 48,92 65,88 60,98 80,90" fill="none" stroke="#4a90d9" stroke-width="1.3"/>
+  <text x="34" y="78" fill="#4a90d9" font-size="7" font-family="monospace">accumulation</text>
+  <circle cx="60" cy="98" r="4" fill="none" stroke="#9a7bd0"/><text x="44" y="115" fill="#9a7bd0" font-size="7" font-family="monospace">spring</text>
+  <polyline points="80,90 110,60 140,40 165,30" fill="none" stroke="#3ec77b" stroke-width="1.5"/>
+  <text x="110" y="48" fill="#3ec77b" font-size="7" font-family="monospace">markup</text>
+  <polyline points="165,30 180,28 173,24 192,28 185,30 205,26" fill="none" stroke="#e8aa42" stroke-width="1.3"/>
+  <text x="168" y="20" fill="#e8aa42" font-size="7" font-family="monospace">distribution</text>
+  <circle cx="192" cy="24" r="4" fill="none" stroke="#9a7bd0"/>
+  <polyline points="205,26 235,60 260,90 280,110" fill="none" stroke="#e0533b" stroke-width="1.5"/>
+  <text x="235" y="80" fill="#e0533b" font-size="7" font-family="monospace">markdown</text>
+ `,150)}
+];
+console.log('Advanced concepts loaded:',ADVANCED.length);
+
+
 
 
 console.log('part3 content loaded');
 
 /* ============ NAVIGATION ============ */
 const TABS=[
- {id:'dash',n:'Desk',icon:'M3 13h2v6H3zm4-5h2v11H7zm4-4h2v15h-2zm4 7h2v8h-2zm4-3h2v11h-2z'},
- {id:'chart',n:'Chart',icon:'M3 3v18h18M7 14l3-4 3 3 4-6'},
  {id:'journal',n:'Journal',icon:'M5 3h11l3 3v15H5zM15 3v4h4M8 11h8M8 15h8'},
- {id:'calc',n:'Calc',icon:'M6 2h12v20H6zM9 6h6M8 10h2m3 0h2M8 14h2m3 0h2M8 18h2m3 0h2'},
- {id:'news',n:'News',icon:'M4 4h16v16H4zM8 8h8M8 12h8M8 16h5'},
- {id:'ict',n:'ICT',icon:'M3 17l5-5 4 3 8-9M21 6h-4m4 0v4'},
- {id:'edu',n:'Learn',icon:'M12 3L2 8l10 5 10-5zM6 11v5l6 3 6-3v-5'},
+ {id:'stats',n:'Stats',icon:'M3 13h2v6H3zm4-5h2v11H7zm4-4h2v15h-2zm4 7h2v8h-2zm4-3h2v11h-2z'},
  {id:'plan',n:'Plan',icon:'M9 11l3 3 8-8M3 12a9 9 0 1018 0 9 9 0 00-18 0'},
+ {id:'rules',n:'Rules',icon:'M5 3h11l3 3v15H5zM9 12l2 2 4-4'},
+ {id:'edu',n:'Learn',icon:'M12 3L2 8l10 5 10-5zM6 11v5l6 3 6-3v-5'},
+ {id:'ref',n:'Reference',icon:'M4 4h16v16H4zM8 8h8M8 12h8M8 16h5'},
 ];
 function nav(id){
-  if(id!=='chart' && typeof stopAutoRefresh==='function')stopAutoRefresh();
   $$('.view').forEach(v=>v.classList.remove('on'));
-  $('#v-'+id).classList.add('on');
+  const v=$('#v-'+id); if(v)v.classList.add('on');
   $$('.tabbar button').forEach(b=>b.classList.toggle('on',b.dataset.t===id));
   window.scrollTo(0,0);
   render(id);
@@ -818,14 +1056,16 @@ function stats(trades){
 
 /* ============ RENDER DISPATCHER ============ */
 function render(id){
-  ({dash:renderDash,chart:renderChart,journal:renderJournal,calc:renderCalc,news:renderNews,ict:renderICT,edu:renderEdu,plan:renderPlan}[id])();
+  ({journal:renderJournal,stats:renderStats,plan:renderPlan,rules:renderRules,edu:renderEdu,ref:renderRef}[id])();
 }
 
 /* ---- DASHBOARD ---- */
-function renderDash(){
+function renderStats(){
   const s=stats(DB.trades);
   const wrCol=s.wr>=50?'pos':s.wr>0?'amber':'';
-  $('#v-dash').innerHTML=`
+  const tags={};DB.trades.filter(t=>t.outcome!=null&&t.mistake&&t.mistake!=='None').forEach(t=>tags[t.mistake]=(tags[t.mistake]||0)+1);
+  const topLeak=Object.keys(tags).sort((a,b)=>tags[b]-tags[a])[0];
+  $('#v-stats').innerHTML=`
   <div class="card">
     <h3>Performance <span class="tag">${s.n} closed trades</span></h3>
     <div class="statgrid">
@@ -836,59 +1076,20 @@ function renderDash(){
       <div class="stat"><div class="v">${s.n?fmt(s.avgR,2):'—'}</div><div class="l">Avg R / Trade</div></div>
       <div class="stat"><div class="v neg">${s.n?'-'+fmt(s.maxDD,1):'—'}</div><div class="l">Max Drawdown</div></div>
     </div>
+    <div class="note" style="margin-top:12px">Profit factor above 1.5 is good, above 2.0 excellent. Expectancy is your average R per trade — if it's positive over 100+ trades, you have a confirmed edge. ${topLeak?`<b style="color:var(--amber)">Biggest leak: ${esc(topLeak)} (${tags[topLeak]}×).</b>`:''}</div>
   </div>
   <div class="card">
     <h3>Equity Curve <span class="tag">cumulative R</span></h3>
-    ${s.n>1?`<canvas id="curve" height="150"></canvas>`:`<div class="empty">Log trades to see your equity curve build.</div>`}
+    ${s.n>1?`<canvas id="curve" height="150"></canvas>`:`<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3v18h18M7 14l3-4 3 3 4-6"/></svg>Log trades to see your equity curve build.</div>`}
   </div>
-  ${s.n?`<div class="card"><h3>Edge by Session</h3>${breakdown(s.bySession)}</div>
-  <div class="card"><h3>Edge by Model</h3>${breakdown(s.byModel)}</div>`:''}
-  ${signalSection()}
+  ${s.n?`<div class="card"><h3>Edge by Model</h3>${breakdown(s.byModel)}</div>
+  <div class="card"><h3>Edge by Session</h3>${breakdown(s.bySession)}</div>
+  <div class="card"><h3>Edge by Day of Week</h3>${breakdown(s.byDay)}</div>`:''}
   <button class="btn" onclick="openTrade()">+ Log a Trade</button>
   <div style="height:10px"></div>
   <button class="btn ghost" onclick="exportData()">Export / Backup Data</button>`;
   if(s.n>1)drawCurve(s.curve);
 }
-function signalSection(){
-  const sigs=DB.signals||[];
-  if(!sigs.length)return `<div class="card"><h3>Signal Engine <span class="tag">educational, separate from your trades</span></h3>
-    <div class="faint" style="font-size:13px">No signals logged yet. Open the Chart tab and let the engine scan — flagged setups appear here so you can mark how each one resolved.</div></div>`;
-  const resolved=sigs.filter(s=>s.outcome==='win'||s.outcome==='loss');
-  const wins=resolved.filter(s=>s.outcome==='win').length;
-  const wr=resolved.length?wins/resolved.length*100:0;
-  const totR=resolved.reduce((a,s)=>a+(s.outcome==='win'?(s.rr||2):-1),0);
-  const open=sigs.filter(s=>!s.outcome).length;
-  return `<div class="card"><h3>Signal Engine <span class="tag">${sigs.length} flagged · ${open} unresolved</span></h3>
-    <p class="faint" style="font-size:12px;margin:-4px 0 12px">Kept separate from your hand-logged trades so neither number is polluted. Mark each signal's outcome to measure the engine's real edge.</p>
-    <div class="statgrid" style="margin-bottom:14px">
-      <div class="stat"><div class="v ${wr>=50?'pos':wr>0?'amber':''}">${resolved.length?fmt(wr,0)+'%':'—'}</div><div class="l">Engine Win Rate</div></div>
-      <div class="stat"><div class="v ${totR>=0?'pos':'neg'}">${resolved.length?(totR>=0?'+':'')+fmt(totR,1):'—'}</div><div class="l">Engine Total R</div></div>
-      <div class="stat"><div class="v">${resolved.length}/${sigs.length}</div><div class="l">Resolved</div></div>
-    </div>
-    <div class="tlist">${sigs.slice(0,12).map(sg=>signalRow(sg)).join('')}</div>
-    ${sigs.length>12?`<div class="faint mono" style="font-size:10px;margin-top:8px">Showing latest 12 of ${sigs.length}</div>`:''}
-  </div>`;
-}
-function signalRow(sg){
-  const col=sg.dir==='long'?'long':'short';
-  const oc=sg.outcome;
-  const ocCls=oc==='win'?'win':oc==='loss'?'loss':'be';
-  return `<div class="trade ${ocCls}">
-    <div class="top"><span class="pair">AUD/USD</span><span class="dir ${col}">${sg.dir}</span>
-      <span class="badge" style="font-size:9px;padding:2px 6px;border-radius:4px;border:1px solid var(--line)">${sg.grade}</span>
-      <span class="r ${oc==='win'?'pos':oc==='loss'?'neg':'amber'}" style="font-size:13px">${oc?(oc==='win'?'+'+fmt(sg.rr||2,1)+'R':oc==='loss'?'-1R':'BE'):'open'}</span></div>
-    <div class="meta"><span class="mono">@${sg.entry.toFixed(5)}</span><span class="mono">SL ${sg.sl.toFixed(5)}</span><span class="mono">TP ${sg.tp.toFixed(5)}</span>
-      <span>${new Date(sg.ts).toLocaleDateString('en',{month:'short',day:'numeric'})} ${new Date(sg.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></div>
-    ${!oc?`<div class="chipwrap" style="margin-top:8px">
-      <span class="chip" style="padding:5px 11px" onclick="resolveSignal('${sg.id}','win')">Hit TP ✓</span>
-      <span class="chip" style="padding:5px 11px" onclick="resolveSignal('${sg.id}','loss')">Hit SL ✕</span>
-      <span class="chip" style="padding:5px 11px" onclick="resolveSignal('${sg.id}','be')">Breakeven</span>
-      <span class="chip" style="padding:5px 11px" onclick="deleteSignal('${sg.id}')">Dismiss</span>
-    </div>`:`<div class="chipwrap" style="margin-top:6px"><span class="chip" style="padding:4px 10px" onclick="resolveSignal('${sg.id}',null)">↺ reopen</span></div>`}
-  </div>`;
-}
-function resolveSignal(id,outcome){const s=(DB.signals||[]).find(x=>x.id===id);if(s){s.outcome=outcome;save();renderDash();}}
-function deleteSignal(id){DB.signals=(DB.signals||[]).filter(x=>x.id!==id);save();renderDash();}
 function breakdown(o){
   const ks=Object.keys(o).sort((a,b)=>o[b].r-o[a].r);
   if(!ks.length)return'<div class="faint">No data yet.</div>';
@@ -924,17 +1125,29 @@ function renderJournal(){
   if(jFilter.session)ts=ts.filter(t=>t.session===jFilter.session);
   if(jFilter.outcome)ts=ts.filter(t=>t.outcome===jFilter.outcome);
   const op=DB.open;
+  const s=stats(DB.trades);
   $('#v-journal').innerHTML=`
+  <div class="card" style="background:linear-gradient(135deg,#1a2229,#13181d)">
+    <div style="display:flex;gap:14px;text-align:center">
+      <div style="flex:1"><div class="mono" style="font-size:20px;font-weight:750;color:${s.totR>=0?'var(--green)':'var(--red)'}">${s.n?(s.totR>=0?'+':'')+fmt(s.totR,1):'0'}R</div><div class="faint" style="font-size:10px;text-transform:uppercase;letter-spacing:.08em">Total</div></div>
+      <div style="flex:1"><div class="mono" style="font-size:20px;font-weight:750">${s.n?fmt(s.wr,0)+'%':'—'}</div><div class="faint" style="font-size:10px;text-transform:uppercase;letter-spacing:.08em">Win Rate</div></div>
+      <div style="flex:1"><div class="mono" style="font-size:20px;font-weight:750">${s.n}</div><div class="faint" style="font-size:10px;text-transform:uppercase;letter-spacing:.08em">Trades</div></div>
+    </div>
+  </div>
+  <div class="row" style="margin-bottom:10px">
+    <button class="btn" onclick="openChecklist()">✓ Pre-Trade Checklist</button>
+    <button class="btn ghost" onclick="openTrade()">+ Log Trade</button>
+  </div>
   <div class="row" style="margin-bottom:14px">
-    <button class="btn" onclick="openTrade()">+ Log Trade</button>
-    <button class="btn ghost" onclick="openPosition()">+ Open Position</button>
+    <button class="btn ghost sm" onclick="openPosition()">+ Open Position</button>
+    <button class="btn ghost sm" onclick="openRoutine()">☀ Daily Routine</button>
   </div>
   ${op.length?`<div class="section-h">Open Positions (${op.length})</div>
    <div class="tlist">${op.map(p=>posCard(p)).join('')}</div>`:''}
   <div class="section-h">Trade Log</div>
   <div class="card" style="padding:12px">
    <div class="chipwrap" style="margin-bottom:4px">
-    ${['Silver Bullet','Unicorn','Turtle Soup'].map(m=>`<span class="chip ${jFilter.model===m?'on':''}" onclick="toggleF('model','${m}')">${m}</span>`).join('')}
+    ${['Silver Bullet','Unicorn','Turtle Soup','Order Block','FVG Entry'].map(m=>`<span class="chip ${jFilter.model===m?'on':''}" onclick="toggleF('model','${m}')">${m}</span>`).join('')}
     <span class="chip ${jFilter.outcome==='win'?'on g':''}" onclick="toggleF('outcome','win')">Wins</span>
     <span class="chip ${jFilter.outcome==='loss'?'on r':''}" onclick="toggleF('outcome','loss')">Losses</span>
     ${Object.keys(jFilter).length?`<span class="chip" onclick="jFilter={};renderJournal()">Clear ✕</span>`:''}
@@ -942,6 +1155,66 @@ function renderJournal(){
   </div>
   ${ts.length?`<div class="tlist">${ts.map(t=>tradeCard(t)).join('')}</div>`:
    `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 3h11l3 3v15H5z"/><path d="M15 3v4h4M8 11h8M8 15h8"/></svg><div>No trades logged yet.<br>Every entry sharpens the edge.</div></div>`}`;
+}
+/* ---- PRE-TRADE CHECKLIST (Ch.166 SMC 7-step) ---- */
+const PRECHECK=[
+ ['HTF bias confirmed','Daily / 4H shows clear HH-HL (bullish) or LH-LL (bearish). Not unclear.'],
+ ['Liquidity identified','BSL above and SSL below marked. I know which side will be swept.'],
+ ['Liquidity swept','Price swept the pool and closed back inside after the sweep.'],
+ ['BOS with displacement','A strong displacement candle broke structure, leaving a 3-candle FVG.'],
+ ['Kill zone timing','This is during London (2-5 AM) or NY AM (9:30-11 AM) or Silver Bullet (10-11 AM).'],
+ ['FVG at OTE','Entry zone is an FVG/OB inside the 61.8-78.6 OTE, in discount (long) / premium (short).'],
+ ['Risk defined','SL placed at structure with buffer, lot size calculated, RR minimum 3R.'],
+];
+let CHK={};
+function openChecklist(){
+  CHK={};
+  sheet(`<h2 style="margin-bottom:6px">Pre-Trade Checklist</h2>
+   <p class="faint" style="font-size:13px;margin-bottom:16px">7 checks. All must pass. Any missing = SKIP. This is your pre-flight inspection — it doesn't care about your feelings, it cares about your capital.</p>
+   <div id="chkList">${PRECHECK.map((c,i)=>`
+     <div class="chkitem" id="chk-${i}" onclick="toggleChk(${i})">
+       <div class="chkbox"><span class="tick">✓</span></div>
+       <div><div style="font-weight:650;font-size:14px">${i+1}. ${esc(c[0])}</div><div class="faint" style="font-size:12px;margin-top:2px">${esc(c[1])}</div></div>
+     </div>`).join('')}</div>
+   <div id="chkVerdict" style="margin-top:16px"></div>
+   <div class="row" style="margin-top:14px">
+     <button class="btn ghost" onclick="closeSheet()">Close</button>
+     <button class="btn" id="chkProceed" onclick="proceedFromCheck()" style="opacity:.5;pointer-events:none">Log This Trade</button>
+   </div>`);
+  updateChkVerdict();
+}
+function toggleChk(i){CHK[i]=!CHK[i];const el=$('#chk-'+i);if(el)el.classList.toggle('on',CHK[i]);updateChkVerdict()}
+function updateChkVerdict(){
+  const score=Object.values(CHK).filter(Boolean).length;
+  const v=$('#chkVerdict'),btn=$('#chkProceed');if(!v)return;
+  let msg,col;
+  if(score===7){msg='✓ 7/7 — Trade with full confidence and full position.';col='var(--green)';}
+  else if(score>=5){msg=score+'/7 — Trade with reduced size. Gaps in the checklist = gaps in the edge.';col='var(--amber)';}
+  else{msg=score+'/7 — SKIP. Too many gaps. There is no trade here, only hope.';col='var(--red)';}
+  v.innerHTML=`<div style="text-align:center;font-weight:650;font-size:14px;color:${col};padding:10px;border:1px solid ${col};border-radius:10px;background:${col.replace('var(--','rgba(').replace(')',',0.08)')}">${msg}</div>`;
+  if(btn){const ok=score>=5;btn.style.opacity=ok?'1':'.5';btn.style.pointerEvents=ok?'auto':'none';}
+}
+function proceedFromCheck(){
+  const score=Object.values(CHK).filter(Boolean).length;
+  closeSheet();
+  setTimeout(()=>{openTrade();setTimeout(()=>{if($('#f-conf'))$('#f-conf').value=score;},60);},120);
+}
+/* ---- DAILY MINDSET ROUTINE (Ch.203 / Ch.204) ---- */
+function openRoutine(){
+  sheet(`<h2 style="margin-bottom:6px">Daily Mindset Routine</h2>
+   <p class="faint" style="font-size:13px;margin-bottom:16px">5 minutes that change your trading day. Do this before you open a single chart.</p>
+   <div class="card" style="margin:0 0 12px"><h3>5-Minute Morning Routine</h3>
+     <div class="kv"><b>1 · Breathe</b><span>Close your eyes. 3 deep breaths. Shift out of fight-or-flight — you can't read structure in survival mode.</span></div>
+     <div class="kv"><b>2 · Accept</b><span>Say aloud: "I accept I may lose today. 1% is the cost of business. I will not chase. I will not revenge."</span></div>
+     <div class="kv"><b>3 · Review</b><span>Open your plan. Read your 7 rules. Read your checklist. Re-anchor to the process.</span></div>
+     <div class="kv"><b>4 · Visualize</b><span>Picture taking a perfect trade: setup forms, you wait, enter at CE, manage with partials. Win or loss, executed perfectly.</span></div>
+     <div class="kv"><b>5 · Commit</b><span>"Today I follow my plan. Max 2 trades. If I hit 2% loss, I close the charts. No exceptions."</span></div>
+   </div>
+   <div class="card" style="margin:0"><h3>5 Signs You Will Lose Today — if ANY is true, do NOT trade</h3>
+     ${['Slept less than 5 hours','Angry or stressed about something outside trading','Lost yesterday and want to make it back','No clear HTF bias in 2 minutes','It is not a kill zone right now'].map(x=>`<div class="kv"><b style="color:var(--red)">✕</b><span>${x}</span></div>`).join('')}
+     <div class="note" style="border-left-color:var(--green)">Protecting capital by sitting out is a skill, not weakness. The most profitable action on a bad day is no action.</div>
+   </div>
+   <button class="btn" onclick="closeSheet()" style="margin-top:14px">I'm Ready — Clear & Disciplined</button>`);
 }
 function toggleF(k,v){jFilter[k]=jFilter[k]===v?undefined:v;if(!jFilter[k])delete jFilter[k];renderJournal()}
 function tradeCard(t){
@@ -1044,45 +1317,6 @@ function closePos(id){const p=DB.open.find(x=>x.id===id);DB.open=DB.open.filter(
 
 console.log('part5 journal loaded');
 
-/* ---- CALCULATORS ---- */
-function renderCalc(){
-  $('#v-calc').innerHTML=`
-  <div class="card"><h3>Position Size</h3>
-    <div class="grid2">
-      <div><label>Account ($)</label><input type="number" id="ps-acct" value="${DB.settings.acct}" oninput="calcPos()"></div>
-      <div><label>Risk %</label><input type="number" step="0.1" id="ps-risk" value="${DB.settings.risk}" oninput="calcPos()"></div>
-      <div><label>Pair</label><select id="ps-pair" onchange="calcPos()">${PAIRS.map(p=>`<option>${p}</option>`).join('')}</select></div>
-      <div><label>Stop (pips)</label><input type="number" id="ps-sl" value="20" oninput="calcPos()"></div>
-    </div>
-    <div class="result"><div class="big" id="ps-out">—</div><div class="sub" id="ps-sub">Enter values to size your position</div></div>
-  </div>
-  <div class="card"><h3>Risk : Reward</h3>
-    <div class="grid3">
-      <div><label>Entry</label><input type="number" step="0.00001" id="rr-e" oninput="calcRR()"></div>
-      <div><label>Stop</label><input type="number" step="0.00001" id="rr-s" oninput="calcRR()"></div>
-      <div><label>Target</label><input type="number" step="0.00001" id="rr-t" oninput="calcRR()"></div>
-    </div>
-    <div class="result"><div class="big" id="rr-out">—</div><div class="sub" id="rr-sub">1:2 minimum to trade</div></div>
-  </div>
-  <div class="card"><h3>Profit / Loss</h3>
-    <div class="grid3">
-      <div><label>Pair</label><select id="pl-pair" onchange="calcPL()">${PAIRS.map(p=>`<option>${p}</option>`).join('')}</select></div>
-      <div><label>Lots</label><input type="number" step="0.01" id="pl-lots" value="0.10" oninput="calcPL()"></div>
-      <div><label>Pips</label><input type="number" id="pl-pips" value="20" oninput="calcPL()"></div>
-    </div>
-    <div class="result"><div class="big" id="pl-out">—</div><div class="sub">Standard lot = 100,000 units</div></div>
-  </div>
-  <div class="card"><h3>Drawdown Recovery</h3>
-    <label>Account loss %</label><input type="number" id="dd-in" value="20" oninput="calcDD()">
-    <div class="result"><div class="big" id="dd-out">—</div><div class="sub">Gain required to get back to breakeven</div></div>
-    <div class="note">Why this matters: a 50% loss needs a 100% gain to recover. Protecting capital beats chasing returns.</div>
-  </div>
-  <div class="card"><h3>Session Time Converter</h3>
-    <label>Your UTC offset</label><input type="number" id="tz-in" value="${DB.settings.tz}" step="0.5" oninput="calcTZ()">
-    <div id="tz-out" style="margin-top:12px"></div>
-  </div>`;
-  calcPos();calcRR();calcPL();calcDD();calcTZ();
-}
 function calcPos(){
   const a=+$('#ps-acct').value,r=+$('#ps-risk').value,sl=+$('#ps-sl').value,pair=$('#ps-pair').value;
   DB.settings.acct=a;DB.settings.risk=r;save();
@@ -1125,73 +1359,76 @@ function calcTZ(){
   }).join('');
 }
 
-/* ---- NEWS ---- */
-function renderNews(){
-  const grp={USD:[],AUD:[],CNY:[]};NEWS_RECUR.forEach(n=>grp[n.cc].push(n));
-  const flag={USD:'🇺🇸 United States',AUD:'🇦🇺 Australia',CNY:'🇨🇳 China'};
-  $('#v-news').innerHTML=`
-   <div class="note">Recurring high-impact events affecting AUD/USD. Times in <b>UTC</b>. A static reference — confirm exact dates on a live calendar before trading the release.</div>
-   <div class="card"><h3>AUD Correlation Map</h3>
-    <div class="kv"><b>Inverse</b><span>${CORR.inverse.join(' · ')}</span></div>
-    <div class="kv"><b>Positive</b><span>${CORR.positive.join(' · ')}</span></div>
-    <div class="note">Don't stack correlated risk: AUD/USD long + NZD/USD long = one position at double size.</div>
-   </div>
-   ${Object.keys(grp).map(cc=>`<div class="card"><h3>${flag[cc]}</h3>
-     ${grp[cc].map(n=>`<div class="news-item"><span class="imp ${n.imp}"></span>
-       <span class="cc">${n.cc}</span>
-       <span class="ev">${esc(n.ev)}<small>${esc(n.note)} · ${esc(n.when)}</small></span>
-       <span class="tm">${n.t}</span></div>`).join('')}</div>`).join('')}
-   <div class="note">⚠ News-window discipline: spreads widen 5–20× at release. The screen price is not your fill. If you must trade it, wait for the post-news FVG, never the spike.</div>`;
-}
-
-/* ---- ICT ---- */
-function renderICT(){
-  $('#v-ict').innerHTML=`<div class="note">Tap any model to expand the diagram and rules. Build trades from confluence, not single signals.</div>
-   ${ICT.map((m,i)=>`<div class="refcard" id="ict-${i}">
-     <div class="head" onclick="document.getElementById('ict-${i}').classList.toggle('open')">
-       <span class="n">${esc(m.n)}</span><span class="badge">${esc(m.badge)}</span>
-       <span class="arr">›</span></div>
-     <div class="body"><p class="lead">${esc(m.lead)}</p>${m.svg}${m.body}</div></div>`).join('')}`;
-}
-
 /* ---- EDU (candles + TA + methodology) ---- */
 function renderEdu(){
   const capStyle='font-size:11px;color:var(--faint);font-style:italic;margin:6px 0 0;padding-left:8px;border-left:2px solid var(--line)';
-  $('#v-edu').innerHTML=`
-   <div class="note">Every card includes a diagram and a plain-language description of what the picture shows. Tap to expand.</div>
-   <div class="section-h">Smart Money Mechanics</div>
-   ${SMC.map((m,i)=>`<div class="refcard" id="smc-${i}">
-     <div class="head" onclick="document.getElementById('smc-${i}').classList.toggle('open')">
-       <span class="n">${esc(m.n)}</span><span class="badge">${esc(m.badge)}</span><span class="arr">›</span></div>
-     <div class="body"><p class="lead">${esc(m.lead)}</p>${m.body}</div></div>`).join('')}
-   <div class="section-h">Candlestick Theory — Deep</div>
-   ${CANDLE_THEORY.map((m,i)=>`<div class="refcard" id="ct-${i}">
-     <div class="head" onclick="document.getElementById('ct-${i}').classList.toggle('open')">
-       <span class="n">${esc(m.n)}</span><span class="badge">${esc(m.badge)}</span><span class="arr">›</span></div>
-     <div class="body"><p class="lead">${esc(m.lead)}</p>${m.svg||''}${m.body}</div></div>`).join('')}
-   <div class="section-h">Methodology</div>
-   ${EDU.map((e,i)=>`<div class="refcard" id="edu-${i}">
-     <div class="head" onclick="document.getElementById('edu-${i}').classList.toggle('open')">
-       <span class="n">${esc(e.n)}</span><span class="arr">›</span></div>
-     <div class="body"><p class="lead">${esc(e.lead)}</p>
-       ${e.svg||''}${e.cap?`<p style="${capStyle}"><b style="color:var(--dim);font-style:normal">What you're seeing:</b> ${esc(e.cap)}</p>`:''}
-       ${e.steps.map(s=>`<div class="kv"><b>${esc(s[0])}</b><span>${esc(s[1])}</span></div>`).join('')}
-       <div class="note">${esc(e.note)}</div></div></div>`).join('')}
-   <div class="section-h">Technical Analysis Cheat Sheets</div>
-   ${TA.map((t,i)=>`<div class="refcard" id="ta-${i}">
-     <div class="head" onclick="document.getElementById('ta-${i}').classList.toggle('open')">
-       <span class="n">${esc(t.n)}</span><span class="arr">›</span></div>
-     <div class="body">${t.svg||''}${t.cap?`<p style="${capStyle}"><b style="color:var(--dim);font-style:normal">What you're seeing:</b> ${esc(t.cap)}</p>`:''}
-       <ul style="margin:12px 0 0 18px;font-size:14px;color:var(--dim)">${t.pts.map(p=>`<li style="margin-bottom:7px">${esc(p)}</li>`).join('')}</ul></div></div>`).join('')}
-   <div class="section-h">Candlestick Patterns</div>
-   <div class="grid2">
-   ${CANDLES.map(c=>`<div class="refcard" style="margin-bottom:0"><div class="body" style="display:block;border:none;padding:13px">
-     <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px"><span style="font-weight:700;font-size:14px">${esc(c.n)}</span></div>
-     <span class="badge" style="font-size:9px">${esc(c.t)}</span>
-     ${c.svg}${c.cap?`<p style="font-size:10px;color:var(--faint);font-style:italic;margin:4px 0 0">${esc(c.cap)}</p>`:''}
-     <p style="font-size:12px;margin:6px 0 0">${esc(c.d)}</p></div></div>`).join('')}
+  // Assign a tier to every card. Default tiers per source, with explicit overrides by name.
+  const tierOf=(name,fallback)=>{
+    const beg=['OHLC — The Four Prices','The Candle Is Fractal','Anatomy of a Strong Bull Candle','Anatomy of a Rejection Candle','Anatomy of a Continuation Candle','Reversal vs Continuation — Reading Which','Candlestick Bible — Core Patterns','Classic Chart Patterns','Market Structure','Support & Resistance','Key Levels to Mark Daily','Liquidity Pools'];
+    const adv=['Power of 3 Inside One Candle','BOS vs CHoCH vs MSS','Does Price Actually React? — The Honest Data','Building a Consistent Edge','Mitigation Block','Vacuum Block','Rejection Block (RJB)','Weekly AMD Profile','Order Block Curve Selection','Risk Management (the real edge)','Trade Management'];
+    if(beg.includes(name))return'beg';
+    if(adv.includes(name))return'adv';
+    return fallback;
+  };
+  // Build a unified, normalized card list
+  const cards=[];
+  ICT.forEach(m=>cards.push({...m,tier:'adv',render:'rich'}));
+  SMC.forEach(m=>cards.push({...m,tier:tierOf(m.n,'int'),render:'rich'}));
+  CANDLE_THEORY.forEach(m=>cards.push({...m,tier:m.tier||tierOf(m.n,'beg'),render:'rich'}));
+  ADVANCED.forEach(m=>cards.push({...m,tier:m.tier||tierOf(m.n,'adv'),render:'rich'}));
+  EDU.forEach(e=>cards.push({n:e.n,badge:'Method',tier:tierOf(e.n,'int'),lead:e.lead,svg:e.svg,cap:e.cap,steps:e.steps,note:e.note,render:'method'}));
+  TA.forEach(t=>cards.push({n:t.n,badge:'TA',tier:tierOf(t.n,'beg'),svg:t.svg,cap:t.cap,pts:t.pts,render:'ta'}));
+
+  const TIERS=[
+   {k:'beg',n:'Beginner',d:'What price is — anatomy, structure, classic patterns'},
+   {k:'int',n:'Intermediate',d:'Smart-money mechanics — liquidity, structure breaks, blocks'},
+   {k:'adv',n:'Advanced',d:'Specialized applications, models, and the math of consistency'},
+  ];
+  const active=eduFilter||'all';
+  const renderCard=(m,id)=>{
+    if(m.render==='ta')return `<div class="refcard" id="${id}">
+       <div class="head" onclick="document.getElementById('${id}').classList.toggle('open')">
+         <span class="n">${esc(m.n)}</span><span class="badge">${esc(m.badge)}</span><span class="arr">›</span></div>
+       <div class="body">${m.svg||''}${m.cap?`<p class="cap"><b>What you're seeing:</b> ${esc(m.cap)}</p>`:''}
+         <ul style="margin:12px 0 0 18px;font-size:14px;color:var(--dim);line-height:1.6">${m.pts.map(p=>`<li style="margin-bottom:7px">${esc(p)}</li>`).join('')}</ul></div></div>`;
+    if(m.render==='method')return `<div class="refcard" id="${id}">
+       <div class="head" onclick="document.getElementById('${id}').classList.toggle('open')">
+         <span class="n">${esc(m.n)}</span><span class="badge">${esc(m.badge)}</span><span class="arr">›</span></div>
+       <div class="body"><p class="lead">${esc(m.lead)}</p>${m.svg||''}${m.cap?`<p class="cap"><b>What you're seeing:</b> ${esc(m.cap)}</p>`:''}
+         ${(m.steps||[]).map(s=>`<div class="kv"><b>${esc(s[0])}</b><span>${esc(s[1])}</span></div>`).join('')}
+         ${m.note?`<div class="note">${esc(m.note)}</div>`:''}</div></div>`;
+    return `<div class="refcard" id="${id}">
+       <div class="head" onclick="document.getElementById('${id}').classList.toggle('open')">
+         <span class="n">${esc(m.n)}</span>${m.badge?`<span class="badge">${esc(m.badge)}</span>`:''}<span class="arr">›</span></div>
+       <div class="body"><p class="lead">${esc(m.lead)}</p>${m.svg||''}${m.body||''}</div></div>`;
+  };
+  let html=`<div class="note">A full curriculum — Beginner to Advanced. Tap a card to expand. Use the filter to focus on one level.</div>
+   <div class="chipwrap" style="margin-bottom:6px">
+     <span class="chip ${active==='all'?'on':''}" onclick="eduFilter=null;renderEdu()">All</span>
+     ${TIERS.map(t=>`<span class="chip ${active===t.k?'on':''}" onclick="eduFilter='${t.k}';renderEdu()">${t.n}</span>`).join('')}
    </div>`;
+  TIERS.forEach(t=>{
+    if(active!=='all'&&active!==t.k)return;
+    const tierCards=cards.filter(c=>c.tier===t.k);
+    if(!tierCards.length)return;
+    html+=`<div class="section-h">${t.n} <span style="font-weight:500;letter-spacing:0;text-transform:none;color:var(--faint);margin-left:6px">${tierCards.length}</span></div>
+      <p style="font-size:12px;color:var(--faint);margin:-4px 4px 10px">${t.d}</p>`;
+    tierCards.forEach((m,i)=>{html+=renderCard(m,'edu_'+t.k+'_'+i);});
+  });
+  // Candlestick pattern mini-grid (beginner reference) at the end of Beginner or All
+  if(active==='all'||active==='beg'){
+    html+=`<div class="section-h">Candlestick Pattern Reference</div>
+     <div class="grid2">
+     ${CANDLES.map(c=>`<div class="refcard" style="margin-bottom:0"><div class="body" style="display:block;border:none;padding:13px">
+       <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px"><span style="font-weight:700;font-size:14px">${esc(c.n)}</span></div>
+       <span class="badge" style="font-size:9px">${esc(c.t)}</span>
+       ${c.svg}${c.cap?`<p style="font-size:10px;color:var(--faint);font-style:italic;margin:4px 0 0">${esc(c.cap)}</p>`:''}
+       <p style="font-size:12px;margin:6px 0 0">${esc(c.d)}</p></div></div>`).join('')}
+     </div>`;
+  }
+  $('#v-edu').innerHTML=html;
 }
+let eduFilter=null;
 
 /* ---- PLAN BUILDER (custom checklists) ---- */
 /* Data: DB.plans = [{id,name,sections:[{id,title,items:[{id,text}]}]}], DB.activePlan, DB.runState={planId:{itemId:bool}} */
@@ -1201,19 +1438,56 @@ function migratePlans(){
 function renderPlan(){
   migratePlans();
   if(DB.editingPlan){return renderPlanEdit()}
+  if(DB.editingDoc){return renderPlanDoc()}
   const active=DB.plans.find(p=>p.id===DB.activePlan)||DB.plans[0]||null;
+  const d=DB.planDoc||{};
+  const filled=PLAN_FIELDS.filter(f=>d[f.k]&&d[f.k].trim()).length;
   $('#v-plan').innerHTML=`
-   <div class="card"><h3>Trading Plans <span class="tag">${DB.plans.length} saved</span></h3>
-    <p class="dim" style="font-size:14px;margin:0 0 12px">Build your own checklists — sections and items, your words. Save as many as you want, run one live before each session.</p>
-    ${DB.plans.length?`<label>Active plan</label><select onchange="DB.activePlan=this.value;save();renderPlan()">
+   <div class="card" style="border-color:var(--amber-d)">
+    <h3>My Trading Plan <span class="tag">${filled}/${PLAN_FIELDS.length} sections</span></h3>
+    <p class="dim" style="font-size:13px;margin:0 0 12px">A plan you don't write down does not exist. This is your contract with yourself — the document that removes emotion from the decision.</p>
+    ${filled?`<div class="bar" style="margin-bottom:12px"><div style="width:${Math.round(filled/PLAN_FIELDS.length*100)}%;background:var(--amber)"></div></div>
+      ${PLAN_FIELDS.filter(f=>d[f.k]&&d[f.k].trim()).map(f=>`<div class="fieldcard"><div class="lbl">${esc(f.n)}</div><div style="font-size:14px;color:var(--ink);white-space:pre-wrap;line-height:1.55">${esc(d[f.k])}</div></div>`).join('')}`
+      :`<div class="empty" style="padding:24px"><div>Your plan is empty.<br>Write it once. Read it every morning.</div></div>`}
+    <button class="btn" style="margin-top:6px" onclick="editDoc()">${filled?'Edit My Plan':'Write My Plan'}</button>
+   </div>
+   <div class="card"><h3>Pre-Session Checklists <span class="tag">${DB.plans.length} saved</span></h3>
+    <p class="dim" style="font-size:13px;margin:0 0 12px">Build runnable checklists — sections and items in your words. Run one live before each session.</p>
+    ${DB.plans.length?`<label>Active checklist</label><select onchange="DB.activePlan=this.value;save();renderPlan()">
       ${DB.plans.map(p=>`<option value="${p.id}" ${active&&p.id===active.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select>`:''}
     <div class="row" style="margin-top:12px">
-      <button class="btn" onclick="openTemplates()">⚡ Load Template</button>
-      <button class="btn ghost" onclick="newPlan()">+ Blank Plan</button>
+      <button class="btn ghost" onclick="openTemplates()">⚡ Load Template</button>
+      <button class="btn ghost" onclick="newPlan()">+ Blank</button>
     </div>
-    ${active?`<button class="btn ghost sm" style="margin-top:8px;width:100%" onclick="editPlan('${active.id}')">Edit active plan</button>`:''}
+    ${active?`<button class="btn ghost sm" style="margin-top:8px;width:100%" onclick="editPlan('${active.id}')">Edit active checklist</button>`:''}
    </div>
-   ${active?runPlan(active):`<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3 8-8M3 12a9 9 0 1018 0 9 9 0 00-18 0"/></svg><div>No plans yet.<br>Load a template to start fast, or build one from scratch.</div></div>`}`;
+   ${active?runPlan(active):''}`;
+}
+const PLAN_FIELDS=[
+ {k:'identity',n:'1 · Identity',ph:'I am a Smart Money Concepts trader. I trade XAU/USD and AUD/USD during London and NY AM. I am patient, disciplined, and I follow my process.'},
+ {k:'strategy',n:'2 · Strategy',ph:'My primary entry is Model 1 (FVG at OTE) with a 3-candle gap and CE entry. Backup: Model 3 (OB retest). I only trade with HTF bias.'},
+ {k:'rules',n:'3 · Risk Rules',ph:'1% risk per trade. 2% max daily loss. 5% max weekly loss. 2 trades max per day. Minimum 3R. Never move a stop against the trade.'},
+ {k:'routine',n:'4 · Daily Routine',ph:'Mark HTF bias and key levels pre-session. Trade only in kill zones. Journal every trade. Weekly review every Sunday.'},
+ {k:'management',n:'5 · Trade Management',ph:'Take 50% partial at TP1, move SL to breakeven, let runner ride to TP2. Never close early from fear. Never add to a loser.'},
+ {k:'nonneg',n:'6 · Non-Negotiables',ph:'No trading outside kill zones. No revenge trading. No trading after 2% daily loss. No changing the plan mid-week. No moving stops.'},
+ {k:'goals',n:'7 · Goals & Why',ph:'Consistent 2-5% monthly on a funded account. Why: freedom, providing for my family, mastering myself. The market is my mirror.'},
+];
+function editDoc(){DB.editingDoc=true;renderPlan()}
+function renderPlanDoc(){
+  const d=DB.planDoc||{};
+  $('#v-plan').innerHTML=`<div class="card"><h3>Write My Trading Plan</h3>
+    <p class="dim" style="font-size:13px;margin:0 0 14px">Fill what you can now — you can refine it forever. Be specific. Vague plans produce vague results.</p>
+    ${PLAN_FIELDS.map(f=>`<label style="margin-top:12px">${esc(f.n)}</label>
+      <textarea rows="3" id="doc-${f.k}" placeholder="${esc(f.ph)}">${esc(d[f.k]||'')}</textarea>`).join('')}
+    <div class="row" style="margin-top:18px">
+      <button class="btn ghost" onclick="DB.editingDoc=false;renderPlan()">Cancel</button>
+      <button class="btn green" onclick="saveDoc()">Save Plan</button>
+    </div></div>`;
+}
+function saveDoc(){
+  DB.planDoc=DB.planDoc||{};
+  PLAN_FIELDS.forEach(f=>{const el=$('#doc-'+f.k);if(el)DB.planDoc[f.k]=el.value});
+  DB.editingDoc=false;save();renderPlan();
 }
 function runPlan(p){
   const rs=(DB.runState&&DB.runState[p.id])||{};
@@ -1339,399 +1613,196 @@ function donePlan(){
 }
 function deletePlan(id){DB.plans=DB.plans.filter(p=>p.id!==id);if(DB.activePlan===id)DB.activePlan=DB.plans[0]?DB.plans[0].id:null;DB.editingPlan=null;save();renderPlan()}
 
-/* ---- LIVE CHART (TradingView Lightweight Charts v5) ---- */
-const TF=[{k:'M5',n:'5m',sec:300},{k:'M15',n:'15m',sec:900},{k:'H1',n:'1H',sec:3600},{k:'H4',n:'4H',sec:14400},{k:'D',n:'1D',sec:86400}];
-let chartState={tf:'M15',chart:null,series:null,markers:null,instrument:'AUD_USD'};
 
-/* ===== DATA LAYER — the ONLY thing that changes when Supabase is live =====
-   To go live: set DATA_SOURCE='supabase' and SUPA_FN to your Edge Function URL.
-   The function should accept ?instrument=AUD_USD&tf=M15&n=200 and return
-   [{time:<unix sec>, open, high, low, close}, ...] oldest→newest.            */
-const DATA_SOURCE='supabase';          // 'sample' | 'supabase'
-const SUPA_FN='https://knnfctsuvrnrqeglbctt.supabase.co/functions/v1/oanda-candles';
-const SUPA_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtubmZjdHN1dnJucnFlZ2xiY3R0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0OTQzNDksImV4cCI6MjA5NzA3MDM0OX0.YHb_8aQJzoO3T0dgr-E47esQ4aCwa-Vn7U5zn1PqMeQ';
-const APP_SECRET='';                   // optional: set if you later lock the function with an APP_SECRET secret
-
-async function fetchCandles(instrument,tf,n=200){
-  if(DATA_SOURCE==='supabase' && SUPA_FN){
-    try{
-      // Function has verify_jwt OFF and no APP_SECRET, so it needs NO auth headers.
-      // (Sending Authorization/apikey here causes the gateway to 401.)
-      const headers={};
-      if(APP_SECRET){headers['x-app-secret']=APP_SECRET;}
-      const r=await fetch(`${SUPA_FN}?instrument=${instrument}&tf=${tf}&n=${n}`,{headers});
-      if(!r.ok)throw new Error('HTTP '+r.status);
-      const data=await r.json();
-      if(!Array.isArray(data))throw new Error(data&&data.error?data.error:'bad response');
-      if(!data.length)throw new Error('no candles');
-      return data;
-    }catch(e){console.warn('Live feed failed, using sample:',e.message);chartState.feedError=e.message;}
-  }
-  return sampleCandles(tf,n);
-}
-/* Realistic AUD/USD random-walk sample so the chart works before the feed is wired */
-function sampleCandles(tf,n){
-  const sec=(TF.find(t=>t.k===tf)||TF[1]).sec;
-  const now=Math.floor(Date.now()/1000); const start=now-sec*n;
-  let price=0.6580; const out=[];
-  for(let i=0;i<n;i++){
-    const t=start+i*sec;
-    const drift=Math.sin(i/18)*0.0006 + (Math.random()-0.5)*0.0009;
-    const o=price; const c=+(o+drift).toFixed(5);
-    const hi=+(Math.max(o,c)+Math.random()*0.0006).toFixed(5);
-    const lo=+(Math.min(o,c)-Math.random()*0.0006).toFixed(5);
-    out.push({time:t,open:o,high:hi,low:lo,close:c}); price=c;
-  }
-  return out;
-}
-
-function renderChart(){
-  const live=DATA_SOURCE==='supabase'&&SUPA_FN;
-  $('#v-chart').innerHTML=`
-   <div class="card" style="padding:12px">
-     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-       <span class="mono" style="font-weight:700">AUD/USD</span>
-       <span class="badge" style="font-size:10px;padding:3px 8px;border-radius:5px;background:${live?'var(--green-d)':'var(--panel2)'};border:1px solid var(--line);color:${live?'#bff5d6':'var(--faint)'}">${live?'● LIVE':'○ SAMPLE'}</span>
-       <button class="chip" style="margin-left:auto;padding:4px 10px" onclick="refreshChart(true)" title="Refresh now">↻</button>
-     </div>
-     <div style="font-size:11px;margin-bottom:8px" class="faint mono"><span id="chartPx"></span><span id="chartUpd" style="float:right"></span></div>
-     <div class="chipwrap" style="margin-bottom:10px">
-       ${TF.map(t=>`<span class="chip ${chartState.tf===t.k?'on':''}" onclick="setTF('${t.k}')">${t.n}</span>`).join('')}
-     </div>
-     <div id="lwchart" style="height:340px;width:100%"></div>
-     <div class="chipwrap" style="margin-top:10px">
-       <span class="chip ${chartState.showSignal!==false?'on':''}" onclick="toggleOverlay('showSignal')">Signal levels</span>
-       <span class="chip ${chartState.showCone?'on':''}" onclick="toggleOverlay('showCone')">Volatility range</span>
-       <span class="chip ${chartState.showSess?'on':''}" onclick="toggleOverlay('showSess')">Killzones</span>
-       <span class="chip ${chartState.showPD?'on':''}" onclick="toggleOverlay('showPD')">PDH / PDL</span>
-     </div>
+/* ============ RULES TAB (50 rules + reviews + discipline) ============ */
+const RULES_50=[
+ 'Risk 1 percent per trade. No exceptions.',
+ 'Maximum 2 trades per day.',
+ 'Journal every trade — win or loss.',
+ 'Trade only in Kill Zones.',
+ 'Never move SL further from entry.',
+ 'Move SL to breakeven after partials.',
+ 'Take partials at TP1. Always.',
+ 'Let the runner ride to TP2.',
+ 'Never add to a losing position.',
+ 'Check HTF bias before every trade.',
+ 'Mark liquidity before looking for setups.',
+ 'A sweep must happen before you enter.',
+ 'No displacement equals no trade.',
+ 'FVG at OTE is your primary entry.',
+ 'CE is the exact entry point — use limit orders.',
+ 'Close all trades 30 min before high-impact news.',
+ 'Never trade during FOMC or NFP release.',
+ 'Check DXY before trading Gold.',
+ 'After 2 percent daily loss, take the rest of the day off.',
+ 'After 5 percent weekly loss, take the week off.',
+ 'Never revenge trade.',
+ 'FOMO costs money. Patience makes money.',
+ 'The market will be here tomorrow.',
+ 'Backtest 100 trades before going live.',
+ 'Demo for 3 months minimum.',
+ 'Start live with minimum capital.',
+ 'One strategy for 12 months — no switching.',
+ 'One instrument — master it.',
+ 'Monthly review the first Sunday of each month.',
+ 'Sleep more than 5 hours before you trade.',
+ 'If angry or stressed, do not trade.',
+ 'If trying to recover yesterday\u2019s loss, do not trade.',
+ 'After every loss ask: did I follow my checklist?',
+ 'Losing streaks are a mathematical certainty — plan for them.',
+ 'After 5 consecutive losses, reduce risk to 0.5 percent.',
+ 'Boredom while trading is the goal.',
+ 'Excitement while trading is poison.',
+ 'Grade yourself on process, not profit.',
+ 'A correct loss is better than a lucky win.',
+ 'Print your trading plan and read it every morning.',
+ 'Your playbook is your law — follow it.',
+ 'Comparison with other traders is poison.',
+ 'Weekly review every Sunday — 30 minutes, non-negotiable.',
+ 'Never trade the LTF against the HTF.',
+ 'Buy only in discount. Sell only in premium.',
+ 'Wait for the candle to close before entering.',
+ 'Trade the news aftermath, never the spike.',
+ 'Treat every day like a prop challenge day.',
+ 'Year 1 is tuition. Year 2 is income.',
+ 'Trust the process. Trust yourself.',
+];
+function renderRules(){
+  const rc=DB.rulesCheck||{};
+  const checked=Object.values(rc).filter(Boolean).length;
+  $('#v-rules').innerHTML=`
+   <div class="card"><h3>The Trading Constitution <span class="tag">${checked}/50 internalized</span></h3>
+     <p class="dim" style="font-size:13px;margin:0 0 6px">50 rules to live by. Tap each one you've truly internalized — not just read, but <i>live</i>. These are the entire philosophy of the system compressed.</p>
+     <div class="bar" style="margin:10px 0"><div style="width:${checked/50*100}%;background:var(--amber)"></div></div>
    </div>
-   ${live?'':`<div class="note">Showing <b>sample data</b>. Set <span class="mono">DATA_SOURCE='supabase'</span> and your function URL at the top of the chart module to go live.</div>`}
-   <div id="feedNote"></div>
-   <div class="card"><h3>Signal Engine <span class="tag">M15 + H1 aligned · educational</span></h3>
-     <div id="signalBox"><div class="faint" style="font-size:13px">Scanning…</div></div>
-     <div class="note" style="margin-top:10px">Detects sweep → structure shift → FVG on M15 and H1, flags only when both agree. Every flag is auto-logged to Desk so you can measure the real hit rate. Not a predictor — your bias, news read, and checklist decide the trade.</div>
+   <div class="card">
+     ${RULES_50.map((r,i)=>`<div class="ruleitem ${rc[i]?'on':''}" onclick="toggleRule(${i})">
+        <span class="rn">${i+1}</span><span class="rt">${esc(r)}</span><span class="rcheck">${rc[i]?'✓':''}</span></div>`).join('')}
+   </div>
+   <div class="section-h">Review Routines</div>
+   <div class="card"><h3>Weekly Review <span class="tag">every Sunday · 30 min</span></h3>
+     <div class="kv"><b>1 · Pull journal</b><span>Open all trades from the past week with screenshots</span></div>
+     <div class="kv"><b>2 · Count numbers</b><span>Total trades, win rate, total R, avg RR, largest win/loss</span></div>
+     <div class="kv"><b>3 · Grade compliance</b><span>How many trades followed all 7 checklist steps? Below 60% = discipline problem</span></div>
+     <div class="kv"><b>4 · Best trade</b><span>Which had the best execution? What did you do right? Repeat it.</span></div>
+     <div class="kv"><b>5 · Worst trade</b><span>What went wrong — FOMO? revenge? no checklist? Name it.</span></div>
+     <div class="kv"><b>6 · One goal</b><span>Set ONE improvement goal for next week. Just one.</span></div>
+     <button class="btn ghost sm" style="margin-top:12px" onclick="openReview('weekly')">+ Log a Weekly Review</button>
+   </div>
+   <div class="card"><h3>Monthly Review <span class="tag">first Sunday · big picture</span></h3>
+     <div class="kv"><b>Compile data</b><span>Total trades, win rate, total R, return %, max DD for the month</span></div>
+     <div class="kv"><b>Compare</b><span>Month 1 vs 2 vs 3 side by side. Win rate improving? Discipline improving?</span></div>
+     <div class="kv"><b>Identify edge</b><span>Which model produced the best results? Double down on it. Eliminate what loses.</span></div>
+     <div class="kv"><b>Biggest leak</b><span>What ONE mistake cost the most? Fix THAT next month.</span></div>
+     <button class="btn ghost sm" style="margin-top:12px" onclick="openReview('monthly')">+ Log a Monthly Review</button>
+   </div>
+   ${(DB.reviews&&DB.reviews.length)?`<div class="section-h">Saved Reviews (${DB.reviews.length})</div>
+     ${DB.reviews.map(r=>`<div class="card" style="padding:13px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+       <span class="badge">${esc(r.type)}</span><span class="faint mono" style="font-size:11px">${esc(r.date)}</span>
+       <button class="faint" style="margin-left:auto;font-size:16px" onclick="delReview('${r.id}')">×</button></div>
+       <div style="font-size:14px;white-space:pre-wrap;line-height:1.5">${esc(r.text)}</div></div>`).join('')}`:''}
+   <div class="section-h">The Losing Cycle — Break It</div>
+   <div class="card">
+     <p class="dim" style="font-size:13px;margin:0 0 10px">The loop that traps 95% of traders. Recognize where you are and break out.</p>
+     <div class="kv"><b style="color:var(--red)">The trap</b><span>New strategy → first loss → second loss → blame the system → quit early → find new strategy → repeat for years</span></div>
+     <div class="kv"><b style="color:var(--green)">The exit</b><span>Accept losses are part of the system (40% win rate still wins) → commit to ONE method for 12 months → journal everything → review weekly → let the compound curve work</span></div>
+     <div class="note" style="border-left-color:var(--green)">The losing cycle is not about strategy. It is about quitting too early and starting over. Commitment and data break it.</div>
    </div>`;
-  setTimeout(initChart,30);
 }
-async function initChart(attempt){
-  attempt=attempt||0;
-  const el=$('#lwchart'); if(!el)return;
-  if(typeof LightweightCharts==='undefined'||!LightweightCharts.createChart){
-    if(attempt<24){ // retry up to ~6s while the CDN script loads
-      if(attempt===0)el.innerHTML='<div class="empty" style="padding:30px"><div class="faint">Loading chart library…</div></div>';
-      return setTimeout(()=>initChart(attempt+1),250);
-    }
-    el.innerHTML='<div class="empty" style="padding:30px">Chart library couldn\'t load.<br><span class="faint">Check your internet connection and reopen this tab. If it persists, a network/firewall may be blocking the CDN.</span></div>';
-    return;
-  }
-  el.innerHTML='';
-  const chart=LightweightCharts.createChart(el,{
-    height:340, autoSize:true,
-    layout:{background:{type:LightweightCharts.ColorType?LightweightCharts.ColorType.Solid:'solid',color:'#0a0d10'},textColor:'#8a98a5',fontFamily:'monospace'},
-    grid:{vertLines:{color:'#1a2127'},horzLines:{color:'#1a2127'}},
-    rightPriceScale:{borderColor:'#262f38'},
-    timeScale:{borderColor:'#262f38',timeVisible:true,secondsVisible:false},
-    crosshair:{mode:0},
-  });
-  const series=chart.addSeries(LightweightCharts.CandlestickSeries,{
-    upColor:'#3ec77b',downColor:'#e0533b',borderVisible:false,wickUpColor:'#3ec77b',wickDownColor:'#e0533b'});
-  chartState.chart=chart; chartState.series=series;
-  chartState.priceLines=[]; chartState.markerPrim=null;  // reset overlay refs for new series
-  await refreshChart(false);
-  chart.timeScale().fitContent(); // fit once on initial load only
-  startAutoRefresh();
+function toggleRule(i){DB.rulesCheck=DB.rulesCheck||{};DB.rulesCheck[i]=!DB.rulesCheck[i];save();renderRules()}
+function openReview(type){
+  sheet(`<h2 style="margin-bottom:6px">${type==='weekly'?'Weekly':'Monthly'} Review</h2>
+   <p class="faint" style="font-size:13px;margin-bottom:14px">Be honest. Data beats feelings. This is the highest-ROI activity in trading.</p>
+   <label>Review notes</label>
+   <textarea id="rev-text" rows="10" placeholder="${type==='weekly'?'Trades: 8. Win rate: 62%. Total: +6.4R. Compliance: 7/8 followed checklist.\n\nBest trade: NY AM Silver Bullet, waited for CE, textbook.\nWorst trade: revenge entry after a loss, no checklist, -1R.\n\nGoal next week: zero trades outside kill zones.':'Month total: 34 trades, 58% win, +18R, +9% on account, max DD 4%.\n\nBest model: Model 1 FVG at OTE.\nBiggest leak: trading NY PM out of boredom. Cost ~6R.\n\nFocus next month: no NY PM trades at all.'}">${esc((DB.reviews||[]).find(r=>r.type===type&&r.draft)?.text||'')}</textarea>
+   <button class="btn green" style="margin-top:16px" onclick="saveReview('${type}')">Save Review</button>`);
 }
-function startAutoRefresh(){
-  stopAutoRefresh();
-  if(DATA_SOURCE!=='supabase'||!SUPA_FN)return; // only stream when live
-  chartState.timer=setInterval(()=>{
-    // only refresh while the Chart tab is actually visible
-    const v=$('#v-chart'); if(v&&v.classList.contains('on'))refreshChart(false);
-  },15000);
+function saveReview(type){
+  const text=$('#rev-text').value.trim();if(!text){closeSheet();return}
+  DB.reviews=DB.reviews||[];
+  DB.reviews.unshift({id:uid(),type,date:new Date().toLocaleDateString('en',{month:'short',day:'numeric',year:'numeric'}),text});
+  save();closeSheet();renderRules();
 }
-function stopAutoRefresh(){if(chartState.timer){clearInterval(chartState.timer);chartState.timer=null;}}
-async function refreshChart(manual){
-  const series=chartState.series; if(!series)return;
-  if(manual){const u=$('#chartUpd'); if(u)u.textContent='updating…';}
-  chartState.feedError=null;
-  const data=await fetchCandles(chartState.instrument,chartState.tf,200);
-  chartState.lastData=data;
-  series.setData(data); // updates in place, no rebuild/flicker
-  const last=data[data.length-1];
-  if(last){const px=$('#chartPx'); if(px)px.textContent='O '+last.open.toFixed(5)+'  H '+last.high.toFixed(5)+'  L '+last.low.toFixed(5)+'  C '+last.close.toFixed(5);}
-  applyOverlays(data);
-  const u=$('#chartUpd');
-  if(u)u.textContent='updated '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  runSignalEngine();
-  const fn=$('#feedNote');
-  if(fn){
-    if(chartState.feedError){fn.innerHTML=`<div class="note" style="border-left-color:var(--red-d)">Live feed unavailable (${esc(chartState.feedError)}) — showing sample data. Check the Supabase function or your connection.</div>`;
-      const b=$('#v-chart .badge'); if(b){b.textContent='○ SAMPLE';b.style.background='var(--panel2)';b.style.color='var(--faint)';}}
-    else{fn.innerHTML='';}
-  }
-}
-function setTF(tf){stopAutoRefresh();chartState.tf=tf;renderChart()}
-function toggleOverlay(k){chartState[k]=!chartState[k];renderChart()}
-function clearPriceLines(){
-  const s=chartState.series; if(!s)return;
-  (chartState.priceLines||[]).forEach(l=>{try{s.removePriceLine(l)}catch(e){}});
-  chartState.priceLines=[];
-}
-function addLine(opts){
-  const s=chartState.series; if(!s)return;
-  try{const l=s.createPriceLine(opts);chartState.priceLines=chartState.priceLines||[];chartState.priceLines.push(l);}catch(e){}
-}
-function atr(data,period){
-  if(data.length<period+1)return 0;
-  let sum=0;const n=data.length;
-  for(let i=n-period;i<n;i++){
-    const tr=Math.max(
-      data[i].high-data[i].low,
-      Math.abs(data[i].high-data[i-1].close),
-      Math.abs(data[i].low-data[i-1].close)
-    );
-    sum+=tr;
-  }
-  return sum/period;
-}
-function applyOverlays(data){
-  const s=chartState.series; if(!s)return;
-  clearPriceLines();              // FIX: remove old lines so they don't stack each refresh
-  const marks=[];
+function delReview(id){DB.reviews=(DB.reviews||[]).filter(r=>r.id!==id);save();renderRules()}
 
-  // --- Signal levels: entry / stop / target + swept liquidity (on by default) ---
-  if(chartState.showSignal!==false && chartState.activeSignal){
-    const sig=chartState.activeSignal, dir=chartState.activeDir;
-    const ec=dir==='long'?'#3ec77b':'#e0533b';
-    addLine({price:sig.entry, color:'#e8aa42', lineWidth:2, lineStyle:0, title:'Entry'});
-    addLine({price:sig.sl, color:'#e0533b', lineWidth:1, lineStyle:2, title:'Stop (1R)'});
-    addLine({price:sig.tp, color:'#3ec77b', lineWidth:1, lineStyle:2, title:'Target (2R)'});
-    addLine({price:sig.sweptLevel, color:'#9a7bd0', lineWidth:1, lineStyle:3, title:'Swept liq'});
-    // FVG zone edges (the imbalance the entry sits in)
-    if(sig.fvgTop!=null && sig.fvgBottom!=null){
-      addLine({price:sig.fvgTop, color:'#8a98a5', lineWidth:1, lineStyle:3, title:'FVG'});
-      addLine({price:sig.fvgBottom, color:'#8a98a5', lineWidth:1, lineStyle:3, title:''});
-    }
-    // marker on the most recent bar showing direction
-    if(data.length){
-      const lastT=data[data.length-1].time;
-      marks.push({time:lastT, position:dir==='long'?'belowBar':'aboveBar', color:ec, shape:dir==='long'?'arrowUp':'arrowDown', text:dir.toUpperCase()});
-    }
-  }
+/* ============ REFERENCE TAB (cheat sheets + calculators) ============ */
+function renderRef(){
+  $('#v-ref').innerHTML=`
+   <div class="note">Quick-reference cheat sheets and calculators. The information you reach for mid-session.</div>
 
-  // --- Volatility range (ATR cone): measured, NOT a forecast of direction ---
-  if(chartState.showCone && data.length>20){
-    const a=atr(data,14);
-    const lastClose=data[data.length-1].close;
-    if(a>0){
-      // expected range over the next ~5 bars ≈ ATR * sqrt(bars). Honest volatility band.
-      const band=a*Math.sqrt(5);
-      addLine({price:lastClose+band, color:'#4a90d9', lineWidth:1, lineStyle:2, title:'+1 ATR range'});
-      addLine({price:lastClose-band, color:'#4a90d9', lineWidth:1, lineStyle:2, title:'-1 ATR range'});
-    }
-  }
-
-  // --- PDH / PDL ---
-  if(chartState.showPD){
-    const day=data.slice(-Math.min(data.length,Math.floor(86400/(TF.find(t=>t.k===chartState.tf)||TF[1]).sec)));
-    const prev=data.slice(0,data.length-day.length);
-    if(prev.length){
-      const pdh=Math.max(...prev.map(d=>d.high)), pdl=Math.min(...prev.map(d=>d.low));
-      addLine({price:pdh,color:'#e0533b',lineWidth:1,lineStyle:2,title:'PDH'});
-      addLine({price:pdl,color:'#3ec77b',lineWidth:1,lineStyle:2,title:'PDL'});
-    }
-  }
-
-  // --- Killzone markers ---
-  if(chartState.showSess){
-    const kz=h=>(h>=7&&h<10)?{t:'LDN',c:'#e8aa42'}:(h>=12&&h<15)?{t:'NY',c:'#3ec77b'}:(h>=0&&h<4)?{t:'ASIA',c:'#4a90d9'}:null;
-    data.forEach(d=>{const z=kz(new Date(d.time*1000).getUTCHours());
-      if(z&&Math.random()<0.04)marks.push({time:d.time,position:'aboveBar',color:z.c,shape:'circle',text:z.t})});
-  }
-
-  // apply all markers at once (v5 marker primitive)
-  if(LightweightCharts.createSeriesMarkers){
-    try{
-      marks.sort((a,b)=>a.time-b.time);
-      if(chartState.markerPrim){chartState.markerPrim.setMarkers(marks);}
-      else{chartState.markerPrim=LightweightCharts.createSeriesMarkers(s,marks);}
-    }catch(e){}
-  }
-}
-
-
-
-/* ============ SIGNAL ENGINE (ICT pattern detection) ============ */
-/* Educational pattern detection on completed candles. NOT a predictor.
-   Detects: liquidity sweep -> market structure shift (MSS) -> fair value gap (FVG).
-   Scans M15 + H1; a signal fires only when both timeframes AGREE on direction.   */
-
-// --- swing point detection: a swing high/low needs `k` lower/higher bars on each side
-function swings(c,k){
-  const hi=[],lo=[];
-  for(let i=k;i<c.length-k;i++){
-    let isH=true,isL=true;
-    for(let j=1;j<=k;j++){
-      if(c[i].high<=c[i-j].high||c[i].high<=c[i+j].high)isH=false;
-      if(c[i].low >=c[i-j].low ||c[i].low >=c[i+j].low )isL=false;
-    }
-    if(isH)hi.push({i,price:c[i].high});
-    if(isL)lo.push({i,price:c[i].low});
-  }
-  return {hi,lo};
-}
-
-// --- find a bullish FVG (gap up): candle i-1 high < candle i+1 low. Bearish: i-1 low > i+1 high.
-function findFVG(c,fromIdx,dir){
-  for(let i=Math.max(fromIdx,1);i<c.length-1;i++){
-    if(dir==='long' && c[i-1].high < c[i+1].low)
-      return {top:c[i+1].low, bottom:c[i-1].high, idx:i};
-    if(dir==='short' && c[i-1].low > c[i+1].high)
-      return {top:c[i-1].low, bottom:c[i+1].high, idx:i};
-  }
-  return null;
-}
-
-// --- core detection on one candle series. Returns a setup object or null.
-function detectSetup(c){
-  if(!c||c.length<40)return null;
-  const k=2;
-  const sw=swings(c,k);
-  const recent=c.length-1;
-  const lookback=Math.min(c.length,80);
-  const startI=c.length-lookback;
-  const lastClose=c[recent].close;
-
-  // SHORT: find a prior swing HIGH that a LATER bar wicked above (sweep) then price closed back below,
-  // with a bearish FVG in the displacement, and the latest close still below that level.
-  // Iterate most-recent prior swings first.
-  const hiCands=sw.hi.filter(s=>s.i>=startI && s.i<=recent-3).reverse();
-  for(const ph of hiCands){
-    // a sweep bar after ph whose HIGH exceeds ph.price
-    let sweepIdx=-1;
-    for(let i=ph.i+1;i<=recent;i++){ if(c[i].high>ph.price){sweepIdx=i;break;} }
-    if(sweepIdx<0)continue;
-    // after the sweep, a bar that CLOSES back below ph.price (rejection / start of MSS)
-    let rejIdx=-1;
-    for(let i=sweepIdx;i<=recent;i++){ if(c[i].close<ph.price){rejIdx=i;break;} }
-    if(rejIdx<0)continue;
-    const fvg=findFVG(c,sweepIdx,'short');
-    if(fvg && fvg.idx>sweepIdx-1 && lastClose<ph.price){
-      return mkSetup('short',ph.price,fvg,c);
-    }
-  }
-  // LONG: mirror — prior swing LOW wicked below then close back above + bullish FVG.
-  const loCands=sw.lo.filter(s=>s.i>=startI && s.i<=recent-3).reverse();
-  for(const pl of loCands){
-    let sweepIdx=-1;
-    for(let i=pl.i+1;i<=recent;i++){ if(c[i].low<pl.price){sweepIdx=i;break;} }
-    if(sweepIdx<0)continue;
-    let rejIdx=-1;
-    for(let i=sweepIdx;i<=recent;i++){ if(c[i].close>pl.price){rejIdx=i;break;} }
-    if(rejIdx<0)continue;
-    const fvg=findFVG(c,sweepIdx,'long');
-    if(fvg && fvg.idx>sweepIdx-1 && lastClose>pl.price){
-      return mkSetup('long',pl.price,fvg,c);
-    }
-  }
-  return null;
-}
-
-function mkSetup(dir,sweptLevel,fvg,c){
-  const last=c[c.length-1];
-  const entry=(fvg.top+fvg.bottom)/2;            // mid of FVG (consequent encroachment)
-  let sl,tp;
-  if(dir==='short'){
-    sl=sweptLevel + (sweptLevel-entry)*0.1 + (fvg.top-fvg.bottom); // just above swept high / fvg
-    sl=Math.max(sweptLevel, fvg.top);
-    const risk=sl-entry;
-    tp=entry - risk*2;                            // 1:2
-  }else{
-    sl=Math.min(sweptLevel, fvg.bottom);
-    const risk=entry-sl;
-    tp=entry + risk*2;
-  }
-  const risk=Math.abs(entry-sl);
-  const rr=risk>0?Math.abs(tp-entry)/risk:0;
-  return {dir,sweptLevel,entry,sl,tp,rr,fvgTop:fvg.top,fvgBottom:fvg.bottom,lastClose:last.close,lastTime:last.time};
-}
-
-// --- run on both TFs and require agreement
-async function scanSignals(){
-  if(DATA_SOURCE!=='supabase'||!SUPA_FN)return null;
-  let m15,h1;
-  try{
-    m15=await fetchCandles('AUD_USD','M15',120);
-    h1 =await fetchCandles('AUD_USD','H1',120);
-  }catch(e){return null;}
-  if(!Array.isArray(m15)||!Array.isArray(h1))return null;
-  const sM=detectSetup(m15), sH=detectSetup(h1);
-  if(!sM||!sH)return null;
-  if(sM.dir!==sH.dir)return null;                 // require alignment
-  // grade by how well levels align + R
-  let grade='B';
-  if(sM.rr>=2 && sH.rr>=2)grade='A';
-  if(sM.rr<1.5)grade='C';
-  return {
-    dir:sM.dir, grade,
-    m15:sM, h1:sH,
-    primary:sM,                                   // execute on M15
-    detectedAt:Date.now(),
-    bar:sM.lastTime,
-  };
-}
-
-// --- dedupe + log. Key on STRUCTURAL identity (dir + swept level + entry zone),
-// NOT the moving last-bar time, so the same setup isn't re-logged every refresh.
-function signalKey(sig){
-  const s=sig.primary;
-  return sig.dir+'_swept'+s.sweptLevel.toFixed(4)+'_e'+s.entry.toFixed(4);
-}
-async function runSignalEngine(){
-  const sig=await scanSignals();
-  const box=$('#signalBox');
-  chartState.activeSignal = sig ? sig.primary : null;  // expose to chart overlay
-  chartState.activeDir = sig ? sig.dir : null;
-  if(!sig){ if(box)box.innerHTML='<div class="faint" style="font-size:13px">No aligned M15 + H1 setup right now. The engine is watching.</div>'; applyOverlays(chartState.lastData||[]); return; }
-  // log if new — guard against exact key match AND near-identical recent setups
-  DB.signals=DB.signals||[];
-  const key=signalKey(sig);
-  const now=sig.detectedAt;
-  const pip=0.0010; // within ~10 pips of entry + same direction within 6h = treat as the same setup
-  const dup=DB.signals.some(s=>
-    s.key===key ||
-    (s.dir===sig.dir && Math.abs(s.entry-sig.primary.entry)<pip && (now-s.ts)<6*3600*1000)
-  );
-  if(!dup){
-    DB.signals.unshift({
-      id:uid(), key, dir:sig.dir, grade:sig.grade,
-      entry:sig.primary.entry, sl:sig.primary.sl, tp:sig.primary.tp, rr:sig.primary.rr,
-      sweptLevel:sig.primary.sweptLevel, ts:sig.detectedAt, outcome:null,
-    });
-    if(DB.signals.length>200)DB.signals.length=200;
-    save();
-  }
-  if(box)box.innerHTML=signalCard(sig);
-  applyOverlays(chartState.lastData||[]);  // draw signal levels on chart
-}
-function signalCard(sig){
-  const s=sig.primary; const dirU=sig.dir==='long'?'LONG':'SHORT';
-  const col=sig.dir==='long'?'var(--green)':'var(--red)';
-  return `<div style="border:1px solid ${col};border-radius:10px;padding:13px;background:linear-gradient(135deg,#1a2127,#13181d)">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-      <span style="font-weight:700;color:${col}">${dirU} setup forming</span>
-      <span class="badge" style="font-size:10px;padding:2px 7px;border-radius:5px;background:var(--panel);border:1px solid var(--line)">Grade ${sig.grade}</span>
-      <span class="faint mono" style="margin-left:auto;font-size:11px">M15 + H1 aligned</span>
+   <div class="section-h">Calculators</div>
+   <div class="card"><h3>Position Size</h3>
+    <div class="grid2">
+      <div><label>Account ($)</label><input type="number" id="ps-acct" value="${DB.settings.acct}" oninput="calcPos()"></div>
+      <div><label>Risk %</label><input type="number" step="0.1" id="ps-risk" value="${DB.settings.risk}" oninput="calcPos()"></div>
+      <div><label>Pair</label><select id="ps-pair" onchange="calcPos()">${PAIRS.map(p=>`<option>${p}</option>`).join('')}</select></div>
+      <div><label>Stop (pips)</label><input type="number" id="ps-sl" value="20" oninput="calcPos()"></div>
     </div>
-    <div class="kv"><b>Entry (FVG mid)</b><span class="mono">${s.entry.toFixed(5)}</span></div>
-    <div class="kv"><b>Stop</b><span class="mono">${s.sl.toFixed(5)}</span></div>
-    <div class="kv"><b>Target (1:2)</b><span class="mono">${s.tp.toFixed(5)}</span></div>
-    <div class="kv"><b>Reward:Risk</b><span class="mono">1 : ${s.rr.toFixed(1)}</span></div>
-    <div class="kv"><b>Swept level</b><span class="mono">${s.sweptLevel.toFixed(5)}</span></div>
-    <p style="font-size:12px;color:var(--dim);margin:10px 0 0">Price swept ${sig.dir==='long'?'sell-side liquidity (a prior low)':'buy-side liquidity (a prior high)'}, shifted structure, and left an FVG. <b style="color:var(--ink)">Educational only</b> — confirm against your bias, news, and checklist before any entry.</p>
-  </div>`;
+    <div class="result"><div class="big" id="ps-out">—</div><div class="sub" id="ps-sub">Lot size = risk $ / (SL pips × pip value)</div></div>
+   </div>
+   <div class="card"><h3>Risk : Reward</h3>
+    <div class="grid3">
+      <div><label>Entry</label><input type="number" step="0.00001" id="rr-e" oninput="calcRR()"></div>
+      <div><label>Stop</label><input type="number" step="0.00001" id="rr-s" oninput="calcRR()"></div>
+      <div><label>Target</label><input type="number" step="0.00001" id="rr-t" oninput="calcRR()"></div>
+    </div>
+    <div class="result"><div class="big" id="rr-out">—</div><div class="sub" id="rr-sub">3R minimum to trade</div></div>
+   </div>
+   <div class="card"><h3>Drawdown Recovery</h3>
+    <label>Account loss %</label><input type="number" id="dd-in" value="20" oninput="calcDD()">
+    <div class="result"><div class="big" id="dd-out">—</div><div class="sub">Gain required to break even</div></div>
+    <div class="note">A 50% loss needs a 100% gain to recover. Small losses are recoverable. Big losses are account-ending.</div>
+   </div>
+   <div class="card"><h3>Kill Zone Times <span class="tag">your local time</span></h3>
+    <label>Your UTC offset</label><input type="number" id="tz-in" value="${DB.settings.tz}" step="0.5" oninput="calcTZ()">
+    <div id="tz-out" style="margin-top:12px"></div>
+   </div>
+
+   <div class="section-h">Cheat Sheets</div>
+   ${REF_SHEETS.map((s,i)=>`<div class="refcard" id="ref-${i}">
+     <div class="head" onclick="document.getElementById('ref-${i}').classList.toggle('open')">
+       <span class="n">${esc(s.n)}</span><span class="badge">${esc(s.badge)}</span><span class="arr">›</span></div>
+     <div class="body">${s.lead?`<p class="lead">${esc(s.lead)}</p>`:''}
+       ${s.rows.map(r=>`<div class="kv"><b>${esc(r[0])}</b><span>${esc(r[1])}</span></div>`).join('')}
+       ${s.note?`<div class="note">${esc(s.note)}</div>`:''}</div></div>`).join('')}`;
+  calcPos();calcRR();calcDD();calcTZ();
 }
+const REF_SHEETS=[
+ {n:'Entry Models',badge:'Setups',lead:'The 3 core ICT entry models. Master one, then add the rest.',
+  rows:[['Model 1 · FVG at OTE','Highest win rate (55-65%). FVG inside 61.8-78.6 OTE, enter at CE. Best for trending markets after BOS.'],['Model 2 · Sweep to FVG','Best RR (4-8R). Wait for liquidity sweep, then FVG forms on displacement back inside. Best for reversals.'],['Model 3 · OB Retest','Most reliable continuation (3-4R). Enter on retest of order block after BOS. Best for trend continuation.']],
+  note:'Start with Model 1 over 100 demo trades. Add Model 2, then 3. Never trade all three at once until each is mastered.'},
+ {n:'Stop Loss Placement',badge:'Risk',lead:'Where your SL goes for every setup type.',
+  rows:[['FVG at OTE','Below 78.6 + 2 pip buffer'],['Liquidity sweep','Beyond the full sweep wick + 1-2 pips'],['Order block','Below OB body low (longs) / above OB body high (shorts) + 1-2 pips'],['Breaker block','Beyond the breaker zone + 2 pips'],['Structure','Below swing low (longs) / above swing high (shorts) + 2 pips'],['CRT entry','Beyond the CRT high/low + 2 pips']],
+  note:'SL goes where the entire trade idea is dead — not where it is comfortable. Too tight gets stopped by noise; too wide kills your RR. The structure decides your lot size, not the other way around.'},
+ {n:'The 4 Trading Sessions',badge:'Time',lead:'When to trade and when to sleep. Times in EST.',
+  rows:[['Asian (7 PM-2 AM)','Accumulation. Builds the range. DO NOT trade — mark Asian High/Low and sleep.'],['London (2-5 AM)','Manipulation. The most important session. Sweeps one side of Asia. Where the real move starts.'],['NY AM (9:30-11 AM)','Distribution. Follows through on London direction. Silver Bullet 10-11 AM is your second chance.'],['NY PM (2-4 PM)','The graveyard. Low volume, random wicks. AVOID — close charts and go to the gym.']],
+  note:'90% of institutional moves happen in just 5 hours: London 2-5 AM and NY AM 9:30-11 AM. Trade those hours only. The rest is preparation and rest.'},
+ {n:'Liquidity Map',badge:'Liquidity',lead:'Where the stops are. Where the money is.',
+  rows:[['Buy-Side (BSL)','Above swing highs, equal highs, PDH. Buy stops of shorts + breakout buyers. Sits ABOVE price.'],['Sell-Side (SSL)','Below swing lows, equal lows, PDL. Sell stops of longs + breakout sellers. Sits BELOW price.'],['Internal','Pools inside the current range — minor equal H/L. Fuel for the move toward external.'],['External','The major swing high/low — the range boundary, the ultimate draw on liquidity.'],['Strongest pools','Equal highs/lows (clean double tops/bottoms) — the biggest magnets.']],
+  note:'Equal highs/lows are NOT support and resistance — they are magnets that WILL be swept. The only question is when. Mark them, then trade the sweep.'},
+ {n:'FVG & OTE',badge:'Entry',lead:'The entry system on one page.',
+  rows:[['Bullish FVG','3-candle gap up: candle 1 high < candle 3 low. The empty space is the imbalance. Enter at the 50% (CE).'],['Bearish FVG','3-candle gap down: candle 1 low > candle 3 high. Enter at CE on retrace.'],['OTE zone','The 61.8-78.6 Fibonacci retracement. 70.5 is the sweet spot — highest reaction rate.'],['CE (Consequent Encroachment)','The exact 50% midpoint of the FVG. The optimal entry. Set limit and walk away.'],['Premium / Discount','Above 50% of the range = premium (sell zone). Below 50% = discount (buy zone).']],
+  note:'Buy ONLY in discount. Sell ONLY in premium. Buying in premium or selling in discount is fighting the math — both lose long-term.'},
+ {n:'Risk Management',badge:'Survival',lead:'Survival first. Profits second.',
+  rows:[['Per trade','1% risk. Non-negotiable. 1% = $100 on a $10k account.'],['Daily limit','Max 2% loss. Hit it = close charts for the day.'],['Weekly limit','Max 5% loss. Hit it = done until Monday.'],['Trades per day','Maximum 2. The first 2 are usually the best.'],['Minimum RR','3R. Below 2R = skip unless A+ setup.'],['Losing streak','After 5 consecutive losses, cut risk to 0.5%.']],
+  note:'A 40% win rate at 4R average outperforms a 70% win rate at 1R. RR matters more than win rate. The math does not lie.'},
+ {n:'Daily Bias (Top-Down)',badge:'Bias',lead:'How to frame direction before you trade.',
+  rows:[['Weekly','Context + objective. Where is the draw on liquidity? Major levels.'],['Daily','Structure + confirmation. HH/HL (bullish) or LH/LL (bearish)? Mark PDH/PDL.'],['4H','Confirm or refine the daily bias. Mark 4H OB and FVG zones.'],['15M','Find the entry zone. Mark FVG, OB, liquidity.'],['5M / 1M','Execution. CHoCH/BOS after the tap, enter on confirmation candle close.']],
+  note:'HTF decides direction. LTF decides entry. Never trade the LTF against the HTF. When they conflict, wait or skip.'},
+ {n:'Gold (XAU/USD) Specifics',badge:'Instrument',lead:'Gold math is different from Forex.',
+  rows:[['Daily range','150-500 pips. 3-10× a Forex pair. Higher reward AND higher risk.'],['Best session','London (70% of daily range) and NY AM. Asian is quiet — avoid.'],['DXY correlation','Inverse. DXY up = Gold down (shorts). DXY down = Gold up (longs). Always check DXY first.'],['Lot sizing','0.01 lot ≈ $1 per pip move (broker-dependent). Risk $ / SL pips / pip value. ALWAYS calculate — never guess on Gold.'],['Risk','1% on Gold is non-negotiable. The volatility that makes the reward makes the ruin.']],
+  note:'Gold is the ultimate ICT instrument — it respects FVG, OB, OTE and liquidity beautifully. But it punishes loose risk. Master risk management BEFORE trading Gold live.'},
+ {n:'News Trading Rules',badge:'News',lead:'7 rules that protect you during volatile events.',
+  rows:[['Check the calendar','Every Sunday. Mark high-impact USD/AUD events on your week.'],['Close before','Close all trades 30 min before high-impact news.'],['Don\u2019t enter before','No new trades 30 min before — spreads widen 5-20×.'],['Wait after','15-30 min after release. The initial move is chaos.'],['Trade the aftermath','News creates the biggest FVGs of the month. Trade the retrace into them, not the spike.'],['NFP','First Friday, 8:30 AM EST. Can move Gold 100-300 pips. Trade the aftermath.'],['FOMC','8 meetings/year, 2 PM EST. Never hold through it. Trade next day.']],
+  note:'News creates chaos during the event and opportunity after. Be the trader who waits, not the trader who gambles. The screen price during release is not your fill.'},
+ {n:'Prop Firm Survival',badge:'Funding',lead:'How to pass and keep a funded account.',
+  rows:[['Trade in kill zones only','London and NY AM. No dead-hour trades.'],['Risk 0.5% per trade','Half your normal risk. Survival > speed during a challenge.'],['Max 1 trade per day','Quality over quantity. One A+ setup beats five forced ones.'],['Aim 1-2% profit/week','Slow and steady. Don\u2019t rush the target.'],['Know your drawdown type','Static (from start balance) vs trailing (from peak equity). Trailing is stricter.'],['Treat every day like a challenge','The discipline that passed continues forever.']],
+  note:'Prop firms are not free money — you must already be consistently profitable on demo before attempting. The challenge tests discipline, not strategy. 90% fail from oversizing and overtrading, not bad strategy.'},
+ {n:'Stages of a Trader',badge:'Journey',lead:'The 5 stages every profitable trader passes through.',
+  rows:[['1 · The Gambler','Random entries, no rules, blown account. Most quit here.'],['2 · The Student','Learns a strategy weekly, masters none. Confused.'],['3 · The Journal Keeper','TURNING POINT. Finally picks ONE strategy and journals every trade. Month 8-14.'],['4 · The Executor','Consistently profitable. One setup, one checklist, every day. No emotion.'],['5 · The Professional','Trading is boring. Same setup, same routine, compounding. Year 2+.']],
+  note:'90% quit at Stage 1-2. The bridge is Stage 3 — the journal. Most traders fail because the process feels boring and results are slow, so they quit right before it compounds.'},
+];
+console.log('rules+ref loaded');
 
 /* ---- MODAL + EXPORT + INIT ---- */
 function sheet(html){$('#sheetBody').innerHTML=html;$('#modal').classList.add('on')}
@@ -1742,7 +1813,7 @@ function exportData(){
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download='true-balance-trader-'+new Date().toISOString().slice(0,10)+'.json';a.click();
 }
-tickClock();nav('dash');
+tickClock();nav('journal');
 // dismiss boot splash once the app is up
 setTimeout(()=>{const sp=document.getElementById('splash');if(sp)sp.classList.add('gone');setTimeout(()=>{if(sp)sp.remove();},600);},1400);
 console.log('TBT ready');
