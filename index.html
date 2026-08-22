@@ -1659,7 +1659,7 @@ function renderPlan(){
     ${DB.plans.length?`<label>Active checklist</label><select onchange="DB.activePlan=this.value;save();renderPlan()">
       ${DB.plans.map(p=>`<option value="${p.id}" ${active&&p.id===active.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select>`:''}
     <div class="row" style="margin-top:12px">
-      <button class="btn ghost" onclick="openTemplates()">⚡ Load Template</button>
+      <button class="btn ghost" onclick="openTemplates()">⚡ Load My Plan</button>
       <button class="btn ghost" onclick="newPlan()">+ Blank</button>
     </div>
     ${active?`<button class="btn ghost sm" style="margin-top:8px;width:100%" onclick="editPlan('${active.id}')">Edit active checklist</button>`:''}
@@ -1667,13 +1667,13 @@ function renderPlan(){
    ${active?runPlan(active):''}`;
 }
 const PLAN_FIELDS=[
- {k:'identity',n:'1 · Identity',ph:'I am a Smart Money Concepts trader. I trade XAU/USD and AUD/USD during London and NY AM. I am patient, disciplined, and I follow my process.'},
- {k:'strategy',n:'2 · Strategy',ph:'My primary entry is Model 1 (FVG at OTE) with a 3-candle gap and CE entry. Backup: Model 3 (OB retest). I only trade with HTF bias.'},
- {k:'rules',n:'3 · Risk Rules',ph:'1% risk per trade. 2% max daily loss. 5% max weekly loss. 2 trades max per day. Minimum 3R. Never move a stop against the trade.'},
- {k:'routine',n:'4 · Daily Routine',ph:'Mark HTF bias and key levels pre-session. Trade only in kill zones. Journal every trade. Weekly review every Sunday.'},
- {k:'management',n:'5 · Trade Management',ph:'Take 50% partial at TP1, move SL to breakeven, let runner ride to TP2. Never close early from fear. Never add to a loser.'},
- {k:'nonneg',n:'6 · Non-Negotiables',ph:'No trading outside kill zones. No revenge trading. No trading after 2% daily loss. No changing the plan mid-week. No moving stops.'},
- {k:'goals',n:'7 · Goals & Why',ph:'Consistent 2-5% monthly on a funded account. Why: freedom, providing for my family, mastering myself. The market is my mirror.'},
+ {k:'identity',n:'1 · Identity',ph:'I am a market-structure trader. I read bias top-down (Monthly/Weekly/Daily), map my zones on 4H/1H/15M, and execute on 5M/1M. I am patient and I wait for displacement-validated setups.'},
+ {k:'strategy',n:'2 · Strategy',ph:'HTF bias from M/W/D. Mark OBs, FVGs, supply/demand, and liquidity on 4H/1H/15M — prioritizing the ones made with displacement. Enter on 5M/1M when price taps a POI and prints a bullish/bearish engulfing or pin bar out of the zone — on the candle close.'},
+ {k:'rules',n:'3 · Risk Rules',ph:'Fixed % risk per trade. Max daily loss defined. Max trades per day defined. Minimum R defined. Never move a stop against the trade.'},
+ {k:'routine',n:'4 · Daily Routine',ph:'Set M/W/D bias. Mark 4H/1H/15M zones and flag which have displacement. Trade only 1–3 AM and 6–10 AM Central. Journal every trade.'},
+ {k:'management',n:'5 · Trade Management',ph:'Enter on confirmation candle close. SL beyond the zone/swing. Partial at internal liquidity, runner to external liquidity. Never close early from fear. Never add to a loser.'},
+ {k:'nonneg',n:'6 · Non-Negotiables',ph:'No trades outside 1–3 AM / 6–10 AM Central. No entry without a confirmed MSS during displacement. No entry before the confirmation candle closes. No revenge trading. No moving stops.'},
+ {k:'goals',n:'7 · Goals & Why',ph:'Consistency through one repeatable process. Why: freedom, providing for my family, mastering myself. The market is my mirror.'},
 ];
 function editDoc(){DB.editingDoc=true;renderPlan()}
 function renderPlanDoc(){
@@ -1714,88 +1714,15 @@ function resetRun(pid){if(DB.runState)DB.runState[pid]={};save();renderPlan()}
 
 /* ---- PLAN TEMPLATES (click-to-load, fully editable after) ---- */
 const PLAN_TEMPLATES=[
- {name:'★ TBT Primary Entry (A–Z)',desc:'Your one main entry plan — full SMC sequence, top to bottom',
+ {name:'★ Market Structure Mechanics',desc:'My one plan — HTF bias, medium-TF POI mapping, LTF entry, validation checks',
   sections:[
-   {title:'1 · Pre-Flight',items:['Slept 5+ hours, calm, not chasing yesterday?','Is it a kill zone right now? (London 2–5 AM / NY AM 9:30–11 AM CT)','Daily loss limit not hit, fewer than 2 trades taken today?','No high-impact news in the next 30 min?']},
-   {title:'2 · HTF Bias (Daily → 4H)',items:['Daily structure clear — HH/HL (bull) or LH/LL (bear)?','One-sentence bias written: "Expect price to sweep ___ then deliver to ___"','DXY checked — confirms (not fights) the bias?','Marked: PDH/PDL, prior week H/L, Asia range, key OB/FVG zones']},
-   {title:'3 · Liquidity (the WHY)',items:['Identified the draw — which pool is price targeting (BSL/SSL)?','Inducement noted — is the obvious move a trap before the real one?','Waited for the sweep — did price actually take the liquidity?']},
-   {title:'4 · Zone & OTE (the WHERE)',items:['Price reacting at a valid OB / FVG / Breaker after the sweep?','Fib drawn on the impulse leg — zone inside 61.8–78.6 OTE?','Long zone in discount / short zone in premium?','CE (50% of the FVG) marked as the exact entry price']},
-   {title:'5 · Trigger (the WHEN)',items:['Dropped to 5M/1M — CHoCH or BOS after the tap?','Displacement candle (not a drift) broke minor structure?','Confirmation candle CLOSED before you act — no early entry?']},
-   {title:'6 · Execute & Define Risk',items:['Limit order at CE (or market on confirmation close)','SL beyond the swept high/low + buffer — at structure, not comfort','Lot size calculated from 1% risk and the SL distance','Minimum 3R to the first target — if not, skip it']},
-   {title:'7 · Commit',items:['Setup is A or B grade — not a forced C?','All 6 steps above genuinely passed, not rationalized?','Entry, SL, TP1, TP2 all set before you click — then walk away']},
-  ]},
- {name:'Risk & Recovery Protocol',desc:'What to do after a loss or a streak — the plan that saves the account',
-  sections:[
-   {title:'Per-Trade Limits',items:['Risk fixed at 1% — sized by SL distance, never by conviction','Minimum 3R target, or skip','Max 2 trades per day — the first 2 are usually the best']},
-   {title:'Daily Circuit Breaker',items:['Down 2% on the day → close the charts, no exceptions','2 losses today → done, even if under 2%','After any loss, ask: "Did I follow my checklist?" before the next trade']},
-   {title:'Weekly Circuit Breaker',items:['Down 5% on the week → flat until Monday','Reduced size all week if equity is below last week’s close']},
-   {title:'Streak Rules',items:['5 reds in a row → cut risk to 0.5% until 3 green trades','Tilt check: angry, anxious, or revenge-driven → step away','Recovery is made by good process, never by sizing up']},
-   {title:'Re-Entry After a Stop-Out',items:['Setup must re-qualify fully — no "it’ll come back" entries','No widening stops, no averaging down, ever','Walk, water, breathe before re-engaging']},
-  ]},
- {name:'Weekend Prep / Sunday Routine',desc:'The homework that frames the whole week before it starts',
-  sections:[
-   {title:'Higher-Timeframe Map',items:['Weekly: macro trend + major liquidity marked','Daily: structure (HH/HL or LH/LL?), draw on liquidity','Mark prior week H/L, monthly open, major OB/FVG zones']},
-   {title:'Per-Pair Bias',items:['AUD/USD: one-sentence bias for the week','Gold/XAU: one-sentence bias + DXY context','Note where you’ll stand aside if price goes the wrong way']},
-   {title:'News & Events',items:['Scan the week’s calendar — mark NFP, CPI, FOMC, RBA','Flag the days/times you will NOT trade around releases']},
-   {title:'Set the Week’s Intent',items:['Write the ONE improvement goal from last week’s review','Pre-commit max risk for the week and trades per day','Charts marked and saved so weekday-you just executes']},
-  ]},
- {name:'Trade Management',desc:'The in-trade decisions — where most edge is won or lost',
-  sections:[
-   {title:'After Entry',items:['Order filled at planned price — no chasing if it ran?','SL and both targets already set?','Hands off — let the trade breathe, no micro-managing']},
-   {title:'At TP1 (internal liquidity)',items:['Take partial (e.g. 50%) at the first structure target','Move SL to breakeven once partial is booked','Trade is now risk-free — let the runner work']},
-   {title:'Managing the Runner',items:['Trail behind structure (new HL in a long / LH in a short)','Target TP2 at external liquidity (equal H/L, session H/L)','Do NOT close early from boredom or fear']},
-   {title:'When to Cut Early',items:['Thesis invalidated — opposite CHoCH against you?','Major news suddenly inbound? Reduce or flatten','Otherwise: trust the plan, let SL/TP do their job']},
-  ]},
- {name:'Prop Firm Challenge',desc:'Survival rules for a funded evaluation',
-  sections:[
-   {title:'Know Your Rules',items:['Profit target and exact % written down','Max daily loss + max overall drawdown known','Static or trailing drawdown? (trailing is stricter)']},
-   {title:'Conservative Risk',items:['0.5% per trade — half your normal size','Max 1 trade per day during the challenge','Aim 1–2% profit per week — slow and steady passes']},
-   {title:'Discipline Gates',items:['Kill zones only — no dead-hour trades','No news trading during the evaluation','Hit a bad day? Stop early — protecting the account IS the strategy']},
-   {title:'After Funding',items:['Treat the funded account exactly like the challenge','Withdraw on schedule, scale only per the firm’s plan','The discipline that passed must continue forever']},
-  ]},
- {name:'Post-Trade Review',desc:'Fast per-trade debrief — closes the journal loop',
-  sections:[
-   {title:'Log It',items:['Trade logged in the Journal with R result','Screenshot saved (entry, SL, TP, what happened)','Model, session, and HTF bias tagged']},
-   {title:'Grade the Process',items:['Did I follow all 7 checklist steps? (yes/no)','Execution grade A/B/C — based on process, not profit','Was this an A/B setup or a forced one?']},
-   {title:'Name the Lesson',items:['Mistake tag set honestly (FOMO, revenge, early exit, none)','One sentence: what I’d repeat or change next time','Emotion before/during entry noted']},
-   {title:'Close the Loop',items:['A correct loss logged as a WIN of discipline','Anything recurring? Flag it for the weekly review']},
-  ]},
- {name:'AUD/USD Kill Zone Scalping',desc:'Your smart-money scalping checklist, start to finish',
-  sections:[
-   {title:'Bias Check (4H + 1H)',items:['Is structure bullish or bearish? (BOS/CHoCH)','Are we in discount (long) or premium (short) pricing?','Is price near a valid OB, FVG, or Breaker Block?']},
-   {title:'Liquidity Zone Confirmation',items:['Internal liquidity (equal highs/lows) or external (prev day/session H/L) nearby?','Is price about to sweep or reacting to these zones?']},
-   {title:'OTE Fibonacci',items:['Longs: draw swing low → swing high of last impulse','Shorts: draw swing high → swing low of last impulse','Is price inside the 61.8%–79% retracement zone?','Confluence with OB, FVG, or Breaker Block?']},
-   {title:'Execution TF (15M / 5M)',items:['Is it during a Kill Zone? (London 2–5 AM CT / NY 7–10 AM CT)','Did price tap a marked zone (OB, FVG, Breaker)?','Is there a CHoCH or BOS on the lower TF after the tap?']},
-   {title:'Entry Confirmation Candle',items:['Bullish: engulfing / displacement / long lower-wick pin','Bearish: engulfing / displacement / long upper-wick pin','CHoCH/BOS candle closed beyond minor structure?','Did you wait for the candle to close before entry?']},
-   {title:'Entry & Risk Management',items:['Entry placed at confirmation candle close','Stop just beyond zone/swing (tight: 8–12 pips)','TP1: internal liquidity (structure H/L)','TP2: external liquidity (equal H/L, session H/L)','Minimum R:R = 1.5:1','Stop trading after 3 wins or 2 losses today']},
-  ]},
- {name:'ICT 2022 Model',desc:'The 5-gate mechanical sweep → MSS → FVG sequence',
-  sections:[
-   {title:'1 · Liquidity Run',items:['Has price taken obvious buyside (sell) or sellside (buy) liquidity on 15m/Daily?']},
-   {title:'2 · Structure Shift',items:['Sell: swing low formed AFTER the highest swing high that took liquidity?','Buy: swing high formed BEFORE the lowest swing low that took liquidity?']},
-   {title:'3 · Fair Value Gap',items:['Does the displacement leg leave a 3-candle FVG?','Is the middle candle energetic (real displacement, not drift)?']},
-   {title:'4 · Premium / Discount',items:['Draw 50% fib of the dealing range','Sell: is the FVG at/above 50% (premium)?','Buy: is the FVG at/below 50% (discount)?']},
-   {title:'5 · Execution',items:['Place limit order inside the FVG','SL beyond the swept high/low','TP at opposing liquidity, min 1:2 R']},
-  ]},
- {name:'One Setup for Life',desc:'IFVG + Breaker dual confirmation inside a macro',
-  sections:[
-   {title:'Context',items:['Price at HTF PD array (premium/discount)?','Inside an ICT macro time window?','Focus: only 1–2 A+ trades today']},
-   {title:'Trigger',items:['Liquidity sweep / stop hunt off the level','SMT divergence confirmation present?']},
-   {title:'1st Entry — Inversion',items:['Candle closed through the FVG (now IFVG)?','Enter on 2nd candle open after the close']},
-   {title:'2nd Entry — Breaker',items:['Candle closed below/above the breaker?','Enter on 2nd candle open after the close']},
-   {title:'Risk',items:['SL above/below the liquidity sweep','Target minimum 1:2 R']},
-  ]},
- {name:'Daily Bias Routine',desc:'Pre-session top-down prep before any entry',
-  sections:[
-   {title:'Higher Timeframe',items:['Weekly: macro bias & major liquidity marked','Daily: trend (HH/HL?), PDH/PDL marked','Where is the draw on liquidity today?']},
-   {title:'Key Levels Marked',items:['Previous Day High / Low','Previous Week High / Low','Asia session range H/L','Daily / Weekly opening price','Equal highs & lows (liquidity pools)']},
-   {title:'News Check',items:['Any high-impact USD/AUD/CNY event today? (check News tab)','If yes — plan around the release, avoid the spread']},
-   {title:'Commit the Bias',items:['Write one sentence: "Today I expect price to sweep ___ then deliver to ___"','If you cannot write it — no bias, no trade']},
-  ]},
- {name:'Pre-Trade Discipline',desc:'Fast final gate before clicking buy/sell',
-  sections:[
-   {title:'Setup Quality',items:['HTF bias aligned?','In a killzone (time)?','At a key level (OB/FVG/PDH-PDL)?','Liquidity swept before entry?','Min 1:2 R:R?']},
-   {title:'Mind & Risk',items:['Emotion calm — not FOMO/revenge?','Risk is fixed % (not "conviction"-sized)?','Daily loss limit not hit?','Not over-correlated with an open position?']},
+   {title:'1 · Directional Bias (M / W / D)',items:['Monthly bias set — Bullish / Bearish / Neutral?','Weekly bias set — and does it agree or conflict with monthly?','Daily bias set — this is the day\u2019s working direction','One sentence written: "Expect price to draw toward ___"']},
+   {title:'2 · HTF Zones — 4H',items:['Marked the important supply / demand zones from the higher timeframe','Order block(s) identified','Fair value gap(s) identified','Liquidity level(s) identified (equal H/L, session H/L, PDH/PDL)','\u26a1 Flagged which of these were created WITH displacement (most important)']},
+   {title:'3 · HTF Zones — 1H',items:['Order block(s) identified','Fair value gap(s) identified','Supply / demand zone(s) identified','Liquidity level(s) identified','\u26a1 Flagged the displacement zones (highest priority)']},
+   {title:'4 · HTF Zones — 15M',items:['Order block(s) identified','Fair value gap(s) identified','Supply / demand zone(s) identified','Liquidity level(s) identified','\u26a1 Flagged the displacement zones (highest priority)']},
+   {title:'5 · Validation Checks (each must be true)',items:['\u2610 Confirmed market structure shift DURING displacement','\u2610 Order block validated by that MSS + displacement','\u2610 High-probability supply/demand zone — has displacement','\u2610 High-probability fair value gap — has displacement']},
+   {title:'6 · LTF Entry (5M / 1M)',items:['Price has entered a marked point of interest','Watching the 5M / 1M for the confirmation candle','Bullish: bullish ENGULFING out of the zone \u2014 enter on its CLOSE','Bullish: PIN BAR at the zone \u2014 enter on its CLOSE','Bearish: bearish ENGULFING out of the zone \u2014 enter on its CLOSE','Bearish: PIN BAR at the zone \u2014 enter on its CLOSE','Waited for the candle to fully CLOSE before entry \u2014 no early fills']},
+   {title:'7 · Session Gate',items:['Right now is inside a trading window: 1\u20133 AM OR 6\u201310 AM Central','If outside both windows \u2014 no trade, mark levels and wait']},
   ]},
 ];
 function loadTemplate(idx){
@@ -1804,8 +1731,8 @@ function loadTemplate(idx){
   DB.plans.push(p);DB.activePlan=p.id;closeSheet();save();renderPlan();
 }
 function openTemplates(){
-  sheet(`<h2 style="margin-bottom:6px">Load a Template</h2>
-   <p class="dim" style="font-size:13px;margin-bottom:16px">Pick a ready-made checklist. It loads fully populated — then edit, rename, or trim it to your exact rules.</p>
+  sheet(`<h2 style="margin-bottom:6px">Load My Plan</h2>
+   <p class="dim" style="font-size:13px;margin-bottom:16px">Loads your Market Structure Mechanics checklist fully populated — then edit, rename, or trim it to your exact rules.</p>
    ${PLAN_TEMPLATES.map((t,i)=>`<div class="refcard" style="margin-bottom:10px"><div class="head" style="cursor:default">
      <div><div class="n">${esc(t.name)}</div><div class="faint" style="font-size:12px;margin-top:2px">${esc(t.desc)}</div>
        <div class="faint mono" style="font-size:10px;margin-top:4px">${t.sections.length} sections · ${t.sections.reduce((a,s)=>a+s.items.length,0)} items</div></div>
@@ -1824,7 +1751,7 @@ function renderPlanEdit(){
   $('#v-plan').innerHTML=`
    <div class="card"><h3>Edit Plan</h3>
      <label>Plan name</label>
-     <input id="pl-name" value="${esc(p.name)}" oninput="planSetName('${p.id}',this.value)" placeholder="e.g. AUD/USD Kill Zone Scalping">
+     <input id="pl-name" value="${esc(p.name)}" oninput="planSetName('${p.id}',this.value)" placeholder="e.g. Market Structure Mechanics">
    </div>
    ${p.sections.map((s,si)=>`<div class="card">
      <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
