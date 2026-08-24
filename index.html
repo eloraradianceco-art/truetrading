@@ -1299,8 +1299,18 @@ function renderJournal(){
    </div>
   </div>
   ${ts.length?`<div class="tlist">${ts.map(t=>tradeCard(t)).join('')}</div>`:
-   `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 3h11l3 3v15H5z"/><path d="M15 3v4h4M8 11h8M8 15h8"/></svg><div>No trades logged yet.<br>Every entry sharpens the edge.</div></div>`}`;
+   `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 3h11l3 3v15H5z"/><path d="M15 3v4h4M8 11h8M8 15h8"/></svg><div>No trades logged yet.<br>Every entry sharpens the edge.</div></div>`}
+  ${(DB.planNotes&&DB.planNotes.length)?`<div class="section-h" style="margin-top:18px">Planning Notes (${DB.planNotes.length})</div>
+   <div class="tlist">${DB.planNotes.map(pn=>`<div class="card" style="padding:12px;margin-bottom:8px">
+     <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+       <span style="font-weight:650;font-size:13px;color:var(--amber)">${esc(pn.plan)}</span>
+       <span class="faint mono" style="font-size:10px;margin-left:auto">${new Date(pn.ts).toLocaleString('en',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
+       <span class="chip" style="padding:3px 8px;font-size:11px" onclick="delPlanNote('${pn.id}')">✕</span>
+     </div>
+     <div style="white-space:pre-wrap;font-family:monospace;font-size:11.5px;color:var(--dim);line-height:1.5">${esc(pn.text)}</div>
+   </div>`).join('')}</div>`:''}`;
 }
+function delPlanNote(id){DB.planNotes=(DB.planNotes||[]).filter(x=>x.id!==id);save();renderJournal();}
 /* ---- PRE-TRADE CHECKLIST (Ch.166 SMC 7-step) ---- */
 const PRECHECK=[
  ['HTF bias confirmed','Daily / 4H shows clear HH-HL (bullish) or LH-LL (bearish). Not unclear.'],
@@ -1694,23 +1704,76 @@ function saveDoc(){
 }
 function runPlan(p){
   const rs=(DB.runState&&DB.runState[p.id])||{};
+  const ns=(DB.runNotes&&DB.runNotes[p.id])||{};
   const all=p.sections.flatMap(s=>s.items.map(i=>i.id));
   const done=all.filter(id=>rs[id]).length;
   const pct=all.length?Math.round(done/all.length*100):0;
+  const noteCount=all.filter(id=>ns[id]&&ns[id].trim()).length;
   return `<div class="card" style="border-color:var(--amber-d)">
     <h3>${esc(p.name)} <span class="tag">${done}/${all.length} checked</span></h3>
     <div class="bar" style="margin-bottom:4px"><div style="width:${pct}%;background:${pct===100?'var(--green)':'var(--amber)'}"></div></div>
-    <div class="faint mono" style="font-size:11px;margin-bottom:14px">${pct}% complete${pct===100?' · cleared to trade ✓':''}</div>
+    <div class="faint mono" style="font-size:11px;margin-bottom:14px">${pct}% complete${pct===100?' · cleared to trade ✓':''}${noteCount?` · ${noteCount} note${noteCount>1?'s':''}`:''}</div>
     ${p.sections.map(s=>`<div class="section-h" style="margin:14px 0 8px">${esc(s.title)}</div>
-      ${s.items.map(it=>`<div class="check ${rs[it.id]?'done':''}" onclick="runToggle('${p.id}','${it.id}')">
+      ${s.items.map(it=>{
+        const hasNote=ns[it.id]&&ns[it.id].trim();
+        const open=(DB.noteOpen&&DB.noteOpen[it.id])||hasNote;
+        return `<div class="check ${rs[it.id]?'done':''}" onclick="runToggle('${p.id}','${it.id}')">
         <div class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#062013" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg></div>
-        <div class="txt">${esc(it.text)}</div></div>`).join('')}`).join('')}
-    <button class="btn ghost sm" style="margin-top:12px" onclick="resetRun('${p.id}')">Reset checklist</button>
-    <div class="note">A plan you don't follow is a wish. Run it top to bottom before every entry.</div>
+        <div class="txt">${esc(it.text)}</div></div>
+        <div style="margin:-2px 0 8px 34px">
+          ${open?`<textarea class="note-in" rows="2" placeholder="What do you see? e.g. Monthly is bullish, price in discount…"
+            oninput="runNote('${p.id}','${it.id}',this.value)"
+            style="width:100%;background:var(--panel2,#12181d);border:1px solid var(--line,#26303a);border-radius:8px;color:var(--ink);font-size:13px;padding:8px 10px;font-family:inherit;resize:vertical">${esc(ns[it.id]||'')}</textarea>`
+          :`<span class="faint" style="font-size:12px;cursor:pointer;color:var(--amber)" onclick="openNote('${it.id}')">＋ note</span>`}
+        </div>`;
+      }).join('')}`).join('')}
+    <div class="row" style="margin-top:14px;gap:8px">
+      <button class="btn ghost sm" onclick="resetRun('${p.id}')">Reset checklist</button>
+      <button class="btn sm" onclick="savePlanToJournal('${p.id}')">Save plan to Journal</button>
+    </div>
+    <div class="note">A plan you don't follow is a wish. Run it top to bottom before every entry. Add notes as you go — save the whole plan to your Journal when you're set.</div>
    </div>`;
 }
-function runToggle(pid,iid){DB.runState=DB.runState||{};DB.runState[pid]=DB.runState[pid]||{};DB.runState[pid][iid]=!DB.runState[pid][iid];save();renderPlan()}
-function resetRun(pid){if(DB.runState)DB.runState[pid]={};save();renderPlan()}
+function runToggle(pid,iid){
+  // ignore clicks that originate in the note textarea/link area
+  if(window.event){const tg=window.event.target; if(tg&&(tg.classList.contains('note-in')||tg.tagName==='TEXTAREA'))return;}
+  DB.runState=DB.runState||{};DB.runState[pid]=DB.runState[pid]||{};DB.runState[pid][iid]=!DB.runState[pid][iid];save();renderPlan();
+}
+function runNote(pid,iid,val){
+  DB.runNotes=DB.runNotes||{};DB.runNotes[pid]=DB.runNotes[pid]||{};DB.runNotes[pid][iid]=val;
+  // save silently WITHOUT re-render so the textarea keeps focus while typing
+  try{localStorage.setItem(LS,JSON.stringify(DB))}catch(e){}
+}
+function openNote(iid){DB.noteOpen=DB.noteOpen||{};DB.noteOpen[iid]=true;renderPlan();
+  setTimeout(()=>{const ta=document.querySelector('.note-in');if(ta)ta.focus()},30);}
+function resetRun(pid){
+  if(DB.runState)DB.runState[pid]={};
+  if(DB.runNotes)DB.runNotes[pid]={};
+  DB.noteOpen={};
+  save();renderPlan();
+}
+function savePlanToJournal(pid){
+  const p=DB.plans.find(x=>x.id===pid);if(!p)return;
+  const rs=(DB.runState&&DB.runState[pid])||{};
+  const ns=(DB.runNotes&&DB.runNotes[pid])||{};
+  let out=p.name+' — '+new Date().toLocaleString('en',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})+'\n\n';
+  p.sections.forEach(s=>{
+    const lines=s.items.map(it=>{
+      const tick=rs[it.id]?'[x]':'[ ]';
+      const note=(ns[it.id]&&ns[it.id].trim())?'  → '+ns[it.id].trim():'';
+      return (note||rs[it.id])?`${tick} ${it.text}${note}`:null;
+    }).filter(Boolean);
+    if(lines.length){out+=s.title+'\n'+lines.join('\n')+'\n\n';}
+  });
+  DB.planNotes=DB.planNotes||[];
+  DB.planNotes.unshift({id:uid(),ts:Date.now(),plan:p.name,text:out.trim()});
+  if(DB.planNotes.length>100)DB.planNotes.length=100;
+  save();
+  sheet(`<h2 style="margin-bottom:8px">Saved to Journal ✓</h2>
+    <p class="dim" style="font-size:13px;margin-bottom:14px">Your filled-out plan is saved as a planning note. Find it in the Journal tab under Planning Notes.</p>
+    <div style="background:var(--panel2,#12181d);border:1px solid var(--line,#26303a);border-radius:10px;padding:14px;white-space:pre-wrap;font-family:monospace;font-size:12px;color:var(--ink);max-height:340px;overflow:auto">${esc(out.trim())}</div>
+    <button class="btn" style="margin-top:14px" onclick="closeSheet()">Done</button>`);
+}
 
 /* ---- PLAN TEMPLATES (click-to-load, fully editable after) ---- */
 const PLAN_TEMPLATES=[
