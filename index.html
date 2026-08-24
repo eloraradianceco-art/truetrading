@@ -303,7 +303,7 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;',
 /* ---- Pairs & correlation ---- */
 const PAIRS=['AUD/USD','NZD/USD','AUD/JPY','AUD/NZD','EUR/USD','GBP/USD','USD/JPY','USD/CAD','USD/CHF','XAU/USD'];
 const PIP={'AUD/USD':0.0001,'NZD/USD':0.0001,'EUR/USD':0.0001,'GBP/USD':0.0001,'USD/CAD':0.0001,'USD/CHF':0.0001,'AUD/NZD':0.0001,'AUD/JPY':0.01,'USD/JPY':0.01,'XAU/USD':0.1};
-const MODELS=['Silver Bullet','Unicorn','Turtle Soup','Order Block','FVG Entry','Judas Swing','Power of 3','OTE','Liquidity Sweep','Breaker','Other'];
+const MODELS=['Order Block','FVG','Supply/Demand','Liquidity Sweep','Engulfing','Pin Bar','Other'];
 const SESSIONS=['Asia','London','NY AM','NY PM'];
 const MISTAKES=['None','FOMO entry','No setup / forced','Moved stop','Revenge trade','Oversized','Early exit','Late entry','Against HTF bias','Traded news spread'];
 
@@ -1292,7 +1292,7 @@ function renderJournal(){
   <div class="section-h">Trade Log</div>
   <div class="card" style="padding:12px">
    <div class="chipwrap" style="margin-bottom:4px">
-    ${['Silver Bullet','Unicorn','Turtle Soup','Order Block','FVG Entry'].map(m=>`<span class="chip ${jFilter.model===m?'on':''}" onclick="toggleF('model','${m}')">${m}</span>`).join('')}
+    ${['Order Block','FVG','Supply/Demand','Liquidity Sweep','Engulfing','Pin Bar'].map(m=>`<span class="chip ${jFilter.model===m?'on':''}" onclick="toggleF('model','${m}')">${m}</span>`).join('')}
     <span class="chip ${jFilter.outcome==='win'?'on g':''}" onclick="toggleF('outcome','win')">Wins</span>
     <span class="chip ${jFilter.outcome==='loss'?'on r':''}" onclick="toggleF('outcome','loss')">Losses</span>
     ${Object.keys(jFilter).length?`<span class="chip" onclick="jFilter={};renderJournal()">Clear ✕</span>`:''}
